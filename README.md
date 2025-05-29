@@ -23,3 +23,5 @@ A continuación, se describe brevemente la función de cada carpeta del sistema:
 
 - **`utils/`**: Funciones auxiliares o clases de utilidad utilizadas en diversas partes del sistema.
 
+- **`.gitkeep`**: Archivos temporales (borrar una vez se agregue algo a su respectiva carpeta.) 
+
