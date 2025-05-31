@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sistema_acviis/ui/views/home_page.dart';
+import 'package:sistema_acviis/constants/routes.dart';
 
 void main() {
   runApp(const MainApp());
@@ -9,12 +11,11 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
+        body: HomePage(),
       ),
+      routes: routes, // Para el redireccionamiento dentro del sistema entero
     );
   }
 }
