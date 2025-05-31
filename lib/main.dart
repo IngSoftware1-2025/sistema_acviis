@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/ui/views/home_page.dart';
-import 'package:sistema_acviis/constants/routes.dart';
-
+import 'package:sistema_acviis/constants/routes.dart'
+;
 void main() {
   runApp(const MainApp());
 }
@@ -15,7 +15,7 @@ class MainApp extends StatelessWidget {
       home: Scaffold(
         body: HomePage(),
       ),
-      routes: routes, // Para el redireccionamiento dentro del sistema entero
+      routes: routes,
     );
   }
 }

@@ -14,21 +14,34 @@ class PersonalizedAppBar extends StatelessWidget implements PreferredSizeWidget 
 
   @override
   Widget build(BuildContext context) {
+    final currentRoute = ModalRoute.of(context)?.settings.name ?? '';
     return AppBar(
       title: Text(title),
-      backgroundColor: colorAcviis,
-      leading: IconButton(
-        icon: CircleAvatar(
-          backgroundColor: Colors.white.withValues(alpha: 0.2),
-          child: const Icon(
-            Icons.home,
-            color: Colors.white,
-          ),
-        ),
-        onPressed: () {
-          Navigator.of(context).pushNamed('/home_page');
-        },
-      ),
+      backgroundColor: colorAppBar,
+      leading: currentRoute == '/home_page'
+          ? null
+          : IconButton(
+              icon: CircleAvatar(
+                backgroundColor: Colors.white.withAlpha(51), // 0.2 * 255 ≈ 51
+                child: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.white,
+                ),
+              ),
+              onPressed: () {
+                // Obtiene la ruta actual (donde se encuentra este widget)
+                final uri = Uri.parse(currentRoute);
+                final segments = List<String>.from(uri.pathSegments);
+                if (segments.isNotEmpty) {
+                  segments.removeLast();
+                }
+                String parentRoute = '/${segments.join('/')}';
+                if (parentRoute == '/') {
+                  parentRoute = '/home_page';
+                }
+                Navigator.of(context).pushReplacementNamed(parentRoute);
+              },
+            ),
     );
   }
 }
