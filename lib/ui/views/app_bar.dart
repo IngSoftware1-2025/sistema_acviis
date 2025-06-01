@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/constants/constants.dart';
+import 'package:sistema_acviis/ui/styles/app_colors.dart';
 
 class PersonalizedAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -17,7 +18,7 @@ class PersonalizedAppBar extends StatelessWidget implements PreferredSizeWidget 
     final currentRoute = ModalRoute.of(context)?.settings.name ?? '';
     return AppBar(
       title: Text(title),
-      backgroundColor: colorAppBar,
+      backgroundColor: AppColors.primaryDark,
       leading: currentRoute == '/home_page'
           ? null
           : IconButton(

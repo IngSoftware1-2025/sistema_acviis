@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/constants/constants.dart';
+import 'package:sistema_acviis/ui/styles/app_colors.dart';
 import 'package:sistema_acviis/ui/views/app_bar.dart';
 import 'package:sistema_acviis/ui/views/bottom_navigation_bar.dart';
+import 'package:sistema_acviis/ui/widgets/buttons.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -18,9 +20,9 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: PersonalizedAppBar(title: 'Home'),
       body: Container(
-        color: Colors.white, // Color de fondo body
+        color: AppColors.background, // Color de fondo body
         child: Container(
-          color: colorAcviis,
+          color: AppColors.background,
           child: Padding(
             padding: EdgeInsets.all(normalPadding),
             child: Column( // Aqui iran todas las vistas iniciales por categoria (trabajador, contrato, etc)
@@ -43,7 +45,22 @@ class _HomePageState extends State<HomePage> {
                     Navigator.pushReplacementNamed(context, '/home_page/contratos_view');
                   },
                   child: Center(child: Text('Contratos')),
-                )
+                ),
+                SizedBox(height: normalPadding,), // Un espacio
+
+                PrimaryButton(
+                  onPressed: () {},
+                  text: "Finanzas",),
+                SizedBox(height: normalPadding,), // Un espacio
+
+                BorderButton(
+                  onPressed: () {},
+                  text: "Logística",),
+                SizedBox(height: normalPadding,), // Un espacio
+
+                SecondaryButton(
+                  onPressed: () {},
+                  text: "Obras",)
               ]
             ),
           )
