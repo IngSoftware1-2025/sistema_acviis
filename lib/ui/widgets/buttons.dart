@@ -27,7 +27,11 @@ class PrimaryButton extends StatelessWidget {
                   shadowColor: WidgetStateProperty.all(Colors.blueGrey),
                 ),
                 onPressed: onPressed,
-                child: Text(text),
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    fontFamily: 'Satoshi',
+                  )),
               ),
     );
   }
