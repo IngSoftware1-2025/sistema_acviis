@@ -18,8 +18,10 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context){
     return Scaffold(
-      appBar: PersonalizedAppBar(title: 'Home'),
+      backgroundColor: AppColors.background,
+      appBar: PersonalizedAppBar(title: 'Home',),
       body: Container(
+        width: double.infinity,
         color: AppColors.background, // Color de fondo body
         child: Container(
           color: AppColors.background,
@@ -31,36 +33,44 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(height: normalPadding,), // Un espacio
         
                 // Boton que redirige a trabajadores
-                ElevatedButton( // El estilo se decidira mas adelante (Probablemente cambiando el Widget)
+                PrimaryButton( // El estilo se decidira mas adelante (Probablemente cambiando el Widget)
                   onPressed: () {
                     Navigator.pushReplacementNamed(context, '/home_page/trabajadores_view');
                   },
-                  child: Center(child: Text('Trabajadores'))
+                  text: "Trabajadores",
+                  size: Size(700, 50),
                 ),
                 SizedBox(height: normalPadding,), // Un espacio
         
                 // Boton que redirige a contratos
-                ElevatedButton(
+                BorderButton(
                   onPressed: () {
                     Navigator.pushReplacementNamed(context, '/home_page/contratos_view');
                   },
-                  child: Center(child: Text('Contratos')),
+                  text: "Contratos",
+                  size: Size(700, 50),
                 ),
                 SizedBox(height: normalPadding,), // Un espacio
 
                 PrimaryButton(
                   onPressed: () {},
-                  text: "Finanzas",),
+                  text: "Finanzas",
+                  size: Size(700, 50),
+                ),
                 SizedBox(height: normalPadding,), // Un espacio
 
                 BorderButton(
                   onPressed: () {},
-                  text: "Logística",),
+                  text: "Logística",
+                  size: Size(700, 50),
+                ),
                 SizedBox(height: normalPadding,), // Un espacio
 
                 SecondaryButton(
                   onPressed: () {},
-                  text: "Obras",)
+                  text: "Obras",
+                  size: Size(700, 50),
+                ),
               ]
             ),
           )

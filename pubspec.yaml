@@ -9,6 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  http: ^1.2.1
+  supabase_flutter: ^2.0.0
+  intl: ^0.18.1
 
 dev_dependencies:
   flutter_test:
@@ -17,3 +20,12 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: Satoshi
+      fonts:
+        - asset: lib/ui/styles/Satoshi-Light.otf
+          weight: 300
+        - asset: lib/ui/styles/Satoshi-Medium.otf
+          weight: 500
+        - asset: lib/ui/styles/Satoshi-Bold.otf
+          weight: 700

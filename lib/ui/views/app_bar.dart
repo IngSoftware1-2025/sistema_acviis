@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:sistema_acviis/constants/constants.dart';
 import 'package:sistema_acviis/ui/styles/app_colors.dart';
 
 class PersonalizedAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -17,8 +16,16 @@ class PersonalizedAppBar extends StatelessWidget implements PreferredSizeWidget 
   Widget build(BuildContext context) {
     final currentRoute = ModalRoute.of(context)?.settings.name ?? '';
     return AppBar(
-      title: Text(title),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontFamily: 'Satoshi', // Aquí estoy probando la nueva fuente. Tiene 3 niveles de negrilla, 300, 500 y 700.
+          fontWeight: FontWeight.w500,
+          color: AppColors.background,
+        ),
+      ),
       backgroundColor: AppColors.primaryDark,
+      elevation: 0,
       leading: currentRoute == '/home_page'
           ? null
           : IconButton(
@@ -43,6 +50,50 @@ class PersonalizedAppBar extends StatelessWidget implements PreferredSizeWidget 
                 Navigator.of(context).pushReplacementNamed(parentRoute);
               },
             ),
+      actions: <Widget>[
+        IconButton(
+          icon: const Icon(
+            Icons.settings,
+            color: AppColors.background,
+          ),
+          tooltip: 'Settings',
+          onPressed: () {},
+        ),
+
+        IconButton(
+          icon: const Icon(
+            Icons.person,
+            color: AppColors.background,
+          ),
+          tooltip: 'Perfil de usuario',
+          onPressed: () {},
+        ),
+
+        Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              'Usuario: <Nombre de usuario>',
+              style: TextStyle(
+                fontFamily: 'Satoshi',
+                fontWeight: FontWeight.w500,
+                color: AppColors.background,
+              )
+            )
+          )
+        ),
+
+        IconButton(
+          icon: const Icon(
+            Icons.logout,
+            color: AppColors.background,
+          ),
+          tooltip: 'Cerrar sesión',
+          onPressed: () {},
+        )
+
+
+      ]
     );
   }
 }
