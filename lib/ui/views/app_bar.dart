@@ -27,7 +27,7 @@ class PersonalizedAppBar extends StatelessWidget implements PreferredSizeWidget 
       ),
       backgroundColor: AppColors.primaryDark,
       elevation: 0,
-      leading: currentRoute == '/home_page'
+      leading: currentRoute == '/home_page' || title=='Home'
           ? null
           : IconButton(
               icon: CircleAvatar(
