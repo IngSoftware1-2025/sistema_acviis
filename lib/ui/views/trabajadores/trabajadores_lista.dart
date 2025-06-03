@@ -4,9 +4,7 @@ import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:sistema_acviis/utils/constants/constants.dart';
 
 class ListaTrabajadores extends StatefulWidget {
-  const ListaTrabajadores({
-    super.key
-  });
+  const ListaTrabajadores({super.key});
   @override
   State<ListaTrabajadores> createState() => _ListaTrabajadoresState();
 }
@@ -21,73 +19,80 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
   }
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     final provider = context.watch<TrabajadoresProvider>();
     if (provider.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-    return ListView(
-      children: provider.trabajadores.map((trabajador) {
-      return Row(
-        children: [
-          Expanded(
-                flex: 4,
-                child: Column(
-                children: [
-                  Center(
-                  child: Text(
-                    trabajador.nombre, // Nombre trabajador
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+    // Define un ancho mínimo para la tabla
+    final double tableWidth = MediaQuery.of(context).size.width > 600
+        ? MediaQuery.of(context).size.width
+        : 600;
+    
+    debugPrint('${tableWidth}');
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: SizedBox(
+        width: tableWidth - normalPadding * 2,
+        child: Column(
+          children: [
+            // Header
+            Row(
+              children: [
+                Flexible(flex: 4, fit: FlexFit.tight, child: Text('Nombre', style: TextStyle(fontWeight: FontWeight.bold))),
+                Flexible(flex: 3, fit: FlexFit.tight, child: Text('Cargo', style: TextStyle(fontWeight: FontWeight.bold))),
+                Flexible(flex: 3, fit: FlexFit.tight, child: Text('Obra', style: TextStyle(fontWeight: FontWeight.bold))),
+                Flexible(
+                  flex: 2,
+                  fit: FlexFit.tight,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text('Opciones', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
-                  ),
-                ],
                 ),
-              ),
-              SizedBox(width: normalPadding),
-              Expanded(
-                flex: 2,
-                child: Column(
-                children: [
-                  Center(
-                  child: Text(
-                    'Pendiente', // Cargo trabajador (Pendiente)
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                  ),
-                ],
+              ],
+            ),
+            const Divider(),
+            // Rows
+            ...provider.trabajadores.map((trabajador) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 1.0),
+                child: Row(
+                  children: [
+                    Flexible(flex: 4, fit: FlexFit.tight, child: Text(trabajador.nombre)),
+                    Flexible(flex: 3, fit: FlexFit.tight, child: Text('Pendiente')), // Cargo real si lo tienes
+                    Flexible(flex: 3, fit: FlexFit.tight, child: Text('Pendiente')), // Obra real si lo tienes
+                    Flexible(
+                      flex: 2,
+                      fit: FlexFit.tight,
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: PopupMenuButton<String>(
+                          onSelected: (value) {
+                            // Maneja las opciones aquí
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'editar',
+                              child: Text('Editar'),
+                            ),
+                            const PopupMenuItem(
+                              value: 'eliminar',
+                              child: Text('Eliminar'),
+                            ),
+                          ],
+                          icon: const Icon(Icons.more_vert),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              SizedBox(width: normalPadding),
-              Expanded(
-                flex: 2,
-                child: Column(
-                children: [
-                  Center(
-                  child: Text(
-                    'Pendiente', // Obra trabajador (Pendiente)
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                  ),
-                ],
-                ),
-              ),
-              SizedBox(width: normalPadding),
-              Expanded(
-                flex: 1,
-                child: Column(
-                children: [
-                  Center(
-                  child: Text(
-                    'Opciones', // Botono pero xd
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                  ),
-                ],
-                ),
-              ),
-        ]
-      );
-      }).toList(),
+              );
+            }),
+          ],
+        ),
+      ),
     );
   }
 }
