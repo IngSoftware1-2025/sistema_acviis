@@ -43,7 +43,10 @@ class _ModificiarListaTrabajadoresViewState extends State<ModificarListaTrabajad
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => GetTrabajador()),
+                  MaterialPageRoute(builder: (context) => Scaffold(
+                    appBar: PersonalizedAppBar(title: 'Trabajadores'),
+                    body: GetTrabajador())
+                  ),
                 );
               },
               child: Center(child: Text('GetTrabajadores'))

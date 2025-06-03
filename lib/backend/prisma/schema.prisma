@@ -9,7 +9,7 @@ datasource db {
 
 // backend/prisma/schema.prisma
 
-model Persona {
+model Trabajador {
   id        String   @id @default(uuid())
   nombre    String   @db.VarChar(100)
   apellido  String?
