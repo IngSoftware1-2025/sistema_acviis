@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:sistema_acviis/constants/constants.dart';
+import 'package:provider/provider.dart';
+import 'package:sistema_acviis/providers/trabajadores_provider.dart';
+import 'package:sistema_acviis/ui/views/trabajadores/trabajadores_lista.dart';
+import 'package:sistema_acviis/utils/constants/constants.dart';
 import 'package:sistema_acviis/ui/views/app_bar.dart';
 import 'package:sistema_acviis/ui/views/bottom_navigation_bar.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/search_bar.dart';
@@ -145,6 +148,10 @@ class _TrabajadoresViewState extends State<TrabajadoresView> {
                 ),
               ),
               ],
+            ),
+            // Lista de trabajadores
+            Expanded(
+              child: ListaTrabajadores(),
             )
           ],
         ),

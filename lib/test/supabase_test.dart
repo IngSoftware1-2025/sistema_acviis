@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:sistema_acviis/backend/controllers/get_trabajadores.dart';
+
 
 class GetTrabajador extends StatefulWidget {
   const GetTrabajador({super.key});
@@ -16,19 +16,7 @@ class _GetTrabajadorState extends State<GetTrabajador> {
   @override
   void initState() {
     super.initState();
-    futureTrabajadores = fetchTrabajadores();
-  }
-
-  // Funcion que crea la peticion al servidor para conseguir todos los trabajadores
-  Future<List<Trabajador>> fetchTrabajadores() async {
-    final response = await http.get(Uri.parse('http://localhost:3000/trabajadores'));
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((e) => Trabajador.fromJson(e)).toList();
-    } else {
-      throw Exception('Error al obtener trabajadores');
-    }
+    futureTrabajadores = fetchTrabajadoresFromApi();
   }
 
   @override
@@ -61,6 +49,9 @@ class _GetTrabajadorState extends State<GetTrabajador> {
           }
         },
       ),
+
+      
+
     );
   }
 }

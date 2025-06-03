@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sistema_acviis/constants/constants.dart';
+import 'package:sistema_acviis/utils/constants/constants.dart';
 
 class TrabajadoresSearchBar extends StatefulWidget {
   const TrabajadoresSearchBar({
