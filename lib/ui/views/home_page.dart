@@ -4,6 +4,7 @@ import 'package:sistema_acviis/ui/styles/app_colors.dart';
 import 'package:sistema_acviis/ui/views/app_bar.dart';
 import 'package:sistema_acviis/ui/views/bottom_navigation_bar.dart';
 import 'package:sistema_acviis/ui/widgets/buttons.dart';
+import 'package:sistema_acviis/ui/widgets/cards.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -66,11 +67,16 @@ class _HomePageState extends State<HomePage> {
                 ),
                 SizedBox(height: normalPadding,), // Un espacio
 
-                SecondaryButton(
+                /*SecondaryButton(
                   onPressed: () {},
                   text: "Obras",
                   size: Size(700, 50),
-                ),
+                ),*/
+                PrimaryCard(
+                  title: 'Trabajadores',
+                  description: 'Funciones de trabajador: Modificar, Agregar, Eliminar, etc',
+                  icon: Icon(Icons.engineering, color: AppColors.primaryDarker, size: 100)
+                ),                
               ]
             ),
           )

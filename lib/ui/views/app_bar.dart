@@ -16,6 +16,7 @@ class PersonalizedAppBar extends StatelessWidget implements PreferredSizeWidget 
   Widget build(BuildContext context) {
     final currentRoute = ModalRoute.of(context)?.settings.name ?? '';
     return AppBar(
+      centerTitle: true,
       title: Text(
         title,
         style: TextStyle(

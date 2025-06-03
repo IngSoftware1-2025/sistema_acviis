@@ -29,3 +29,5 @@ flutter:
           weight: 500
         - asset: lib/ui/styles/Satoshi-Bold.otf
           weight: 700
+        - asset: lib/ui/styles/Satoshi-Black.otf
+          weight: 900
