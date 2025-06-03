@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/constants/constants.dart';
+import 'package:sistema_acviis/test/supabase_test.dart';
 import 'package:sistema_acviis/ui/views/app_bar.dart';
 import 'package:sistema_acviis/ui/views/bottom_navigation_bar.dart';
 
@@ -34,6 +35,18 @@ class _ModificiarListaTrabajadoresViewState extends State<ModificarListaTrabajad
                 Navigator.pushReplacementNamed(context, '/home_page/trabajadores_view/modificar_lista_trabajadores_view/eliminar_trabajador_view');
               },
               child: Center(child: Text('Eliminar trabajador/es'))
+            ),
+
+            SizedBox(height: normalPadding),
+
+            ElevatedButton( // Boton de testing :V
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => GetTrabajador()),
+                );
+              },
+              child: Center(child: Text('GetTrabajadores'))
             )
           ]
         )

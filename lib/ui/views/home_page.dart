@@ -72,11 +72,13 @@ class _HomePageState extends State<HomePage> {
                   text: "Obras",
                   size: Size(700, 50),
                 ),*/
+                /*
                 PrimaryCard(
                   title: 'Trabajadores',
                   description: 'Funciones de trabajador: Modificar, Agregar, Eliminar, etc',
                   icon: Icon(Icons.engineering, color: AppColors.primaryDarker, size: 100)
                 ),                
+                */
               ]
             ),
           )

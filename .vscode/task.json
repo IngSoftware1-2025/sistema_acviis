@@ -1,0 +1,16 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "start-node",
+      "type": "shell",
+      "command": "node lib/backend/index.js",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [],
+      "isBackground": true
+    }
+  ]
+}

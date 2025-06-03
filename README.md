@@ -3,9 +3,21 @@
 
 A continuación, se describe brevemente la función de cada carpeta del sistema:
 
-- **`backend/`**: Contiene la lógica del lado del servidor.
-  - **`controllers/`**: Controladores encargados de manejar las peticiones y coordinar la lógica del negocio.
-  - **`database/`**: Configuración de la base de datos, migraciones y datos de ejemplo (seeders).
+
+### 🧩 Descripción de carpetas asociadas al backend
+
+| Carpeta / Archivo     | Descripción |
+|-----------------------|-------------|
+| `index.js`            | Archivo principal que inicializa el servidor y configura middlewares. |
+| `routes/`             | Define los endpoints de la API para cada entidad (modularizado). [usuarios.js, contratos.js, etc.]|
+| `controllers/`        | Contiene funciones que controlan la lógica de cada ruta. [getUsuarios.js, crearUsuario.js, etc]|
+| `services/`           | Contiene la lógica de negocio que interactúa con la base de datos. [Donde se utilizara Prisma y Mongoose para conectar con Supabase y MongoDB ]|
+| `middlewares/`        | Middleware reutilizable para autenticación, validación, logging, etc. |
+| `prisma/`             | Configuración de Prisma ORM, esquema de base de datos y migraciones. |
+| `.env`                | Archivo para variables de entorno (no debe subirse al repositorio). |
+
+---
+
 
 - **`constants/`**: Define constantes globales utilizadas a lo largo del proyecto, como rutas, textos, colores o configuraciones fijas.
 
