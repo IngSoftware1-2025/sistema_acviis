@@ -5,9 +5,9 @@ import 'dart:convert';
 // Función para crear un trabajador nuevo en el backend
 Future<void> createTrabajador({
   required String nombre,
-  String? apellido,
+  required apellido,
   required String email,
-  int? edad,
+  required edad,
 }) async {
   final url = Uri.parse('http://localhost:3000/trabajadores'); // Ajusta según backend
 
