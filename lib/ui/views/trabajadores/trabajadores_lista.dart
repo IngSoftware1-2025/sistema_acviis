@@ -15,6 +15,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<TrabajadoresProvider>(context, listen: false).fetchTrabajadores();
+      // Iria el provider de Contratos de trabajadores 
     });
   }
 

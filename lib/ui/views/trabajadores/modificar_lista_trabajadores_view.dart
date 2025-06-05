@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/utils/constants/constants.dart';
-import 'package:sistema_acviis/test/supabase_test.dart';
 import 'package:sistema_acviis/ui/views/app_bar.dart';
 import 'package:sistema_acviis/ui/views/bottom_navigation_bar.dart';
 
@@ -38,19 +37,6 @@ class _ModificiarListaTrabajadoresViewState extends State<ModificarListaTrabajad
             ),
 
             SizedBox(height: normalPadding),
-
-            ElevatedButton( // Boton de testing :V
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => Scaffold(
-                    appBar: PersonalizedAppBar(title: 'Trabajadores'),
-                    body: GetTrabajador())
-                  ),
-                );
-              },
-              child: Center(child: Text('GetTrabajadores'))
-            )
           ]
         )
       ),

@@ -1,20 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sistema_acviis/providers/contratos_provider.dart';
 import 'package:sistema_acviis/ui/views/app_bar.dart';
 
 class ContratosView extends StatefulWidget {
-  const ContratosView({
-    super.key
-  });
+  const ContratosView({super.key});
+
   @override
   State<ContratosView> createState() => _ContratosViewState();
 }
 
 class _ContratosViewState extends State<ContratosView> {
   @override
-  Widget build(BuildContext context){
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ContratosProvider>(context, listen: false).fetchContratos();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: PersonalizedAppBar(title: 'Contratos'),
-      body: Placeholder(), // Aqui ira el contenido necesario para cumplir los casos de uso relacionados a contratos
+      body: Consumer<ContratosProvider>(
+        builder: (context, contratosProvider, child) {
+          if (contratosProvider.isLoading) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (contratosProvider.contratos.isEmpty) {
+            return Center(child: Text('No hay contratos'));
+          }
+          return ListView.builder(
+            itemCount: contratosProvider.contratos.length,
+            itemBuilder: (context, index) {
+              final contrato = contratosProvider.contratos[index];
+              return ListTile(
+                title: Text('Contrato ID: ${contrato.id}'),
+                subtitle: Text('Trabajador: ${contrato.idTrabajadores}'),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

@@ -4,21 +4,33 @@ import 'dart:convert';
 
 // Función para crear un trabajador nuevo en el backend
 Future<void> createTrabajador({
-  required String nombre,
-  required apellido,
-  required String email,
-  required edad,
+  required String nombreCompleto,
+  required String estadoCivil,
+  required String rut,
+  required DateTime fechaNacimiento,
+  required String direccion,
+  required String correoElectronico,
+  required String sistemaDeSalud,
+  required String previsionAfp,
+  required String obraEnLaQueTrabaja,
+  required String rolQueAsumeEnLaObra,
 }) async {
-  final url = Uri.parse('http://localhost:3000/trabajadores'); // Ajusta según backend
+  final url = Uri.parse('http://localhost:3000/trabajadores'); // Ajusta la URL si es necesario
 
   final response = await http.post(
     url,
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({
-      'nombre': nombre,
-      'apellido': apellido,
-      'email': email,
-      'edad': edad,
+      'nombre_completo': nombreCompleto,
+      'estado_civil': estadoCivil,
+      'rut': rut,
+      'fecha_de_nacimiento': fechaNacimiento.toIso8601String(),
+      'direccion': direccion,
+      'correo_electronico': correoElectronico,
+      'sistema_de_salud': sistemaDeSalud,
+      'prevision_afp': previsionAfp,
+      'obra_en_la_que_trabaja': obraEnLaQueTrabaja,
+      'rol_que_asume_en_la_obra': rolQueAsumeEnLaObra,
     }),
   );
 

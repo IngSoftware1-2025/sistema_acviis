@@ -1,3 +1,7 @@
+// este archivo estaba en /lib/backend/prisma/seed.js
+// este archivo nos servio para crear datos de prueba en la base de datos inicialmente
+// y verificar que la conexion con la base de datos funciona correctamente
+
 const dotenv = require('dotenv');
 //este es un codigo para meter datos de prueba en la base de datos
 // lo cual me ayudo a saber que si funciona en el backend
