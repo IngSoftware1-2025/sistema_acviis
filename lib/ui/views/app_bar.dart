@@ -54,15 +54,6 @@ class PersonalizedAppBar extends StatelessWidget implements PreferredSizeWidget 
       actions: <Widget>[
         IconButton(
           icon: const Icon(
-            Icons.settings,
-            color: AppColors.background,
-          ),
-          tooltip: 'Settings',
-          onPressed: () {},
-        ),
-
-        IconButton(
-          icon: const Icon(
             Icons.person,
             color: AppColors.background,
           ),
