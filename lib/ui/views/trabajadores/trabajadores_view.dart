@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/trabajadores_lista.dart';
 import 'package:sistema_acviis/utils/constants/constants.dart';
 import 'package:sistema_acviis/ui/views/app_bar.dart';

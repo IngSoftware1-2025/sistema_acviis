@@ -28,8 +28,15 @@ class _ContratosViewState extends State<ContratosView> {
       body: Column(
         children: [
           ElevatedButton(
-            onPressed: () => mongoConnection(), 
-            child: Center(child: Text('Contrato Testing'))
+            onPressed: () => createContratoTest(), 
+            child: Center(child: Text('Contrato Create Testing'))
+          ),
+
+          SizedBox(height: normalPadding),
+
+          ElevatedButton(
+            onPressed: () => showContrato(context, 'Juan_Pérez_contrato.pdf'),
+            child: Center(child: Text('Contrato get Testing'))
           ),
 
           SizedBox(height: normalPadding),
