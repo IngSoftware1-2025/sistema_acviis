@@ -5,7 +5,7 @@ import 'dart:convert';
 
 // Función que crea la petición al servidor para conseguir todos los contratos
 Future<List<Contrato>> fetchContratosFromApi() async {
-  final response = await http.get(Uri.parse('http://localhost:3000/contratos'));
+  final response = await http.get(Uri.parse('http://localhost:3000/contratos/supabase'));
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body);
     if (data is List) {

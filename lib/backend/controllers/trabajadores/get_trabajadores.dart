@@ -8,7 +8,9 @@ Future<List<Trabajador>> fetchTrabajadoresFromApi() async {
   final response = await http.get(Uri.parse('http://localhost:3000/trabajadores'));
   if (response.statusCode == 200) {
     final List<dynamic> data = jsonDecode(response.body);
-    return data.map((e) => Trabajador.fromJson(e)).toList();
+    // Limitar a solo 3 trabajadores
+    final limitedData = data.reversed.take(3).toList();
+    return limitedData.map((e) => Trabajador.fromJson(e)).toList();
   } else {
     throw Exception('Error al obtener trabajadores');
   }
