@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sistema_acviis/backend/controllers/create_trabajador.dart';
+import 'package:sistema_acviis/backend/controllers/trabajadores/create_trabajador.dart';
 import 'package:sistema_acviis/ui/views/app_bar.dart';
 import 'package:sistema_acviis/ui/views/bottom_navigation_bar.dart';
 
@@ -13,16 +13,48 @@ class AgregarTrabajadorView extends StatefulWidget {
 class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _nombreCompletoController = TextEditingController();
-  final TextEditingController _estadoCivilController = TextEditingController();
-  final TextEditingController _rutController = TextEditingController();
-  final TextEditingController _fechaNacimientoController = TextEditingController();
-  final TextEditingController _direccionController = TextEditingController();
-  final TextEditingController _correoElectronicoController = TextEditingController();
-  final TextEditingController _sistemaSaludController = TextEditingController();
-  final TextEditingController _previsionAfpController = TextEditingController();
-  final TextEditingController _obraController = TextEditingController();
-  final TextEditingController _rolController = TextEditingController();
+  // Por razones de testing, se agregan valores iniciales
+  final TextEditingController _nombreCompletoController = TextEditingController(
+    text: 'Usuario${DateTime.now().millisecondsSinceEpoch % 1000} Prueba',
+  );
+  final TextEditingController _estadoCivilController = TextEditingController(
+    text: ['Soltero', 'Casado', 'Divorciado', 'Viudo'][
+      DateTime.now().millisecondsSinceEpoch % 4
+    ],
+  );
+  final TextEditingController _rutController = TextEditingController(
+    text: '${10000000 + DateTime.now().millisecondsSinceEpoch % 90000000}-${DateTime.now().millisecondsSinceEpoch % 10}',
+  );
+  // Fecha y email restringidos, se mantienen fijos
+  final TextEditingController _fechaNacimientoController = TextEditingController(
+    text: '${1980 + DateTime.now().millisecondsSinceEpoch % 30}-${(1 + DateTime.now().millisecondsSinceEpoch % 12).toString().padLeft(2, '0')}-${(1 + DateTime.now().millisecondsSinceEpoch % 28).toString().padLeft(2, '0')}',
+  );
+  final TextEditingController _direccionController = TextEditingController(
+    text: 'Calle ${100 + DateTime.now().millisecondsSinceEpoch % 900}',
+  );
+  final TextEditingController _correoElectronicoController = TextEditingController(
+    text: 'usuario${DateTime.now().millisecondsSinceEpoch % 10000}@email.com',
+  );
+  final TextEditingController _sistemaSaludController = TextEditingController(
+    text: ['Fonasa', 'Isapre'][
+      DateTime.now().millisecondsSinceEpoch % 2
+    ],
+  );
+  final TextEditingController _previsionAfpController = TextEditingController(
+    text: ['Provida', 'Cuprum', 'Habitat', 'PlanVital'][
+      DateTime.now().millisecondsSinceEpoch % 4
+    ],
+  );
+  final TextEditingController _obraController = TextEditingController(
+    text: 'Obra ${['Norte', 'Sur', 'Este', 'Oeste'][
+      DateTime.now().millisecondsSinceEpoch % 4
+    ]}',
+  );
+  final TextEditingController _rolController = TextEditingController(
+    text: ['Maestro', 'Ayudante', 'Supervisor', 'Jornal'][
+      DateTime.now().millisecondsSinceEpoch % 4
+    ],
+  );
 
   bool _isLoading = false;
 

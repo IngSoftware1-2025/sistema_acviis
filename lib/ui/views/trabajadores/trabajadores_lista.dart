@@ -29,8 +29,6 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
     final double tableWidth = MediaQuery.of(context).size.width > 600
         ? MediaQuery.of(context).size.width
         : 600;
-    
-    debugPrint('${tableWidth}');
 
     return SingleChildScrollView(
       scrollDirection: Axis.vertical,
