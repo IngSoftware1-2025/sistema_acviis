@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sistema_acviis/ui/views/app_bar.dart';
-import 'package:sistema_acviis/ui/views/bottom_navigation_bar.dart';
+import 'package:sistema_acviis/ui/widgets/scaffold.dart';
 
 class EliminarTrabajadorView extends StatefulWidget {
   const EliminarTrabajadorView({
@@ -13,10 +12,9 @@ class EliminarTrabajadorView extends StatefulWidget {
 class _EliminarTrabajadorViewState extends State<EliminarTrabajadorView> {
   @override
   Widget build(BuildContext context){
-    return Scaffold(
-      appBar: PersonalizedAppBar(title: 'Eliminar trabajador/es'),
+    return PrimaryScaffold(
+      title: 'Eliminar trabajador/es',
       body: Placeholder(),
-      bottomNavigationBar: NavigationBottomBar(),
     );
   }
 }
