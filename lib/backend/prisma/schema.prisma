@@ -13,7 +13,7 @@ model Trabajador {
   id        String   @id @default(uuid())
   nombre    String   @db.VarChar(100)
   apellido  String?
-  email     String   @unique // <--- ¡Asegúrate de que tenga esto!
+  email     String   @unique 
   edad      Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -21,12 +21,12 @@ model Trabajador {
 
 model trabajadores {
   id                        String   @id @default(uuid())
-  nombre_completo           String
+  nombre_completo           String  @unique
   estado_civil              String
-  rut                       String
+  rut                       String  @unique
   fecha_de_nacimiento       DateTime
   direccion                 String
-  correo_electronico        String   @unique
+  correo_electronico        String    @unique
   sistema_de_salud          String
   prevision_afp             String
   obra_en_la_que_trabaja    String
@@ -35,7 +35,7 @@ model trabajadores {
 }
 
 model contratos {
-  id                                         Int      @id
+  id                                         Int   @id
   id_trabajadores                            String   
   plazo_de_contrato                          String
   estado                                     String

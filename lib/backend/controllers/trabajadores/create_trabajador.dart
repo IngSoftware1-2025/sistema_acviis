@@ -1,9 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-
-// Función para crear un trabajador nuevo en el backend
-Future<void> createTrabajador({
+Future<String> createTrabajador({
   required String nombreCompleto,
   required String estadoCivil,
   required String rut,
@@ -14,11 +12,8 @@ Future<void> createTrabajador({
   required String previsionAfp,
   required String obraEnLaQueTrabaja,
   required String rolQueAsumeEnLaObra,
-
-  //Faltan parámetros relacionados al contrato: k, m, n
-
 }) async {
-  final url = Uri.parse('http://localhost:3000/trabajadores'); 
+  final url = Uri.parse('http://localhost:3000/trabajadores');
 
   final response = await http.post(
     url,
@@ -37,7 +32,10 @@ Future<void> createTrabajador({
     }),
   );
 
-  if (response.statusCode != 201) {
+  if (response.statusCode == 201) {
+    final data = jsonDecode(response.body);
+    return data['id']; 
+  } else {
     throw Exception('Error al crear trabajador: ${response.body}');
   }
 }
