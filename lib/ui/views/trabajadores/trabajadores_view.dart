@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/trabajadores_lista.dart';
+import 'package:sistema_acviis/ui/views/trabajadores/func/lista_trabajadores.dart';
+import 'package:sistema_acviis/ui/widgets/buttons.dart';
 import 'package:sistema_acviis/ui/widgets/scaffold.dart';
 import 'package:sistema_acviis/utils/constants/constants.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/search_bar.dart';
+import 'package:sistema_acviis/ui/views/trabajadores/func/search_bar.dart';
 
 class TrabajadoresView extends StatefulWidget {
   const TrabajadoresView({
@@ -19,39 +20,56 @@ class _TrabajadoresViewState extends State<TrabajadoresView> {
       title: 'Trabajadores',
       body: Column(
         children: [
-
-        // Barra de busqueda especializada para Trabajadores
-        TrabajadoresSearchBar(), 
-        SizedBox(height: normalPadding), // Espacio
         
-        // Boton Agregar o Eliminar y Filtro
+        // Barra de busqueda especializada para Trabajadores
         Row(
           children: [
-          // Boton de Agregar o ELiminar
-          Expanded(
-            child: ElevatedButton(
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, '/home_page/trabajadores_view/modificar_lista_trabajadores_view');
-            },
-            child: Center(child: Text('Modificar lista trabajadores')),
-            ),
-          ),
+            // Acciones lista de trabajadores
+            CascadeButton(
+              title: 'Acciones/Metodos',
+              startRight: true,
+              offset: 0.0, 
+              icon: Icon(Icons.menu),
+              children: [
+                // Boton Agregar trabajador
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/home_page/trabajadores_view/agregar_trabajador_view');
+                  },
+                  child: Center(child: Text('Agregar trabajador')),
+                ),
 
-          // Boton de filtro
-          SizedBox(width: 8), // Espacio pequeño entre botones
+                SizedBox(height: normalPadding), // Espacio entre botones
 
-          SizedBox(
-            child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-            minimumSize: Size(40, 40),
+                // Boton Eliminar trabajadores
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/home_page/trabajadores_view/eliminar_trabajador_view');
+                  }, 
+                  child: Center(child: Text('Eliminar trabajadores')))
+              ],
             ),
-            onPressed: () {},
-            child: Icon(Icons.filter_alt_sharp, size: 22),
+            SizedBox(width: normalPadding), // Espacio pequeño entre botones
+
+            // Search bar expandido
+            Expanded(
+              child: TrabajadoresSearchBar(),
             ),
-          ),
+            SizedBox(width: normalPadding), // Espacio pequeño entre botones
+
+            // Filtros
+            CascadeButton(
+              title: 'Filtros',
+              offset: 0.0,
+              icon: Icon(Icons.filter_alt_sharp),
+              children: [
+
+              ],
+            )
           ],
-        ),
+        ), 
+        SizedBox(height: normalPadding), // Espacio
+
         // Divider con bordes redondeados
         Padding(
           padding: EdgeInsets.symmetric(vertical: normalPadding),

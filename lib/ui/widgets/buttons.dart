@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/ui/styles/app_colors.dart';
+import 'package:sistema_acviis/utils/constants/constants.dart';
+import 'package:sistema_acviis/ui/views/trabajadores/func/cascade_manager.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;
@@ -140,3 +142,193 @@ class BorderButtonBlue extends StatelessWidget {
   }
 } 
 
+class CascadeButton extends StatefulWidget {
+  final double offset;
+  final Icon icon;
+  final List<Widget> children;
+  final bool? startRight;
+  final String title;
+  const CascadeButton({
+    super.key,
+    this.startRight = false,
+    required this.title,
+    required this.offset,
+    required this.icon,
+    required this.children,
+  });
+  @override
+  State<CascadeButton> createState() => _CascadeButtonState();
+}
+
+class _CascadeButtonState extends State<CascadeButton> with WidgetsBindingObserver {
+  OverlayEntry? _overlayEntry;
+  final LayerLink _layerLink = LayerLink();
+  bool _abierto = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    cerrarCascada();
+    super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    if (_overlayEntry != null) {
+      cerrarCascada();
+    }
+    super.didChangeMetrics();
+  }
+
+  @override
+  void deactivate() {
+    cerrarCascada();
+    super.deactivate();
+  }
+
+  void _mostrarCascada() {
+    if (!mounted) return;
+    if (_overlayEntry != null) {
+      cerrarCascada();
+      return;
+    }
+
+    // Notifica al gestor global
+    CascadeManager.instance.register(this);
+
+
+    final renderObject = context.findRenderObject();
+    if (renderObject == null || renderObject is! RenderBox) return;
+    final RenderBox renderBox = renderObject;
+    final Size screenSize = MediaQuery.of(context).size;
+
+    final double menuWidth = screenSize.width
+        - normalPadding * 2
+        - renderBox.size.width;
+
+    setState(() {
+      _abierto = true;
+    });
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        width: menuWidth,
+        child: CompositedTransformFollower(
+          link: _layerLink,
+          showWhenUnlinked: false,
+          offset: Offset(
+            (widget.startRight ?? false)
+                ? widget.offset
+                : widget.offset - menuWidth + renderBox.size.width,
+            renderBox.size.height,
+          ),
+          child: Material(
+            elevation: 4,
+            child: Container(
+              width: menuWidth,
+              color: Colors.white,
+              constraints: BoxConstraints(
+                maxHeight: screenSize.height * 0.8,
+              ),
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.all(normalPadding),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Center(child: Text(widget.title)),
+                      Divider(thickness: 1, color: Colors.grey.shade300, height: 24),
+                      ...widget.children,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void cerrarCascada() {
+    if (_overlayEntry != null) {
+      _overlayEntry!.remove();
+      _overlayEntry = null;
+      if (mounted) {
+        // Difere setState para evitar errores durante el build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              _abierto = false;
+            });
+          }
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: SizedBox(
+        width: 40,
+        height: 40,
+        child: ElevatedButton(
+          style: _abierto
+              ? ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                  minimumSize: Size(40, 40),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      topRight: Radius.circular(12),
+                      bottomLeft: Radius.circular(0),
+                      bottomRight: Radius.circular(0),
+                    ),
+                    side: BorderSide(
+                      color: Colors.black,
+                      width: 1.5,
+                    ),
+                  ),
+                  elevation: 2,
+                  backgroundColor: Colors.white,
+                ).copyWith(
+                  side: WidgetStateProperty.resolveWith<BorderSide?>((states) {
+                    return const BorderSide(color: Colors.black, width: 1.5);
+                  }),
+                  shape: WidgetStateProperty.resolveWith<OutlinedBorder?>((states) {
+                    return const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(12),
+                        topRight: Radius.circular(12),
+                        bottomLeft: Radius.circular(0),
+                        bottomRight: Radius.circular(0),
+                      ),
+                    );
+                  }),
+                )
+              : ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                  minimumSize: Size(40, 40),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                  elevation: 2,
+                  backgroundColor: Colors.white,
+                ),
+          onPressed: _mostrarCascada,
+          child: widget.icon,
+        ),
+      ),
+    );
+  }
+}

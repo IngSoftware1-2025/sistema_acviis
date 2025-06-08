@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sistema_acviis/ui/views/trabajadores/func/cascade_manager.dart';
 import 'package:sistema_acviis/utils/constants/constants.dart';
 
 class TrabajadoresSearchBar extends StatefulWidget {
@@ -14,7 +15,6 @@ class _TrabajadoresSearchBarState extends State<TrabajadoresSearchBar> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: MediaQuery.of(context).size.width - normalPadding*2,
       child: SearchAnchor(
         builder: (BuildContext context, SearchController controller){
           return SizedBox(
@@ -25,9 +25,11 @@ class _TrabajadoresSearchBarState extends State<TrabajadoresSearchBar> {
                 EdgeInsets.symmetric(horizontal: normalPadding),
               ),
               onTap: (){
+                CascadeManager.instance.closeActive();
                 controller.openView();
               },
               onChanged: (_) {
+                CascadeManager.instance.closeActive();
                 controller.openView();
               },
               leading: const Icon(Icons.search),

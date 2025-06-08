@@ -29,7 +29,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
     final double tableWidth = MediaQuery.of(context).size.width > 600
         ? MediaQuery.of(context).size.width
         : 600;
-
+    
     return SingleChildScrollView(
       scrollDirection: Axis.vertical,
       child: SizedBox(
@@ -69,7 +69,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                         alignment: Alignment.centerRight,
                         child: PopupMenuButton<String>(
                           onSelected: (value) {
-                            // Maneja las opciones aquí
+                            // Aqui van cosas xd
                           },
                           itemBuilder: (context) => [
                             const PopupMenuItem(
