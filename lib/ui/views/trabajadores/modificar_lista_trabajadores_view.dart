@@ -31,7 +31,6 @@ class _ModificiarListaTrabajadoresViewState extends State<ModificarListaTrabajad
             },
             child: Center(child: Text('Eliminar trabajador/es'))
           ),
-          SizedBox(height: normalPadding),
         ]
       )
     );
