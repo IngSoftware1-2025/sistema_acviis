@@ -35,7 +35,7 @@ class _ContratosViewState extends State<ContratosView> {
           SizedBox(height: normalPadding),
 
           ElevatedButton(
-            onPressed: () => showContrato(context, 'Juan_Pérez_contrato.pdf'),
+            onPressed: () => showContrato(context, '6845587e8659fab493d5e06a.pdf'),
             child: Center(child: Text('Contrato get Testing'))
           ),
 

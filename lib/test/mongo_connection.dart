@@ -9,15 +9,7 @@ Future<void> createContratoTest() async {
   final response = await http.post(
     url,
     headers: {'Content-Type': 'application/json'},
-    body: '''
-      {
-      "nombre": "Juan",
-      "apellido": "Pérez",
-      "rut": "12.345.678-9",
-      "descripcion": "Contrato de prueba",
-      "terminos": "Acepto los términos y condiciones"
-      }
-    ''',
+    body: "",
   );
 
   if (response.statusCode == 200) {
@@ -25,20 +17,6 @@ Future<void> createContratoTest() async {
     print('Documento cargado exitosiamente: ${response.body}');
   } else {
     print('Error al subir documento: ${response.body}');
-  }
-}
-
-Future<void> getContratoNombre() async {
-  final String nombre = 'Juan_Pérez_contrato.pdf';
-  final url = Uri.http('localhost:3000', '/contratos/mongo/por-nombre', {'filename': nombre});
-  final response = await http.get(
-    url,
-    headers: {'Content-Type': 'application/json'},
-  );
-  if (response.statusCode == 200) {
-    print('Contrato obtenido exitosamente: ${response.body}');
-  } else {
-    print('Error al obtener contrato: ${response.body}');
   }
 }
 
