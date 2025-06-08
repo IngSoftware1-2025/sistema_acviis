@@ -59,7 +59,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                 padding: const EdgeInsets.symmetric(vertical: 1.0),
                 child: Row(
                   children: [
-                    Flexible(flex: 4, fit: FlexFit.tight, child: Text(trabajador.nombre)),
+                    Flexible(flex: 4, fit: FlexFit.tight, child: Text(trabajador.nombreCompleto)),
                     Flexible(flex: 3, fit: FlexFit.tight, child: Text('Pendiente')), // Cargo real si lo tienes
                     Flexible(flex: 3, fit: FlexFit.tight, child: Text('Pendiente')), // Obra real si lo tienes
                     Flexible(

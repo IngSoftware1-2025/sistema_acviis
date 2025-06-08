@@ -1,43 +1,61 @@
+
+//Nuevo
 class Trabajador {
   final String id;
-  final String nombre;
-  final String? apellido;
-  final String email;
-  final int? edad;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final String nombreCompleto;
+  final String estadoCivil;
+  final String rut;
+  final DateTime fechaDeNacimiento;
+  final String direccion;
+  final String correoElectronico;
+  final String sistemaDeSalud;
+  final String previsionAfp;
+  final String obraEnLaQueTrabaja;
+  final String rolQueAsumeEnLaObra;
 
   Trabajador({
     required this.id,
-    required this.nombre,
-    this.apellido,
-    required this.email,
-    this.edad,
-    required this.createdAt,
-    required this.updatedAt,
+    required this.nombreCompleto,
+    required this.estadoCivil,
+    required this.rut,
+    required this.fechaDeNacimiento,
+    required this.direccion,
+    required this.correoElectronico,
+    required this.sistemaDeSalud,
+    required this.previsionAfp,
+    required this.obraEnLaQueTrabaja,
+    required this.rolQueAsumeEnLaObra,
   });
 
   factory Trabajador.fromJson(Map<String, dynamic> json) {
     return Trabajador(
       id: json['id'],
-      nombre: json['nombre'],
-      apellido: json['apellido'],
-      email: json['email'],
-      edad: json['edad'],
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
+      nombreCompleto: json['nombre_completo'],
+      estadoCivil: json['estado_civil'],
+      rut: json['rut'],
+      fechaDeNacimiento: DateTime.parse(json['fecha_de_nacimiento']),
+      direccion: json['direccion'],
+      correoElectronico: json['correo_electronico'],
+      sistemaDeSalud: json['sistema_de_salud'],
+      previsionAfp: json['prevision_afp'],
+      obraEnLaQueTrabaja: json['obra_en_la_que_trabaja'],
+      rolQueAsumeEnLaObra: json['rol_que_asume_en_la_obra'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'nombre': nombre,
-      'apellido': apellido,
-      'email': email,
-      'edad': edad,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
+      'nombre_completo': nombreCompleto,
+      'estado_civil': estadoCivil,
+      'rut': rut,
+      'fecha_de_nacimiento': fechaDeNacimiento.toIso8601String(),
+      'direccion': direccion,
+      'correo_electronico': correoElectronico,
+      'sistema_de_salud': sistemaDeSalud,
+      'prevision_afp': previsionAfp,
+      'obra_en_la_que_trabaja': obraEnLaQueTrabaja,
+      'rol_que_asume_en_la_obra': rolQueAsumeEnLaObra,
     };
   }
 }

@@ -14,8 +14,11 @@ Future<void> createTrabajador({
   required String previsionAfp,
   required String obraEnLaQueTrabaja,
   required String rolQueAsumeEnLaObra,
+
+  //Faltan parámetros relacionados al contrato: k, m, n
+
 }) async {
-  final url = Uri.parse('http://localhost:3000/trabajadores'); // Ajusta la URL si es necesario
+  final url = Uri.parse('http://localhost:3000/trabajadores'); 
 
   final response = await http.post(
     url,

@@ -26,7 +26,7 @@ model trabajadores {
   rut                       String
   fecha_de_nacimiento       DateTime
   direccion                 String
-  correo_electronico        String
+  correo_electronico        String   @unique
   sistema_de_salud          String
   prevision_afp             String
   obra_en_la_que_trabaja    String
