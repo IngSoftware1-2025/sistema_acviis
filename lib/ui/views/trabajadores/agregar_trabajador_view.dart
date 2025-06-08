@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/backend/controllers/trabajadores/create_trabajador.dart';
-import 'package:sistema_acviis/ui/views/app_bar.dart';
-import 'package:sistema_acviis/ui/views/bottom_navigation_bar.dart';
 import 'package:sistema_acviis/ui/widgets/scaffold.dart';
 
 class AgregarTrabajadorView extends StatefulWidget {

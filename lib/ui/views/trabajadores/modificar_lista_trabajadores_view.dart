@@ -15,7 +15,7 @@ class _ModificiarListaTrabajadoresViewState extends State<ModificarListaTrabajad
   @override
   Widget build(BuildContext context) {
     return PrimaryScaffold(
-      title: 'Modificar lista de trabajadores',
+      title: 'Modificar lista de cabezones',
       body: Column(
         children: [
           ElevatedButton(
@@ -31,7 +31,6 @@ class _ModificiarListaTrabajadoresViewState extends State<ModificarListaTrabajad
             },
             child: Center(child: Text('Eliminar trabajador/es'))
           ),
-          SizedBox(height: normalPadding),
         ]
       )
     );
