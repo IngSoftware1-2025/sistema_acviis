@@ -38,9 +38,7 @@ class _TrabajadoresViewState extends State<TrabajadoresView> {
                 // Botón para alternar a la vista de contratos.
                 PrimaryButton(
                   onPressed: () {
-                    setState(() {
-                      vistaSeleccionada = 1 - vistaSeleccionada;
-                    });
+                    Navigator.pushReplacementNamed(context, '/home_page/trabajadores_view/contratos_anexos');
                   },
                   text: 'Alternar vista',
                 ),
@@ -110,8 +108,7 @@ class _TrabajadoresViewState extends State<TrabajadoresView> {
         ),
         // ######### Aqui Comienza la lista de trabajadores #########
         // Lista de trabajadores o contratos
-        Expanded(
-          child: (vistaSeleccionada == 0) ? ListaTrabajadores() : ContratosAnexos(),)
+        ListaTrabajadores(),
         ],
       ),
     );

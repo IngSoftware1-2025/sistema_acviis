@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sistema_acviis/ui/widgets/scaffold.dart';
 
 class Trabajador {
   final String nombre;
@@ -9,9 +10,8 @@ class Trabajador {
 }
 
 class ContratosAnexos extends StatefulWidget {
-  const ContratosAnexos({
-    super.key
-  });
+  const ContratosAnexos({super.key});
+
   @override
   _ContratosAnexosState createState() => _ContratosAnexosState();
 }
@@ -24,34 +24,37 @@ class _ContratosAnexosState extends State<ContratosAnexos> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: ExpansionPanelList(
-        expansionCallback: (index, isOpen) {
-          setState(() {
-            trabajadores[index].isExpanded = !isOpen;
-          });
-        },
-        children: trabajadores.map<ExpansionPanel>((trabajador) {
-          return ExpansionPanel(
-            headerBuilder: (context, isExpanded) {
-              return ListTile(
-                title: Text(trabajador.nombre),
-              );
+    return PrimaryScaffold(
+      title: 'Contratos y anexos',
+      body: ListView(
+        children: [
+          ExpansionPanelList(
+            expansionCallback: (index, isExpanded) {
+              setState(() {
+                trabajadores[index].isExpanded = !isExpanded;
+              });
             },
-            body: Column(
-              children: trabajador.documentos.map((doc) {
-                return ListTile(
-                  leading: Icon(Icons.picture_as_pdf),
-                  title: Text(doc),
-                  onTap: () {
-                    // Acción para abrir el documento
-                  },
-                );
-              }).toList(),
-            ),
-            isExpanded: trabajador.isExpanded,
-          );
-        }).toList(),
+            children: trabajadores.map<ExpansionPanel>((trabajador) {
+              return ExpansionPanel(
+                headerBuilder: (context, isExpanded) => ListTile(
+                  title: Text(trabajador.nombre),
+                ),
+                body: Column(
+                  children: trabajador.documentos.map((doc) {
+                    return ListTile(
+                      leading: Icon(Icons.picture_as_pdf),
+                      title: Text(doc),
+                      onTap: () {
+                        // Acción al tocar documento
+                      },
+                    );
+                  }).toList(),
+                ),
+                isExpanded: trabajador.isExpanded,
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
