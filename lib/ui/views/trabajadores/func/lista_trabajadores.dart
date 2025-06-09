@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
+import 'package:sistema_acviis/ui/widgets/checkbox.dart';
 import 'package:sistema_acviis/utils/constants/constants.dart';
 
 class ListaTrabajadores extends StatefulWidget {
@@ -39,6 +40,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
             // Header
             Row(
               children: [
+                PrimaryCheckbox(),
                 Flexible(flex: 4, fit: FlexFit.tight, child: Text('Nombre', style: TextStyle(fontWeight: FontWeight.bold))),
                 Flexible(flex: 3, fit: FlexFit.tight, child: Text('Cargo', style: TextStyle(fontWeight: FontWeight.bold))),
                 Flexible(flex: 3, fit: FlexFit.tight, child: Text('Obra', style: TextStyle(fontWeight: FontWeight.bold))),
@@ -59,6 +61,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                 padding: const EdgeInsets.symmetric(vertical: 1.0),
                 child: Row(
                   children: [
+                    PrimaryCheckbox(),
                     Flexible(flex: 4, fit: FlexFit.tight, child: Text(trabajador.nombreCompleto)),
                     Flexible(flex: 3, fit: FlexFit.tight, child: Text('Pendiente')), // Cargo real si lo tienes
                     Flexible(flex: 3, fit: FlexFit.tight, child: Text('Pendiente')), // Obra real si lo tienes

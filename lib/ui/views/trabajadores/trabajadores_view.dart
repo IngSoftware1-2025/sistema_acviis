@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sistema_acviis/ui/views/trabajadores/contratos_anexos.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/func/lista_trabajadores.dart';
 import 'package:sistema_acviis/ui/widgets/buttons.dart';
 import 'package:sistema_acviis/ui/widgets/scaffold.dart';
@@ -14,6 +15,9 @@ class TrabajadoresView extends StatefulWidget {
 }
 
 class _TrabajadoresViewState extends State<TrabajadoresView> {
+  int vistaSeleccionada = 0;
+  Widget vista = ListaTrabajadores();
+
   @override
   Widget build(BuildContext context){
     return PrimaryScaffold(
@@ -31,22 +35,45 @@ class _TrabajadoresViewState extends State<TrabajadoresView> {
               offset: 0.0, 
               icon: Icon(Icons.menu),
               children: [
+                // Botón para alternar a la vista de contratos.
+                PrimaryButton(
+                  onPressed: () {
+                    setState(() {
+                      vistaSeleccionada = 1 - vistaSeleccionada;
+                    });
+                  },
+                  text: 'Alternar vista',
+                ),
+
+                SizedBox(height: normalPadding),
+
                 // Boton Agregar trabajador
-                ElevatedButton(
+                PrimaryButton(
                   onPressed: () {
                     Navigator.pushReplacementNamed(context, '/home_page/trabajadores_view/agregar_trabajador_view');
                   },
-                  child: Center(child: Text('Agregar trabajador')),
+                  text: 'Agregar trabajador',
                 ),
 
-                SizedBox(height: normalPadding), // Espacio entre botones
+                SizedBox(height: normalPadding),
+
+                // Botón de modificar trabajadores
+                PrimaryButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/home_page/trabajadores_view/agregar_trabajador_view');
+                  },
+                  text: 'Modificar trabajador',
+                ),
+
+                SizedBox(height: normalPadding),
 
                 // Boton Eliminar trabajadores
-                ElevatedButton(
+                PrimaryButton(
                   onPressed: () {
                     Navigator.pushReplacementNamed(context, '/home_page/trabajadores_view/eliminar_trabajador_view');
                   }, 
-                  child: Center(child: Text('Eliminar trabajadores')))
+                  text: 'Eliminar trabajadores',
+                ),
               ],
             ),
             SizedBox(width: normalPadding), // Espacio pequeño entre botones
@@ -82,8 +109,9 @@ class _TrabajadoresViewState extends State<TrabajadoresView> {
           ),
         ),
         // ######### Aqui Comienza la lista de trabajadores #########
-        // Lista de trabajadores
-        ListaTrabajadores(),
+        // Lista de trabajadores o contratos
+        Expanded(
+          child: (vistaSeleccionada == 0) ? ListaTrabajadores() : ContratosAnexos(),)
         ],
       ),
     );

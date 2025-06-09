@@ -33,6 +33,7 @@ class PrimaryButton extends StatelessWidget {
                   text,
                   style: TextStyle(
                     fontFamily: 'Satoshi',
+                    color: AppColors.secondary
                   )),
               ),
     );
@@ -65,7 +66,13 @@ class SecondaryButton extends StatelessWidget {
                   shadowColor: WidgetStateProperty.all(Colors.blueGrey),
                 ),
                 onPressed: onPressed,
-                child: Text(text),
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    fontFamily: 'Satoshi',
+                    color: AppColors.secondary,
+                  )),
+
               ),
     );
   }
@@ -102,7 +109,12 @@ class BorderButton extends StatelessWidget {
                   return RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)); // usa el borde por defecto
                 }),
               ),
-              child: Text(text),
+              child: Text(
+                text,
+                style: TextStyle(
+                  fontFamily: 'Satoshi',
+                  color: AppColors.textPrimary,
+                )),
             ),
     );
   }
