@@ -35,8 +35,8 @@ model trabajadores {
 }
 
 model contratos {
-  id                                         Int   @id
-  id_trabajadores                            String   
+  id                                         String   @id @default(uuid())
+  id_trabajadores                            String   @db.Uuid
   plazo_de_contrato                          String
   estado                                     String
   documento_de_vacaciones_del_trabajador     String   @db.VarChar(255)

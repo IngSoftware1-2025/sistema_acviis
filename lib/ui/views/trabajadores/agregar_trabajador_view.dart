@@ -86,6 +86,7 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
           obraEnLaQueTrabaja: _obraController.text,
           rolQueAsumeEnLaObra: _rolController.text,
         );
+        print(trabajadorId);
         // Si el formulario de contrato está visible, crear contrato SOLO en MongoDB (PDF)
         if (_showContratoForm) {
           final contratoData = {
@@ -96,7 +97,8 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
             'fecha_de_contratacion': _fechaContratacionController.text,
             'id_trabajadores': trabajadorId,
           };
-          await createContrato(contratoData, trabajadorId);
+          await createContratoMongo(contratoData, trabajadorId);
+          await createContratoSupabase(contratoData, trabajadorId);
         }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
