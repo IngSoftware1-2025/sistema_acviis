@@ -29,7 +29,7 @@ Future<void> createContratoSupabase(Map<String, String> data, String id) async {
   
 
   if (response.statusCode == 200){
-    debugPrint('Contrato cargado supabase correctamente: ${response.body}');
+    //debugPrint('Contrato cargado supabase correctamente: ${response.body}');
   } else {
     debugPrint('Error al crear contrato en supabase: ${response.statusCode}');
     debugPrint('Respuesta del backend: ${response.body}');

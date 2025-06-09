@@ -86,7 +86,6 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
           obraEnLaQueTrabaja: _obraController.text,
           rolQueAsumeEnLaObra: _rolController.text,
         );
-        print(trabajadorId);
         // Si el formulario de contrato está visible, crear contrato SOLO en MongoDB (PDF)
         if (_showContratoForm) {
           final contratoData = {

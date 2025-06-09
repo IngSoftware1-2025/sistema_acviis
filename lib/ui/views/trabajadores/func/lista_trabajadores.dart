@@ -63,8 +63,8 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                   children: [
                     PrimaryCheckbox(),
                     Flexible(flex: 4, fit: FlexFit.tight, child: Text(trabajador.nombreCompleto)),
-                    Flexible(flex: 3, fit: FlexFit.tight, child: Text('Pendiente')), // Cargo real si lo tienes
-                    Flexible(flex: 3, fit: FlexFit.tight, child: Text('Pendiente')), // Obra real si lo tienes
+                    Flexible(flex: 3, fit: FlexFit.tight, child: Text(trabajador.rolQueAsumeEnLaObra)), // Cargo real si lo tienes
+                    Flexible(flex: 3, fit: FlexFit.tight, child: Text(trabajador.obraEnLaQueTrabaja)), // Obra real si lo tienes
                     Flexible(
                       flex: 2,
                       fit: FlexFit.tight,
