@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:sistema_acviis/ui/widgets/checkbox.dart';
 import 'package:sistema_acviis/utils/constants/constants.dart';
+import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
 
 class ListaTrabajadores extends StatefulWidget {
   const ListaTrabajadores({super.key});
@@ -15,15 +16,24 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<TrabajadoresProvider>(context, listen: false).fetchTrabajadores();
-      // Iria el provider de Contratos de trabajadores 
+      final trabajadoresProvider = Provider.of<TrabajadoresProvider>(context, listen: false);
+      trabajadoresProvider.fetchTrabajadores().then((_) {
+        Provider.of<CheckboxProvider>(context, listen: false)
+        .setCheckBoxes(trabajadoresProvider.trabajadores.length);
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<TrabajadoresProvider>();
+    final checkboxProvider = context.watch<CheckboxProvider>();
     if (provider.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    
+    // Espera a que los checkboxes estén listos
+    if (checkboxProvider.checkBoxes.length != (provider.trabajadores.length + 1)) {
       return const Center(child: CircularProgressIndicator());
     }
     // Define un ancho mínimo para la tabla
@@ -40,7 +50,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
             // Header
             Row(
               children: [
-                PrimaryCheckbox(),
+                PrimaryCheckbox(customCheckbox: checkboxProvider.checkBoxes[0]),
                 Flexible(flex: 4, fit: FlexFit.tight, child: Text('Nombre', style: TextStyle(fontWeight: FontWeight.bold))),
                 Flexible(flex: 3, fit: FlexFit.tight, child: Text('Cargo', style: TextStyle(fontWeight: FontWeight.bold))),
                 Flexible(flex: 3, fit: FlexFit.tight, child: Text('Obra', style: TextStyle(fontWeight: FontWeight.bold))),
@@ -56,15 +66,15 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
             ),
             const Divider(),
             // Rows
-            ...provider.trabajadores.map((trabajador) {
+            ...List.generate(provider.trabajadores.length, (i) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 1.0),
                 child: Row(
                   children: [
-                    PrimaryCheckbox(),
-                    Flexible(flex: 4, fit: FlexFit.tight, child: Text(trabajador.nombreCompleto)),
-                    Flexible(flex: 3, fit: FlexFit.tight, child: Text('Pendiente')), // Cargo real si lo tienes
-                    Flexible(flex: 3, fit: FlexFit.tight, child: Text('Pendiente')), // Obra real si lo tienes
+                    PrimaryCheckbox(customCheckbox: checkboxProvider.checkBoxes[i + 1],),
+                    Flexible(flex: 4, fit: FlexFit.tight, child: Text(provider.trabajadores[i].nombreCompleto)),
+                    Flexible(flex: 3, fit: FlexFit.tight, child: Text(provider.trabajadores[i].rolQueAsumeEnLaObra)), // Cargo real si lo tienes
+                    Flexible(flex: 3, fit: FlexFit.tight, child: Text(provider.trabajadores[i].obraEnLaQueTrabaja)), // Obra real si lo tienes
                     Flexible(
                       flex: 2,
                       fit: FlexFit.tight,

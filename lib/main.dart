@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
 import 'package:sistema_acviis/ui/views/home_page.dart';
 import 'package:sistema_acviis/utils/constants/routes.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +13,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => TrabajadoresProvider()),
         ChangeNotifierProvider(create: (_) => ContratosProvider()),
+        ChangeNotifierProvider(create: (_) => CheckboxProvider()),
       ],
       child: MainApp(),
     ),
