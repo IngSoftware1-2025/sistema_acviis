@@ -17,6 +17,7 @@ class PersonalizedAppBar extends StatelessWidget implements PreferredSizeWidget 
   Widget build(BuildContext context) {
     final currentRoute = ModalRoute.of(context)?.settings.name ?? '';
     return AppBar(
+      automaticallyImplyLeading: false, // Nuestra flecha de navegacion es personalizada, no necesitamos que se cree y confunda el programa
       centerTitle: true,
       title: Text(
         title,
@@ -28,7 +29,7 @@ class PersonalizedAppBar extends StatelessWidget implements PreferredSizeWidget 
       ),
       backgroundColor: AppColors.primaryDark,
       elevation: 0,
-      leading: currentRoute == '/home_page' || title=='Home'
+      leading: (currentRoute == '/home_page' || currentRoute == '/' || title.trim().toLowerCase() == 'home')
           ? null
           : IconButton(
               icon: CircleAvatar(

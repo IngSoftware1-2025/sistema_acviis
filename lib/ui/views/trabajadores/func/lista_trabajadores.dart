@@ -22,8 +22,9 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final trabajadoresProvider = Provider.of<TrabajadoresProvider>(context, listen: false);
       trabajadoresProvider.fetchTrabajadores().then((_) {
+        if (!mounted) return; // <-- Agregado
         Provider.of<CheckboxProvider>(context, listen: false)
-        .setCheckBoxes(trabajadoresProvider.trabajadores.length);
+            .setCheckBoxes(trabajadoresProvider.trabajadores.length);
       });
     });
   }
