@@ -5,7 +5,9 @@ import 'package:sistema_acviis/ui/widgets/checkbox.dart';
 import 'package:sistema_acviis/utils/constants/constants.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
 import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_estado_trabajador.dart';
-// ...otros imports...
+import 'package:sistema_acviis/ui/views/trabajadores/editar_trabajador_dialog.dart';
+import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_trabajador.dart';
+
 class ListaTrabajadores extends StatefulWidget {
   const ListaTrabajadores({super.key});
   @override
