@@ -4,6 +4,7 @@ import 'package:sistema_acviis/ui/widgets/buttons.dart';
 import 'package:sistema_acviis/ui/widgets/scaffold.dart';
 import 'package:sistema_acviis/utils/constants/constants.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/func/search_bar.dart';
+import 'package:sistema_acviis/utils/filtros/trabajadores.dart';
 
 class TrabajadoresView extends StatefulWidget {
   const TrabajadoresView({
@@ -87,7 +88,7 @@ class _TrabajadoresViewState extends State<TrabajadoresView> {
               offset: 0.0,
               icon: Icon(Icons.filter_alt_sharp),
               children: [
-
+                FiltrosDisplay(),
               ],
             )
           ],

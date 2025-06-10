@@ -15,44 +15,54 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
   final _formKey = GlobalKey<FormState>();
 
   // Por razones de testing, se agregan valores iniciales
+  // ===================== Nombre Completo
   final TextEditingController _nombreCompletoController = TextEditingController(
     text: 'Usuario${DateTime.now().millisecondsSinceEpoch % 1000} Prueba',
   );
+  // ===================== Estado Civil
   final TextEditingController _estadoCivilController = TextEditingController(
     text: ['Soltero', 'Casado', 'Divorciado', 'Viudo'][
       DateTime.now().millisecondsSinceEpoch % 4
     ],
   );
+  // ===================== Rut
   final TextEditingController _rutController = TextEditingController(
     text: '${10000000 + DateTime.now().millisecondsSinceEpoch % 90000000}-${DateTime.now().millisecondsSinceEpoch % 10}',
   );
   // Fecha y email restringidos, se mantienen fijos
+  // ===================== Fecha Nacimiento
   final TextEditingController _fechaNacimientoController = TextEditingController(
     text: '${1980 + DateTime.now().millisecondsSinceEpoch % 30}-${(1 + DateTime.now().millisecondsSinceEpoch % 12).toString().padLeft(2, '0')}-${(1 + DateTime.now().millisecondsSinceEpoch % 28).toString().padLeft(2, '0')}',
   );
+  // ===================== Direccion
   final TextEditingController _direccionController = TextEditingController(
     text: 'Calle ${100 + DateTime.now().millisecondsSinceEpoch % 900}',
   );
+  // ===================== Correo
   final TextEditingController _correoElectronicoController = TextEditingController(
     text: 'usuario${DateTime.now().millisecondsSinceEpoch % 10000}@email.com',
   );
+  // ===================== Sistema de salid
   final TextEditingController _sistemaSaludController = TextEditingController(
     text: ['Fonasa', 'Isapre'][
       DateTime.now().millisecondsSinceEpoch % 2
     ],
   );
+  // ===================== Prevision afp
   final TextEditingController _previsionAfpController = TextEditingController(
     text: ['Provida', 'Cuprum', 'Habitat', 'PlanVital'][
       DateTime.now().millisecondsSinceEpoch % 4
     ],
   );
+  // ===================== Obra
   final TextEditingController _obraController = TextEditingController(
     text: 'Obra ${['Norte', 'Sur', 'Este', 'Oeste'][
       DateTime.now().millisecondsSinceEpoch % 4
     ]}',
   );
+  // ===================== Rol
   final TextEditingController _rolController = TextEditingController(
-    text: ['Maestro', 'Ayudante', 'Supervisor', 'Jornal'][
+    text: ['Maestro', 'Ayudante', 'Supervisor', 'Jornal', 'Oficina Tecnica', 'Electricista'][
       DateTime.now().millisecondsSinceEpoch % 4
     ],
   );
@@ -60,12 +70,22 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
   bool _isLoading = false;
   bool _showContratoForm = false;
 
-  // Controladores para el formulario de contrato
-  final TextEditingController _plazoDeContratoController = TextEditingController();
-  final TextEditingController _estadoContratoController = TextEditingController();
-  final TextEditingController _documentoVacacionesController = TextEditingController();
-  final TextEditingController _comentarioAdicionalController = TextEditingController();
-  final TextEditingController _fechaContratacionController = TextEditingController();
+  // Controladores para el formulario de contrato con valores por defecto
+  final TextEditingController _plazoDeContratoController = TextEditingController(
+    text: '${DateTime.now().millisecondsSinceEpoch % 13} ${['meses', 'años'][DateTime.now().millisecondsSinceEpoch % 2]}',
+  );
+  final TextEditingController _estadoContratoController = TextEditingController(
+    text: 'Activo',
+  );
+  final TextEditingController _documentoVacacionesController = TextEditingController(
+    text: 'DocVac-${DateTime.now().millisecondsSinceEpoch % 10000}',
+  );
+  final TextEditingController _comentarioAdicionalController = TextEditingController(
+    text: 'Sin comentarios',
+  );
+  final TextEditingController _fechaContratacionController = TextEditingController(
+    text: '${2020 + DateTime.now().millisecondsSinceEpoch % 5}-${(1 + DateTime.now().millisecondsSinceEpoch % 12).toString().padLeft(2, '0')}-${(1 + DateTime.now().millisecondsSinceEpoch % 28).toString().padLeft(2, '0')}',
+  );
 
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
@@ -191,7 +211,8 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
                 },
                 child: Text(_showContratoForm ? 'Ocultar contrato' : 'Generar contrato'),
               ),
-              if (_showContratoForm) ...[
+              if (_showContratoForm) ...[ 
+                // ===================== Plazo de contrato
                 const SizedBox(height: 16),
                 Text('Datos del contrato', style: TextStyle(fontWeight: FontWeight.bold)),
                 TextFormField(
@@ -202,6 +223,7 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
                     return value == null || value.isEmpty ? 'Campo requerido' : null;
                   },
                 ),
+                // ===================== Estado
                 TextFormField(
                   controller: _estadoContratoController,
                   decoration: const InputDecoration(labelText: 'Estado'),
@@ -210,6 +232,7 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
                     return value == null || value.isEmpty ? 'Campo requerido' : null;
                   },
                 ),
+                // ===================== Documento de vacaciones
                 TextFormField(
                   controller: _documentoVacacionesController,
                   decoration: const InputDecoration(labelText: 'Documento de vacaciones del trabajador'),
@@ -218,6 +241,7 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
                     return value == null || value.isEmpty ? 'Campo requerido' : null;
                   },
                 ),
+                // ===================== Comentario Adicional
                 TextFormField(
                   controller: _comentarioAdicionalController,
                   decoration: const InputDecoration(labelText: 'Comentario adicional acerca del trabajador'),
@@ -226,6 +250,7 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
                     return value == null || value.isEmpty ? 'Campo requerido' : null;
                   },
                 ),
+                // ===================== Fecha de contratacion
                 TextFormField(
                   controller: _fechaContratacionController,
                   decoration: const InputDecoration(labelText: 'Fecha de contratación (YYYY-MM-DD)'),
