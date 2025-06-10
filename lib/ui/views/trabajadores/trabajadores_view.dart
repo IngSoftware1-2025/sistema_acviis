@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/contratos_anexos.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/func/lista_trabajadores.dart';
 import 'package:sistema_acviis/ui/widgets/buttons.dart';
 import 'package:sistema_acviis/ui/widgets/scaffold.dart';
