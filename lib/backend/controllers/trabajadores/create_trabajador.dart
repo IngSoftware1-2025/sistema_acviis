@@ -11,6 +11,7 @@ Future<String> createTrabajador({
   required String sistemaDeSalud,
   required String previsionAfp,
   required String obraEnLaQueTrabaja,
+  required String rolQueAsumeEnLaObra
 }) async {
   final url = Uri.parse('http://localhost:3000/trabajadores');
 
@@ -27,6 +28,7 @@ Future<String> createTrabajador({
       'sistema_de_salud': sistemaDeSalud,
       'prevision_afp': previsionAfp,
       'obra_en_la_que_trabaja': obraEnLaQueTrabaja,
+      'rol_que_asume_en_la_obra' : rolQueAsumeEnLaObra
     }),
   );
 
