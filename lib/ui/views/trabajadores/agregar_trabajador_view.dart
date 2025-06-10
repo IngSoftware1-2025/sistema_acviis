@@ -3,7 +3,6 @@ import 'package:sistema_acviis/backend/controllers/trabajadores/create_trabajado
 import 'package:sistema_acviis/backend/controllers/contratos/create_contrato.dart';
 import 'package:sistema_acviis/ui/views/app_bar.dart';
 import 'package:sistema_acviis/ui/views/bottom_navigation_bar.dart';
-import 'package:sistema_acviis/ui/widgets/scaffold.dart';
 
 class AgregarTrabajadorView extends StatefulWidget {
   const AgregarTrabajadorView({super.key});

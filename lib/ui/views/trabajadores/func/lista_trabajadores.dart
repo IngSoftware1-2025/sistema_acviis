@@ -4,7 +4,8 @@ import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:sistema_acviis/ui/widgets/checkbox.dart';
 import 'package:sistema_acviis/utils/constants/constants.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
-
+import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_estado_trabajador.dart';
+// ...otros imports...
 class ListaTrabajadores extends StatefulWidget {
   const ListaTrabajadores({super.key});
   @override
@@ -81,20 +82,89 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                       child: Align(
                         alignment: Alignment.centerRight,
                         child: PopupMenuButton<String>(
-                          onSelected: (value) {
-                            // Aqui van cosas xd
-                          },
                           itemBuilder: (context) => [
-                            const PopupMenuItem(
+                            const PopupMenuItem<String>(
                               value: 'editar',
                               child: Text('Editar'),
                             ),
-                            const PopupMenuItem(
+                            const PopupMenuItem<String>(
                               value: 'eliminar',
                               child: Text('Eliminar'),
                             ),
                           ],
-                          icon: const Icon(Icons.more_vert),
+                          onSelected: (value) async {
+                            if (value == 'eliminar') {
+                              final trabajador = provider.trabajadores[i];
+                              String estadoSeleccionado = 'despedido'; // Valor por defecto
+
+                              final resultado = await showDialog<String>(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: const Text('Cambiar estado del trabajador'),
+                                    content: StatefulBuilder(
+                                      builder: (context, setState) {
+                                        return Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text('Nombre: ${trabajador.nombreCompleto}'),
+                                            Text('RUT: ${trabajador.rut}'),
+                                            const SizedBox(height: 16),
+                                            const Text('Seleccione el nuevo estado:'),
+                                            DropdownButton<String>(
+                                              value: estadoSeleccionado,
+                                              items: [
+                                                DropdownMenuItem(
+                                                  value: 'despedido',
+                                                  child: Text('Despedido'),
+                                                ),
+                                                DropdownMenuItem(
+                                                  value: 'renuncio',
+                                                  child: Text('Renunció'),
+                                                ),
+                                                // aqui se agregan mas estados
+                                                // DropdownMenuItem(
+                                                //   value: 'otro_estado',
+                                                //   child: Text('Otro Estado'),
+                                                // ),
+                                              ],
+                                              onChanged: (value) {
+                                                if (value != null) {
+                                                  setState(() {
+                                                    estadoSeleccionado = value;
+                                                  });
+                                                }
+                                              },
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context, null),
+                                        child: const Text('Cancelar'),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () => Navigator.pop(context, estadoSeleccionado),
+                                        child: const Text('Confirmar'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+
+                              if (resultado != null) {
+                                await actualizarEstadoTrabajador(trabajador.id, resultado);
+                                await provider.fetchTrabajadores();
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Se a actualizado el estado de activo a "$resultado" con exito')),
+                                  );
+                                }
+                              }
+                            }
+                          },
                         ),
                       ),
                     ),
