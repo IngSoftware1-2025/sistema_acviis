@@ -16,6 +16,7 @@ class TrabajadoresProvider extends ChangeNotifier {
   RangeValues? rangoEdad;
   String? sistemaSalud;
   String? estadoEmpresa;
+  String? textoBusqueda;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -49,6 +50,11 @@ class TrabajadoresProvider extends ChangeNotifier {
     this.rangoEdad = rangoEdad ?? this.rangoEdad;
     this.sistemaSalud = sistemaSalud ?? this.sistemaSalud;
     this.estadoEmpresa = estadoEmpresa ?? this.estadoEmpresa;
+    filtrar();
+  }
+
+  void actualizarBusqueda(String? texto) {
+    textoBusqueda = texto;
     filtrar();
   }
 
@@ -113,6 +119,10 @@ class TrabajadoresProvider extends ChangeNotifier {
           }
         }
       }
+      // Filtro por nombre
+      if (textoBusqueda != null && textoBusqueda!.isNotEmpty) {
+        if (!t.nombreCompleto.toLowerCase().contains(textoBusqueda!.toLowerCase())) return false;
+      }
       return true;
     }).toList();
     notifyListeners();
@@ -127,6 +137,7 @@ class TrabajadoresProvider extends ChangeNotifier {
     rangoEdad = null;
     sistemaSalud = null;
     estadoEmpresa = null;
+    textoBusqueda = null;
     filtrar();
   }
 
