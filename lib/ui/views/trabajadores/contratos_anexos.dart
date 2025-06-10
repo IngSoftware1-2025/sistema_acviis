@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
+import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:sistema_acviis/ui/styles/app_colors.dart';
 import 'package:sistema_acviis/ui/widgets/scaffold.dart';
 
@@ -27,12 +30,26 @@ class _ContratosAnexosState extends State<ContratosAnexos> {
 
   @override
   Widget build(BuildContext context) {
+    final checkboxProvider = context.watch<CheckboxProvider>();
+    final trabajadoresProvider = context.watch<TrabajadoresProvider>();
+
+    final seleccionados = checkboxProvider.checkBoxes // se obtienen los índices de los checkbox seleccionados
+      .skip(1)
+      .where((cb) => cb.isSelected)
+      .map((cb) => cb.index)
+      .toList();
+
+    final trabajadoresSeleccionados = seleccionados // se obtienen los índices de los trabajadores seleccionados
+      .map((i) => trabajadoresProvider.trabajadores[i])
+      .toList();
+
+
     return PrimaryScaffold(
       title: 'Contratos y anexos',
       body: Column(
-        children: trabajadores.asMap().entries.map((entry) {
+        children: trabajadoresSeleccionados.asMap().entries.map((entry) {
           int index = entry.key;
-          Trabajador trabajador = entry.value;
+          var trabajador = entry.value;
           bool isExpanded = expandido.contains(index);
 
           return Container(
@@ -48,7 +65,7 @@ class _ContratosAnexosState extends State<ContratosAnexos> {
                   children: [
                     Expanded(
                       child: Text(
-                        trabajador.nombre,
+                        trabajador.nombreCompleto,
                         style: TextStyle(
                           fontFamily: 'Satoshi',
                           color: AppColors.secondary,
@@ -76,19 +93,18 @@ class _ContratosAnexosState extends State<ContratosAnexos> {
                 ),
                 if (isExpanded)
                   Column(
-                    children: trabajador.documentos.map((doc) {
-                      return TextButton(
+                    children: [ // aquí en lugar de este boton solo habría que sacar los diferentes documentos de contratos y anexos de mongo y ponerlos como textbutton.
+                      TextButton(
                         onPressed: () {},
                         child: Text(
-                          doc,
+                          'Contrato.pdf',
                           style: TextStyle(
                             fontFamily: 'Satoshi',
                             color: AppColors.secondary,
-                            
                           )
                         ),
-                      );
-                    }).toList(),
+                      ),
+                    ]
                   ),
               ],
             ),
