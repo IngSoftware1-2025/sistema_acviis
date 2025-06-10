@@ -5,6 +5,7 @@ import 'package:sistema_acviis/ui/widgets/checkbox.dart';
 import 'package:sistema_acviis/utils/constants/constants.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
 import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_estado_trabajador.dart';
+import 'package:sistema_acviis/ui/widgets/expansion_tile.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/editar_trabajador_dialog.dart';
 import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_trabajador.dart';
 
@@ -37,23 +38,21 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
       if (checkboxProvider.checkBoxes.length != provider.trabajadores.length + 1) {
         checkboxProvider.setCheckBoxes(provider.trabajadores.length);
       }
-
     });
+
     if (provider.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (provider.trabajadores.isEmpty) {
       return const Center(child: Text('No hay trabajadores para mostrar.'));
     }
-    // Espera a que los checkboxes estén listos
     if (checkboxProvider.checkBoxes.length != (provider.trabajadores.length + 1)) {
       return const Center(child: CircularProgressIndicator());
     }
-    // Define un ancho mínimo para la tabla
     final double tableWidth = MediaQuery.of(context).size.width > 600
         ? MediaQuery.of(context).size.width
         : 600;
-    
+
     return Expanded(
       child: SingleChildScrollView(
         scrollDirection: Axis.vertical,
@@ -64,12 +63,21 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
               // Header
               Row(
                 children: [
-                  PrimaryCheckbox(customCheckbox: checkboxProvider.checkBoxes[0]),
-                  Flexible(flex: 4, fit: FlexFit.tight, child: Text('Nombre', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Flexible(flex: 3, fit: FlexFit.tight, child: Text('Cargo', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Flexible(flex: 3, fit: FlexFit.tight, child: Text('Obra', style: TextStyle(fontWeight: FontWeight.bold))),
                   Flexible(
+                    flex: 0,
+                    fit: FlexFit.tight,
+                    child: PrimaryCheckbox(customCheckbox: checkboxProvider.checkBoxes[0])),
+                  Expanded(
                     flex: 2,
+                    child: Center(
+                      child: Text(
+                      'Lista de Trabajadores Registrados',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                    ),
+                  ),
+                  Flexible(
+                    flex: 0,
                     fit: FlexFit.tight,
                     child: Align(
                       alignment: Alignment.centerRight,
@@ -79,22 +87,19 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                 ],
               ),
               const Divider(),
-              // Rows
+              // ExpansionTiles para cada trabajador usando PersonalizedExpansionTile
               ...List.generate(provider.trabajadores.length, (i) {
+                final trabajador = provider.trabajadores[i];
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 1.0),
                   child: Row(
                     children: [
-                      PrimaryCheckbox(customCheckbox: checkboxProvider.checkBoxes[i + 1],),
-                      Flexible(flex: 4, fit: FlexFit.tight, child: Text(provider.trabajadores[i].nombreCompleto)),
-                      Flexible(flex: 3, fit: FlexFit.tight, child: Text(provider.trabajadores[i].rolQueAsumeEnLaObra)), // Cargo real si lo tienes
-                      Flexible(flex: 3, fit: FlexFit.tight, child: Text(provider.trabajadores[i].obraEnLaQueTrabaja)), // Obra real si lo tienes
-                      Flexible(
-                        flex: 2,
-                        fit: FlexFit.tight,
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: PopupMenuButton<String>(
+                      PrimaryCheckbox(customCheckbox: checkboxProvider.checkBoxes[i + 1]),
+                      Expanded(
+                        child: PersonalizedExpansionTile(
+                          trabajador: trabajador,
+                          // Puedes agregar más parámetros si tu widget los acepta
+                          trailing: PopupMenuButton<String>(
                             itemBuilder: (context) => [
                               const PopupMenuItem<String>(
                                 value: 'editar',
@@ -107,9 +112,8 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                             ],
                             onSelected: (value) async {
                               if (value == 'eliminar') {
-                                final trabajador = provider.trabajadores[i];
                                 String estadoSeleccionado = 'despedido'; // Valor por defecto
-      
+
                                 final resultado = await showDialog<String>(
                                   context: context,
                                   builder: (context) {
@@ -135,11 +139,6 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                                     value: 'renuncio',
                                                     child: Text('Renunció'),
                                                   ),
-                                                  // aqui se agregan mas estados
-                                                  // DropdownMenuItem(
-                                                  //   value: 'otro_estado',
-                                                  //   child: Text('Otro Estado'),
-                                                  // ),
                                                 ],
                                                 onChanged: (value) {
                                                   if (value != null) {
@@ -166,7 +165,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                     );
                                   },
                                 );
-      
+
                                 if (resultado != null) {
                                   await actualizarEstadoTrabajador(trabajador.id, resultado);
                                   await provider.fetchTrabajadores();

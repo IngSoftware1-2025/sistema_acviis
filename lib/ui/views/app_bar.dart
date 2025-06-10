@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/ui/styles/app_colors.dart';
+import 'package:sistema_acviis/utils/constants/constants.dart';
 
 class PersonalizedAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -51,41 +52,89 @@ class PersonalizedAppBar extends StatelessWidget implements PreferredSizeWidget 
                 Navigator.of(context).pushReplacementNamed(parentRoute);
               },
             ),
-      actions: <Widget>[
-        IconButton(
-          icon: const Icon(
-            Icons.person,
-            color: AppColors.background,
-          ),
-          tooltip: 'Perfil de usuario',
-          onPressed: () {},
-        ),
-
-        Center(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              'Usuario: <Nombre de usuario>',
-              style: TextStyle(
-                fontFamily: 'Satoshi',
-                fontWeight: FontWeight.w500,
-                color: AppColors.background,
-              )
-            )
-          )
-        ),
-
-        IconButton(
-          icon: const Icon(
-            Icons.logout,
-            color: AppColors.background,
-          ),
-          tooltip: 'Cerrar sesión',
-          onPressed: () {},
-        )
-
-
-      ]
+      actions: MediaQuery.of(context).size.width < 600
+          ? <Widget>[
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: PopupMenuButton<String>(
+                  icon: const Icon(
+                    Icons.menu,
+                    color: AppColors.background,
+                  ),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'profile',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.person, color: AppColors.primaryDark),
+                          const SizedBox(width: 8),
+                          const Text('Perfil de usuario'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'user',
+                      child: Text(
+                        'Usuario: <Nombre de usuario>',
+                        style: const TextStyle(
+                          fontFamily: 'Satoshi',
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.primaryDark,
+                        ),
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'logout',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.logout, color: AppColors.primaryDark),
+                          const SizedBox(width: 8),
+                          const Text('Cerrar sesión'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onSelected: (value) {
+                    if (value == 'profile') {
+                      // Acción para perfil de usuario
+                    } else if (value == 'logout') {
+                      // Acción para cerrar sesión
+                    }
+                  },
+                ),
+              ),
+            ]
+          : <Widget>[
+              IconButton(
+                icon: const Icon(
+                  Icons.person,
+                  color: AppColors.background,
+                ),
+                tooltip: 'Perfil de usuario',
+                onPressed: () {},
+              ),
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    'Usuario: <Nombre de usuario>',
+                    style: const TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.background,
+                    ),
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.logout,
+                  color: AppColors.background,
+                ),
+                tooltip: 'Cerrar sesión',
+                onPressed: () {},
+              ),
+            ],
     );
   }
 }
