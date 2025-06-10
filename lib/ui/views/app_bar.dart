@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/ui/styles/app_colors.dart';
-import 'package:sistema_acviis/utils/constants/constants.dart';
 
 class PersonalizedAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;

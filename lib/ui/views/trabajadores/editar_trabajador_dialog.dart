@@ -21,7 +21,6 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
   late TextEditingController previsionAfpController;
   late TextEditingController obraController;
   late TextEditingController rolController;
-  late TextEditingController estadoTrabajadorController;
 
   @override
   void initState() {
@@ -36,7 +35,6 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
     previsionAfpController = TextEditingController(text: widget.trabajador.previsionAfp);
     obraController = TextEditingController(text: widget.trabajador.obraEnLaQueTrabaja);
     rolController = TextEditingController(text: widget.trabajador.rolQueAsumeEnLaObra);
-    estadoTrabajadorController = TextEditingController(text: widget.trabajador.estadoTrabajador);
   }
 
   @override
@@ -51,7 +49,6 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
     previsionAfpController.dispose();
     obraController.dispose();
     rolController.dispose();
-    estadoTrabajadorController.dispose();
     super.dispose();
   }
 
@@ -123,11 +120,6 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
                 decoration: const InputDecoration(labelText: 'Rol que asume en la obra'),
                 validator: (v) => v == null || v.isEmpty ? 'Campo obligatorio' : null,
               ),
-              TextFormField(
-                controller: estadoTrabajadorController,
-                decoration: const InputDecoration(labelText: 'Estado trabajador'),
-                validator: (v) => v == null || v.isEmpty ? 'Campo obligatorio' : null,
-              ),
             ],
           ),
         ),
@@ -151,7 +143,6 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
                 'prevision_afp': previsionAfpController.text,
                 'obra_en_la_que_trabaja': obraController.text,
                 'rol_que_asume_en_la_obra': rolController.text,
-                'estado_trabajador': estadoTrabajadorController.text,
               });
             }
           },

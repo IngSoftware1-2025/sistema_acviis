@@ -103,7 +103,6 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
           sistemaDeSalud: _sistemaSaludController.text,
           previsionAfp: _previsionAfpController.text,
           obraEnLaQueTrabaja: _obraController.text,
-          rolQueAsumeEnLaObra: _rolController.text,
         );
         // Si el formulario de contrato está visible, crear contrato SOLO en MongoDB (PDF)
         if (_showContratoForm) {
