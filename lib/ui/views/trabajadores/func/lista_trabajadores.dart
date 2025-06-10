@@ -6,6 +6,10 @@ import 'package:sistema_acviis/utils/constants/constants.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
 import 'package:sistema_acviis/backend/controllers/contratos/actualizar_estado_contrato.dart';
 import 'package:sistema_acviis/ui/widgets/expansion_tile.dart';
+import 'package:sistema_acviis/ui/views/trabajadores/editar_trabajador_dialog.dart';
+import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_trabajador.dart'; // Asegúrate de que la ruta sea correcta
+import 'package:sistema_acviis/backend/controllers/contratos/actualizar_contrato.dart';
+
 
 class ListaTrabajadores extends StatefulWidget {
   const ListaTrabajadores({super.key});
@@ -101,8 +105,8 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                           trailing: PopupMenuButton<String>(
                             itemBuilder: (context) => [
                               const PopupMenuItem<String>(
-                                value: 'editar',
-                                child: Text('Editar'),
+                                value: 'Modificar',
+                                child: Text('Modificar'),
                               ),
                               const PopupMenuItem<String>(
                                 value: 'eliminar',
@@ -111,102 +115,200 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                             ],
                             onSelected: (value) async {
                               if (value == 'eliminar') {
-                              // Busca el contrato activo o el más reciente
-                              final contrato = trabajador.contratos.isNotEmpty
-                                  ? trabajador.contratos.last
-                                  : null;
-                              if (contrato == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('No se encontró contrato asociado')),
-                                );
-                                return;
-                              }
-                              // Mostrar un SimpleDialog para elegir el nuevo estado
-                              String? estadoSeleccionado = 'Despedido'; // Valor por defecto
-
-                              final nuevoEstado = await showDialog<String>(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    title: const Text('Selecciona el nuevo estado'),
-                                    content: StatefulBuilder(
-                                      builder: (context, setState) {
-                                        return DropdownButtonFormField<String>(
-                                          value: estadoSeleccionado,
-                                          items: const [
-                                            DropdownMenuItem(
-                                              value: 'Despedido',
-                                              child: Text('Despedido'),
-                                            ),
-                                            DropdownMenuItem(
-                                              value: 'Renuncio',
-                                              child: Text('Renunció'),
-                                            ),
-                                            // aqui se agregan mas
-                                            // DropdownMenuItem(
-                                            //   value: 'Activo',
-                                            //   child: Text('Activo'),
-                                            // ),
-                                          ],
-                                          onChanged: (value) {
-                                            setState(() {
-                                              estadoSeleccionado = value;
-                                            });
-                                          },
-                                          decoration: const InputDecoration(labelText: 'Nuevo estado'),
-                                        );
-                                      },
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context, null),
-                                        child: const Text('Cancelar'),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () => Navigator.pop(context, estadoSeleccionado),
-                                        child: const Text('Confirmar'),
-                                      ),
-                                    ],
+                                // Busca el contrato activo o el más reciente
+                                final contrato = trabajador.contratos.isNotEmpty
+                                    ? trabajador.contratos.last
+                                    : null;
+                                if (contrato == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('No se encontró contrato asociado')),
                                   );
-                                },
-                              );
-                              if (nuevoEstado != null) {
-                                final confirmacion = await showDialog<bool>(
+                                  return;
+                                }
+                                // Mostrar un SimpleDialog para elegir el nuevo estado
+                                String? estadoSeleccionado = 'Despedido'; // Valor por defecto
+
+                                final nuevoEstado = await showDialog<String>(
                                   context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text('Confirmar cambio de estado'),
-                                    content: Text('¿Está seguro que desea cambiar el estado a "$nuevoEstado"?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context, false),
-                                        child: const Text('Cancelar'),
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: const Text('Selecciona el nuevo estado'),
+                                      content: StatefulBuilder(
+                                        builder: (context, setState) {
+                                          return DropdownButtonFormField<String>(
+                                            value: estadoSeleccionado,
+                                            items: const [
+                                              DropdownMenuItem(
+                                                value: 'Despedido',
+                                                child: Text('Despedido'),
+                                              ),
+                                              DropdownMenuItem(
+                                                value: 'Renuncio',
+                                                child: Text('Renunció'),
+                                              ),
+                                              // aqui se agregan mas
+                                              // DropdownMenuItem(
+                                              //   value: 'Activo',
+                                              //   child: Text('Activo'),
+                                              // ),
+                                            ],
+                                            onChanged: (value) {
+                                              setState(() {
+                                                estadoSeleccionado = value;
+                                              });
+                                            },
+                                            decoration: const InputDecoration(labelText: 'Nuevo estado'),
+                                          );
+                                        },
                                       ),
-                                      ElevatedButton(
-                                        onPressed: () => Navigator.pop(context, true),
-                                        child: const Text('Aceptar'),
-                                      ),
-                                    ],
-                                  ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context, null),
+                                          child: const Text('Cancelar'),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () => Navigator.pop(context, estadoSeleccionado),
+                                          child: const Text('Confirmar'),
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 );
-                                if (confirmacion == true) {
-                                  try {
-                                    await actualizarEstadoContrato(contrato['id'].toString(), nuevoEstado);
-                                    await provider.fetchTrabajadores();
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Estado actualizado a "$nuevoEstado"')),
-                                      );
-                                    }
-                                  } catch (e) {
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Error al actualizar estado: $e')),
-                                      );
+                                if (nuevoEstado != null) {
+                                  final confirmacion = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Confirmar cambio de estado'),
+                                      content: Text('¿Está seguro que desea cambiar el estado a "$nuevoEstado"?'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context, false),
+                                          child: const Text('Cancelar'),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () => Navigator.pop(context, true),
+                                          child: const Text('Aceptar'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirmacion == true) {
+                                    try {
+                                      await actualizarEstadoContrato(contrato['id'].toString(), nuevoEstado);
+                                      await provider.fetchTrabajadores();
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Estado actualizado a "$nuevoEstado"')),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Error al actualizar estado: $e')),
+                                        );
+                                      }
                                     }
                                   }
                                 }
                               }
-                            }
+                              if (value == 'Modificar') {
+                                final resultado = await showDialog(
+                                  context: context,
+                                  builder: (context) => EditarTrabajadorDialog(trabajador: trabajador),
+                                );
+                                if (resultado is Map<String, dynamic>) {
+                                  final cambios = <String, Map<String, dynamic>>{};
+                                  final nuevosDatos = resultado['trabajador'] as Map<String, dynamic>;
+                                  final contratosNuevos = resultado['contratos'] as List<dynamic>;
+
+                                  // Compara datos del trabajador
+                                  nuevosDatos.forEach((key, value) {
+                                    final original = trabajador.toJson()[key];
+                                    if (original != value) {
+                                      cambios[key] = {'antes': original, 'despues': value};
+                                    }
+                                  });
+
+                                  // Compara contratos
+                                  for (int i = 0; i < contratosNuevos.length; i++) {
+                                    final contratoOriginal = trabajador.contratos[i];
+                                    final contratoNuevo = contratosNuevos[i];
+                                    contratoNuevo.forEach((key, value) {
+                                      if (key == 'id') return;
+                                      final original = contratoOriginal[key];
+                                      if (original != value) {
+                                        cambios['Contrato ${contratoNuevo['id']} - $key'] = {'antes': original, 'despues': value};
+                                      }
+                                    });
+                                  }
+
+                                  if (cambios.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('No se realizaron cambios')),
+                                    );
+                                    return;
+                                  }
+
+                                  // Muestra el resumen de cambios
+                                  final confirmacion = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Confirmar cambios'),
+                                      content: SingleChildScrollView(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: cambios.entries.map((e) => Padding(
+                                            padding: const EdgeInsets.symmetric(vertical: 2),
+                                            child: Text(
+                                                '${e.key}:\n  Antes: ${e.value['antes']}\n  Después: ${e.value['despues']}',
+                                              style: const TextStyle(fontSize: 14),
+                                            ),
+                                          )).toList(),
+                                        ),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context, false),
+                                          child: const Text('Cancelar'),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () => Navigator.pop(context, true),
+                                          child: const Text('Aceptar'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+
+                                  if (confirmacion == true) {
+                                    try {
+                                      // Actualiza trabajador
+                                      await actualizarTrabajador(trabajador.id, nuevosDatos);
+                                      // Actualiza contratos
+                                      for (final contrato in contratosNuevos) {
+                                        await actualizarContrato(
+                                          contrato['id'].toString(),
+                                          plazo: contrato['plazo_de_contrato'],
+                                          comentario: contrato['comentario_adicional_acerca_del_trabajador'],
+                                          documento: contrato['documento_de_vacaciones_del_trabajador'],
+                                          estado: contrato['estado'],
+                                        );
+                                      }
+                                      await provider.fetchTrabajadores();
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Datos actualizados correctamente')),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Error al actualizar: $e')),
+                                        );
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             },
                           ),
                         ),

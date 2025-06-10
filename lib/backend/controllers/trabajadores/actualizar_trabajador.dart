@@ -1,5 +1,5 @@
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 Future<void> actualizarTrabajador(String id, Map<String, dynamic> data) async {
   final url = Uri.parse('http://localhost:3000/trabajadores/$id/datos');
