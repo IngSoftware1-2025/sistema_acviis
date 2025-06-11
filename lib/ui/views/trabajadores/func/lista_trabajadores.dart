@@ -101,117 +101,173 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                       Expanded(
                         child: PersonalizedExpansionTile(
                           trabajador: trabajador,
-                          // Puedes agregar más parámetros si tu widget los acepta
                           trailing: PopupMenuButton<String>(
-                            itemBuilder: (context) => [
-                              const PopupMenuItem<String>(
-                                value: 'Modificar',
-                                child: Text('Modificar'),
-                              ),
-                              const PopupMenuItem<String>(
-                                value: 'eliminar',
-                                child: Text('Eliminar'),
-                              ),
-                            ],
                             onSelected: (value) async {
-                              if (value == 'eliminar') {
-                                // Busca el contrato activo o el más reciente
-                                final contrato = trabajador.contratos.isNotEmpty
-                                    ? trabajador.contratos.last
-                                    : null;
+                                if (value == 'Eliminar') {
+                                final contrato = trabajador.contratos.isNotEmpty ? trabajador.contratos.last : null;
                                 if (contrato == null) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('No se encontró contrato asociado')),
+                                  const SnackBar(content: Text('No se encontró contrato asociado')),
                                   );
                                   return;
                                 }
-                                // Mostrar un SimpleDialog para elegir el nuevo estado
-                                String? estadoSeleccionado = 'Despedido'; // Valor por defecto
 
-                                final nuevoEstado = await showDialog<String>(
+                                final comentarioController = TextEditingController();
+                                bool comentarioInvalido = false;
+                                /*
+                                muestra un diálogo para confirmar la eliminación del trabajador
+                                y solicita un comentario obligatorio sobre la eliminación
+                                si el comentario es inválido, muestra un mensaje de error
+                                */
+                                final confirmacion = await showDialog<bool>(
                                   context: context,
+                                  barrierDismissible: false,
                                   builder: (context) {
-                                    return AlertDialog(
-                                      title: const Text('Selecciona el nuevo estado'),
-                                      content: StatefulBuilder(
-                                        builder: (context, setState) {
-                                          return DropdownButtonFormField<String>(
-                                            value: estadoSeleccionado,
-                                            items: const [
-                                              DropdownMenuItem(
-                                                value: 'Despedido',
-                                                child: Text('Despedido'),
-                                              ),
-                                              DropdownMenuItem(
-                                                value: 'Renuncio',
-                                                child: Text('Renunció'),
-                                              ),
-                                              // aqui se agregan mas
-                                              // DropdownMenuItem(
-                                              //   value: 'Activo',
-                                              //   child: Text('Activo'),
-                                              // ),
-                                            ],
-                                            onChanged: (value) {
-                                              setState(() {
-                                                estadoSeleccionado = value;
-                                              });
-                                            },
-                                            decoration: const InputDecoration(labelText: 'Nuevo estado'),
-                                          );
+                                  return StatefulBuilder(
+                                    builder: (context, setState) => AlertDialog(
+                                    title: const Text('Eliminar trabajador'),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                      const Text(
+                                        'Esta acción eliminará al trabajador del sistema.\n\n'
+                                        'Por favor, ingresa un comentario obligatorio sobre la eliminación:',
+                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      TextField(
+                                        controller: comentarioController,
+                                        maxLines: 3,
+                                        decoration: InputDecoration(
+                                        labelText: 'Comentario acerca de la eliminación',
+                                        errorText: comentarioInvalido ? 'El comentario es obligatorio' : null,
+                                        border: const OutlineInputBorder(),
+                                        ),
+                                        onChanged: (_) {
+                                        if (comentarioInvalido) {
+                                          setState(() => comentarioInvalido = false);
+                                        }
                                         },
                                       ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(context, null),
-                                          child: const Text('Cancelar'),
-                                        ),
-                                        ElevatedButton(
-                                          onPressed: () => Navigator.pop(context, estadoSeleccionado),
-                                          child: const Text('Confirmar'),
-                                        ),
                                       ],
-                                    );
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                      onPressed: () => Navigator.pop(context, false),
+                                      child: const Text('Cancelar'),
+                                      ),
+                                      ElevatedButton(
+                                      onPressed: () {
+                                        if (comentarioController.text.trim().isEmpty) {
+                                        setState(() => comentarioInvalido = true);
+                                        return;
+                                        }
+                                        Navigator.pop(context, true);
+                                      },
+                                      child: const Text('Eliminar'),
+                                      ),
+                                    ],
+                                    ),
+                                  );
                                   },
                                 );
-                                if (nuevoEstado != null) {
-                                  final confirmacion = await showDialog<bool>(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text('Confirmar cambio de estado'),
-                                      content: Text('¿Está seguro que desea cambiar el estado a "$nuevoEstado"?'),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(context, false),
-                                          child: const Text('Cancelar'),
+                                /*
+                                aquí se confirma la eliminación del trabajador
+                                y se muestra un diálogo de confirmación final
+                                con los detalles del trabajador
+                                a eliminar
+                                */
+                                if (confirmacion == true) {
+                                  final confirmacionFinal = await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Confirmar eliminación'),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          '¿Está seguro que desea eliminar al siguiente trabajador del sistema?',
+                                          style: TextStyle(fontWeight: FontWeight.bold),
                                         ),
-                                        ElevatedButton(
-                                          onPressed: () => Navigator.pop(context, true),
-                                          child: const Text('Aceptar'),
+                                        const SizedBox(height: 16),
+                                        Table(
+                                          columnWidths: const {
+                                            0: IntrinsicColumnWidth(),
+                                            1: FlexColumnWidth(),
+                                          },
+                                          children: [
+                                            TableRow(
+                                              children: [
+                                                const Padding(
+                                                  padding: EdgeInsets.symmetric(vertical: 4),
+                                                  child: Text('Nombre:', style: TextStyle(fontWeight: FontWeight.bold)),
+                                                ),
+                                                Padding(
+                                                  padding: const EdgeInsets.symmetric(vertical: 4),
+                                                  child: Text(trabajador.nombreCompleto ?? ''),
+                                                ),
+                                              ],
+                                            ),
+                                            TableRow(
+                                              children: [
+                                                const Padding(
+                                                  padding: EdgeInsets.symmetric(vertical: 4),
+                                                  child: Text('RUT:', style: TextStyle(fontWeight: FontWeight.bold)),
+                                                ),
+                                                Padding(
+                                                  padding: const EdgeInsets.symmetric(vertical: 4),
+                                                  child: Text(trabajador.rut ?? ''),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 12),
+                                        const Text(
+                                          'Esta acción no se puede deshacer.',
                                         ),
                                       ],
                                     ),
+                                    actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, false),
+                                      child: const Text('Cancelar'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () => Navigator.pop(context, true),
+                                      child: const Text('Aceptar'),
+                                    ),
+                                    ],
+                                  ),
                                   );
-                                  if (confirmacion == true) {
-                                    try {
-                                      await actualizarEstadoContrato(contrato['id'].toString(), nuevoEstado);
-                                      await provider.fetchTrabajadores();
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Estado actualizado a "$nuevoEstado"')),
-                                        );
-                                      }
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Error al actualizar estado: $e')),
-                                        );
-                                      }
+
+                                  if (confirmacionFinal == true) {
+                                  try {
+                                    await actualizarContrato(
+                                    contrato['id'].toString(),
+                                    plazo: contrato['plazo_de_contrato'] ?? '',
+                                    comentario: comentarioController.text.trim(),
+                                    documento: contrato['documento_de_vacaciones_del_trabajador'] ?? '',
+                                    estado: 'Eliminado',
+                                    );
+                                    await provider.fetchTrabajadores();
+                                    if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Trabajador eliminado correctamente')),
+                                    );
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Error al eliminar: $e')),
+                                    );
                                     }
                                   }
+                                  }
                                 }
-                              }
-                              if (value == 'Modificar') {
+                              } else if (value == 'Modificar') {
                                 final resultado = await showDialog(
                                   context: context,
                                   builder: (context) => EditarTrabajadorDialog(trabajador: trabajador),
@@ -310,6 +366,17 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                 }
                               }
                             },
+                            itemBuilder: (context) => [
+                              const PopupMenuItem(
+                                value: 'Modificar',
+                                child: Text('Modificar'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'Eliminar',
+                                child: Text('Eliminar'),
+                              ),
+                            ],
+                            icon: const Icon(Icons.more_vert),
                           ),
                         ),
                       ),

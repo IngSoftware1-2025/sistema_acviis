@@ -95,13 +95,40 @@ class _TrabajadoresViewState extends State<TrabajadoresView> {
 
                 SizedBox(height: normalPadding),
 
-                // Boton Eliminar trabajadores
-                PrimaryButton(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/home_page/trabajadores_view/eliminar_trabajador_view');
-                  }, 
-                  text: 'Eliminar trabajadores',
-                ),
+            // Boton Eliminar trabajadores
+            PrimaryButton(
+              onPressed: () {
+                final checkboxProvider = Provider.of<CheckboxProvider>(context, listen: false);
+                final trabajadoresProvider = Provider.of<TrabajadoresProvider>(context, listen: false);
+
+                // Obtiene los índices seleccionados (excepto el primero, que es "select all")
+                final seleccionados = <int>[];
+                for (int i = 1; i < checkboxProvider.checkBoxes.length; i++) {
+                  if (checkboxProvider.checkBoxes[i].isSelected) {
+                    seleccionados.add(i - 1); // -1 porque el primero es "select all"
+                  }
+                }
+
+                if (seleccionados.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Debes seleccionar al menos un trabajador.')),
+                  );
+                  return;
+                }
+
+                // Obtiene los trabajadores seleccionados
+                final trabajadoresSeleccionados = seleccionados
+                    .map((i) => trabajadoresProvider.trabajadores[i])
+                    .toList();
+
+                Navigator.pushReplacementNamed(
+                  context,
+                  '/home_page/trabajadores_view/eliminar_trabajador_view',
+                  arguments: trabajadoresSeleccionados,
+                );
+              },
+              text: 'Eliminar trabajadores',
+            ),
               ],
             ),
             SizedBox(width: normalPadding), // Espacio pequeño entre botones

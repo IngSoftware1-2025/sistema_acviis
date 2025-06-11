@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
 import 'package:sistema_acviis/ui/widgets/scaffold.dart';
-import 'package:sistema_acviis/utils/constants/constants.dart';
 
 
 class ModificarTrabajadoresView extends StatefulWidget {

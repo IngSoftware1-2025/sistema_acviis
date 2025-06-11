@@ -348,8 +348,9 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
                   ),
                   validator: (value) {
                     if (!_showContratoForm) return null;
-                    if (value == null || value.isEmpty)
+                    if (value == null || value.isEmpty) {
                       return 'Campo requerido';
+                    }
                     try {
                       DateTime.parse(value);
                     } catch (_) {
