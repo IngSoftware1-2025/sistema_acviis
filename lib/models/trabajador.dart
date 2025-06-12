@@ -12,6 +12,7 @@ class Trabajador {
   final String previsionAfp;
   final String obraEnLaQueTrabaja;
   final String rolQueAsumeEnLaObra;
+  final String estado;
   final List<dynamic> contratos;
 
   Trabajador({
@@ -26,6 +27,7 @@ class Trabajador {
     required this.previsionAfp,
     required this.obraEnLaQueTrabaja,
     required this.rolQueAsumeEnLaObra,
+    required this.estado,
     required this.contratos,
   });
 
@@ -42,6 +44,7 @@ class Trabajador {
       previsionAfp: json['prevision_afp'],
       obraEnLaQueTrabaja: json['obra_en_la_que_trabaja'],
       rolQueAsumeEnLaObra: json['rol_que_asume_en_la_obra'],
+      estado: json['estado'] as String,
       contratos: json['contratos']
     );
   }

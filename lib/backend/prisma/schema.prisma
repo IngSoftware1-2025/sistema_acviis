@@ -31,19 +31,34 @@ model trabajadores {
   prevision_afp             String
   obra_en_la_que_trabaja    String
   rol_que_asume_en_la_obra  String
+  estado                    String
   contratos   contratos[]
+  comentarios comentarios[]
 }
 
 model contratos {
-  id                                         String   @id @default(uuid())
-  id_trabajadores                            String   @db.Uuid
-  plazo_de_contrato                          String
-  estado                                     String
-  documento_de_vacaciones_del_trabajador     String   @db.VarChar(255)
-  comentario_adicional_acerca_del_trabajador String   @db.VarChar(255)
-  fecha_de_contratacion                      DateTime
+  id                     String        @id @default(uuid())
+  id_trabajadores        String        @db.Uuid
+  plazo_de_contrato      String
+  estado                 String
+  fecha_de_contratacion  DateTime
 
   trabajadores trabajadores @relation(fields: [id_trabajadores], references: [id])
+  comentarios comentarios[]
 
   @@index([id_trabajadores])
+}
+
+model comentarios {
+  id              String      @id @default(uuid())
+  id_trabajadores String      @db.Uuid
+  id_contrato     String?     @db.Uuid
+  fecha           DateTime
+  comentario      String
+
+  trabajadores    trabajadores @relation(fields: [id_trabajadores], references: [id])
+  contrato        contratos?   @relation(fields: [id_contrato], references: [id])
+
+  @@index([id_trabajadores])
+  @@index([id_contrato])
 }

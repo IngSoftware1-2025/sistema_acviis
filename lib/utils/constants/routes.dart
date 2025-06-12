@@ -6,7 +6,7 @@ import 'package:sistema_acviis/ui/views/trabajadores/contratos_anexos.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/eliminar_trabajadores_view.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/modificar_trabajadores_view.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/trabajadores_view.dart';
-
+import 'package:sistema_acviis/ui/views/trabajadores/eliminar_contratos_view.dart';
 /*
   Aqui se importaran todas las vistas presentes en el sistema
   (Para el primer incremento serian todas las vistas asociadas
@@ -22,6 +22,13 @@ final Map<String, WidgetBuilder> routes = {
     final trabajadores = (args is List<dynamic>) ? args : <dynamic>[];
     return EliminarTrabajadorView(trabajadores: trabajadores);
   },
+  '/home_page/trabajadores_view/eliminar_contratos_view': (BuildContext context) {
+  final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>? ?? {};
+  final trabajadoresSeleccionados = args['trabajadores'] ?? <dynamic>[];
+  return EliminarContratosView(
+    trabajadoresSeleccionados: trabajadoresSeleccionados,
+  );
+},
   '/home_page/trabajadores_view/contratos_anexos' : (BuildContext context) => ContratosAnexos(),
   '/home_page/trabajadores_view/modificar_trabajadores_view' : (BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as List<dynamic>;

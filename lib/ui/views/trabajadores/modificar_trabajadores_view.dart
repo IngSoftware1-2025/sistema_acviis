@@ -11,9 +11,28 @@ class ModificarTrabajadoresView extends StatefulWidget {
   });
   @override
   State<ModificarTrabajadoresView> createState() => _ModificarTrabajadoresViewState();
+  // Dummy implementation for updateTrabajador
+  Future<void> updateTrabajador(Map<String, dynamic> trabajadorData) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
+
+  // Dummy implementation for updateContrato
+  Future<void> updateContrato(Map<String, dynamic> contratoData, int trabajadorId) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
 }
 
 class _ModificarTrabajadoresViewState extends State<ModificarTrabajadoresView> {
+  // Dummy implementation for createContratoMongo
+  Future<void> createContratoMongo(Map<String, dynamic> contratoData, int trabajadorId) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
+
+  // Dummy implementation for createContratoSupabase
+  Future<void> createContratoSupabase(Map<String, dynamic> contratoData, String trabajadorId) async {
+  await Future.delayed(const Duration(milliseconds: 500));
+}
+
   @override
   Widget build(BuildContext context) {
     final List<Trabajador> trabajadores = (widget.trabajadores as List).cast<Trabajador>();
@@ -42,11 +61,10 @@ class _ModificarTrabajadoresViewState extends State<ModificarTrabajadoresView> {
           'previsionAfp': TextEditingController(text: trabajadores[i].previsionAfp ?? ''),
           'obraEnLaQueTrabaja': TextEditingController(text: trabajadores[i].obraEnLaQueTrabaja ?? ''),
           'rolQueAsumeEnLaObra': TextEditingController(text: trabajadores[i].rolQueAsumeEnLaObra ?? ''),
+          'estado': TextEditingController(text: trabajadores[i].estado ?? ''),
           // Contrato
           'plazoDeContrato': TextEditingController(text: contrato['plazo_de_contrato']?.toString() ?? ''),
           'estadoContrato': TextEditingController(text: contrato['estado']?.toString() ?? ''),
-          'documentoVacaciones': TextEditingController(text: contrato['documento_de_vacaciones_del_trabajador']?.toString() ?? ''),
-          'comentarioAdicional': TextEditingController(text: contrato['comentario_adicional_acerca_del_trabajador']?.toString() ?? ''),
           'fechaContratacion': TextEditingController(
             text: contrato['fecha_de_contratacion'] != null
                 ? contrato['fecha_de_contratacion'].toString().split('T').first
@@ -202,21 +220,11 @@ class _ModificarTrabajadoresViewState extends State<ModificarTrabajadoresView> {
                           },
                         ),
                       ),
-                      // --- DATOS DE CONTRATO ---
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: TextField(
-                          controller: c['plazoDeContrato'],
-                          decoration: const InputDecoration(labelText: 'Plazo de Contrato'),
-                        ),
-                      ),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: DropdownButtonFormField<String>(
-                          value: estadoContratoActual,
-                          decoration: const InputDecoration(
-                            labelText: 'Estado (Contrato)',
-                          ),
+                          value: estadosContrato.contains(c['estado']!.text) ? c['estado']!.text : estadosContrato.first,
+                          decoration: const InputDecoration(labelText: 'Estado'),
                           items: estadosContrato
                               .map((estado) => DropdownMenuItem(
                                     value: estado,
@@ -225,34 +233,97 @@ class _ModificarTrabajadoresViewState extends State<ModificarTrabajadoresView> {
                               .toList(),
                           onChanged: (value) {
                             setState(() {
-                              c['estadoContrato']!.text = value ?? '';
+                              c['estado']!.text = value ?? '';
                             });
                           },
                         ),
                       ),
+                      
+                      // --- DATOS DE CONTRATO ---
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: TextField(
-                          controller: c['documentoVacaciones'],
-                          decoration: const InputDecoration(labelText: 'Documento de Vacaciones'),
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            // Validación simple: todos los campos de contrato deben estar completos
+                            if (c['plazoDeContrato']!.text.isEmpty ||
+                                c['estadoContrato']!.text.isEmpty ||
+                                c['fechaContratacion']!.text.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Completa todos los datos del contrato')),
+                              );
+                              return;
+                            }
+                            // Validar formato de fecha
+                            try {
+                              DateTime.parse(c['fechaContratacion']!.text);
+                            } catch (_) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Formato de fecha inválido (YYYY-MM-DD)')),
+                              );
+                              return;
+                            }
+
+                            final trabajadorData = {
+                              'id': t.id,
+                              'nombre_completo': c['nombreCompleto']!.text,
+                              'estado_civil': c['estadoCivil']!.text,
+                              'rut': c['rut']!.text,
+                              'fecha_nacimiento': c['fechaDeNacimiento']!.text,
+                              'direccion': c['direccion']!.text,
+                              'correo_electronico': c['correoElectronico']!.text,
+                              'sistema_de_salud': c['sistemaDeSalud']!.text,
+                              'prevision_afp': c['previsionAfp']!.text,
+                              'obra_en_la_que_trabaja': c['obraEnLaQueTrabaja']!.text,
+                              'rol_que_asume_en_la_obra': c['rolQueAsumeEnLaObra']!.text,
+                              'estado': c['estado']!.text,
+                            };
+
+                            final contratoData = {
+                              'plazo_de_contrato': c['plazoDeContrato']!.text,
+                              'estado': c['estadoContrato']!.text,
+                              'fecha_de_contratacion': c['fechaContratacion']!.text,
+                              'id_trabajadores': t.id,
+                            };
+
+                            await widget.updateTrabajador(trabajadorData);
+
+                            // Aquí se crea una nueva fila en la tabla contratos de Supabase
+                            await createContratoSupabase(contratoData, t.id);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Trabajador y contrato actualizados')),
+                            );
+                            setState(() {});
+                          },
+                          child: const Text('Guardar cambios'),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: TextField(
-                          controller: c['comentarioAdicional'],
-                          decoration: const InputDecoration(labelText: 'Comentario Adicional'),
+
+                        // Campos de contrato
+                        TextField(
+                          controller: c['plazoDeContrato'],
+                          decoration: const InputDecoration(labelText: 'Plazo de Contrato'),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: TextField(
-                          enabled: false,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: DropdownButtonFormField<String>(
+                            value: estadoContratoActual,
+                            decoration: const InputDecoration(labelText: 'Estado del Contrato'),
+                            items: estadosContrato
+                                .map((estado) => DropdownMenuItem(value: estado, child: Text(estado)))
+                                .toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                c['estadoContrato']!.text = value ?? '';
+                              });
+                            },
+                          ),
+                        ),
+                        TextField(
                           controller: c['fechaContratacion'],
-                          decoration: const InputDecoration(labelText: 'Fecha de Contratación'),
+                          decoration: const InputDecoration(labelText: 'Fecha de Contratación (YYYY-MM-DD)'),
                         ),
-                      ),
-                    ],
+                      ],
                   ),
                 ),
               ],

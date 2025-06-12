@@ -21,10 +21,16 @@ Future<void> createContratoMongo(Map<String, String> data, String id) async {
 
 Future<void> createContratoSupabase(Map<String, String> data, String id) async {
   final url = Uri.parse('http://localhost:3000/contratos/supabase');
+    final body = jsonEncode({
+    'id_trabajadores': id,
+    'plazo_de_contrato': data['plazo_de_contrato'] ?? '',
+    'estado': data['estado'] ?? '',
+    'fecha_de_contratacion': data['fecha_de_contratacion'] ?? '',
+  });
   final response  = await http.post(
     url,
     headers: {'Content-type': 'application/json'},
-    body: jsonEncode({'id_trabajador': id, ...data}),
+    body: jsonEncode({'id_trabajadores': id, ...data}),
   );
   
 

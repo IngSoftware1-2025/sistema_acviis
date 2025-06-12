@@ -95,12 +95,6 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
   final TextEditingController _estadoContratoController = TextEditingController(
     text: 'Activo',
   );
-  final TextEditingController _documentoVacacionesController =
-      TextEditingController(
-        text: 'DocVac-${DateTime.now().millisecondsSinceEpoch % 10000}',
-      );
-  final TextEditingController _comentarioAdicionalController =
-      TextEditingController(text: 'Sin comentarios');
   final TextEditingController
   _fechaContratacionController = TextEditingController(
     text:
@@ -125,21 +119,16 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
           obraEnLaQueTrabaja: _obraController.text,
           rolQueAsumeEnLaObra: _rolController.text,
         );
-        // Si el formulario de contrato está visible, crear contrato SOLO en MongoDB (PDF)
-        if (_showContratoForm) {
-          final contratoData = {
-            'plazo_de_contrato': _plazoDeContratoController.text,
-            'estado': _estadoContratoController.text,
-            'documento_de_vacaciones_del_trabajador':
-                _documentoVacacionesController.text,
-            'comentario_adicional_acerca_del_trabajador':
-                _comentarioAdicionalController.text,
-            'fecha_de_contratacion': _fechaContratacionController.text,
-            'id_trabajadores': trabajadorId,
-          };
-          await createContratoMongo(contratoData, trabajadorId);
-          await createContratoSupabase(contratoData, trabajadorId);
-        }
+        // Siempre crear contrato
+        final contratoData = {
+          'plazo_de_contrato': _plazoDeContratoController.text,
+          'estado': _estadoContratoController.text,
+          'fecha_de_contratacion': _fechaContratacionController.text,
+          'id_trabajadores': trabajadorId,
+        };
+        await createContratoMongo(contratoData, trabajadorId);
+        await createContratoSupabase(contratoData, trabajadorId);
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Trabajador creado exitosamente')),
@@ -314,32 +303,7 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
                         : null;
                   },
                 ),
-                // ===================== Documento de vacaciones
-                TextFormField(
-                  controller: _documentoVacacionesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Documento de vacaciones del trabajador',
-                  ),
-                  validator: (value) {
-                    if (!_showContratoForm) return null;
-                    return value == null || value.isEmpty
-                        ? 'Campo requerido'
-                        : null;
-                  },
-                ),
-                // ===================== Comentario Adicional
-                TextFormField(
-                  controller: _comentarioAdicionalController,
-                  decoration: const InputDecoration(
-                    labelText: 'Comentario adicional acerca del trabajador',
-                  ),
-                  validator: (value) {
-                    if (!_showContratoForm) return null;
-                    return value == null || value.isEmpty
-                        ? 'Campo requerido'
-                        : null;
-                  },
-                ),
+                
                 // ===================== Fecha de contratacion
                 TextFormField(
                   controller: _fechaContratacionController,

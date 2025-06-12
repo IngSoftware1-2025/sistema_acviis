@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:sistema_acviis/ui/widgets/scaffold.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/trabajadores_view.dart';
-import 'package:sistema_acviis/backend/controllers/contratos/actualizar_contrato.dart';
+import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_estado_trabajador.dart';
+import 'package:sistema_acviis/backend/controllers/comentarios/create_comentario.dart';
 
 class EliminarTrabajadorView extends StatefulWidget {
   final Object? trabajadores;
@@ -132,13 +133,8 @@ class _EliminarTrabajadorViewState extends State<EliminarTrabajadorView> {
                                   mainAxisSize: MainAxisSize.min,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('Se cambiará el estado de contrato a "Eliminado" para:'),
+                                    const Text('Se cambiará el estado a "Eliminado" para:'),
                                     const SizedBox(height: 8),
-                                    /*
-                                    tabla que muestra los trabajadores seleccionados
-                                    un resumen de los trabajadores seleccionados con su nombre y RUT
-                                    creo que se podria hacer una funcion? asi sirve para mas partes
-                                    */
                                     Table(
                                       columnWidths: const {
                                         0: FlexColumnWidth(2),
@@ -195,35 +191,32 @@ class _EliminarTrabajadorViewState extends State<EliminarTrabajadorView> {
                             if (confirm == true) {
                               final seleccionadosCopia = List<int>.from(seleccionados);
                               setState(() {
-                                for (final i in seleccionadosCopia) {
-                                  if (trabajadores[i].contratos.isNotEmpty) {
-                                    trabajadores[i].contratos.last['estado'] = 'Eliminado';
-                                    trabajadores[i].contratos.last['comentario_adicional_acerca_del_trabajador'] =
-                                        comentariosControllers[i]?.text ?? '';
-                                  }
-                                }
                                 seleccionados.clear();
                               });
                               for (final i in seleccionadosCopia) {
                                 final t = trabajadores[i];
-                                if (t.contratos.isNotEmpty) {
-                                  final contrato = t.contratos.last;
-                                  final contratoId = contrato['id'].toString();
-                                  final comentario = comentariosControllers[i]?.text ?? '';
-                                  await actualizarContrato(
-                                    contratoId,
-                                    plazo: contrato['plazo_de_contrato'] ?? '',
+                                final comentario = comentariosControllers[i]?.text ?? '';
+                                try {
+                                  await crearComentario(
+                                    idTrabajador: t.id.toString(),
                                     comentario: comentario,
-                                    documento: contrato['documento_de_vacaciones_del_trabajador'] ?? '',
-                                    estado: 'Eliminado',
+                                    fecha: DateTime.now(),
+                                    idContrato: null,
                                   );
+                                  await actualizarEstadoTrabajador(t.id, 'Eliminado');
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Error al eliminar: $e')),
+                                    );
+                                  }
                                 }
                               }
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Los trabajadores han sido eliminados con éxito')),
-                              );
-                              await Future.delayed(const Duration(seconds: 1));
-                              if (mounted) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Los trabajadores han sido eliminados con éxito')),
+                                );
+                                await Future.delayed(const Duration(seconds: 1));
                                 Navigator.of(context).pushAndRemoveUntil(
                                   MaterialPageRoute(builder: (_) => TrabajadoresView()),
                                   (route) => false,

@@ -28,7 +28,8 @@ Future<String> createTrabajador({
       'sistema_de_salud': sistemaDeSalud,
       'prevision_afp': previsionAfp,
       'obra_en_la_que_trabaja': obraEnLaQueTrabaja,
-      'rol_que_asume_en_la_obra' : rolQueAsumeEnLaObra
+      'rol_que_asume_en_la_obra' : rolQueAsumeEnLaObra,
+      'estado': 'Activo',
     }),
   );
 

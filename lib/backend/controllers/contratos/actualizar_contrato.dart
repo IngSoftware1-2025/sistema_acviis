@@ -14,7 +14,6 @@ Future<void> actualizarContrato(
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({
       'plazo_de_contrato': plazo,
-      'comentario_adicional_acerca_del_trabajador': comentario,
       'documento_de_vacaciones_del_trabajador': documento,
       'estado': estado,
     }),

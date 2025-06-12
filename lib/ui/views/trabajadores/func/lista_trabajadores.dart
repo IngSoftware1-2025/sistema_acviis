@@ -4,12 +4,14 @@ import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:sistema_acviis/ui/widgets/checkbox.dart';
 import 'package:sistema_acviis/utils/constants/constants.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
-import 'package:sistema_acviis/backend/controllers/contratos/actualizar_estado_contrato.dart';
 import 'package:sistema_acviis/ui/widgets/expansion_tile.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/editar_trabajador_dialog.dart';
-import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_trabajador.dart'; // Asegúrate de que la ruta sea correcta
+import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_trabajador.dart';
+import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_estado_trabajador.dart';
 import 'package:sistema_acviis/backend/controllers/contratos/actualizar_contrato.dart';
-
+import 'package:sistema_acviis/backend/controllers/contratos/actualizar_estado_contrato.dart';
+import 'package:sistema_acviis/backend/controllers/comentarios/create_comentario.dart';
+import 'package:sistema_acviis/backend/controllers/contratos/create_contrato.dart';
 
 class ListaTrabajadores extends StatefulWidget {
   const ListaTrabajadores({super.key});
@@ -104,14 +106,6 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                           trailing: PopupMenuButton<String>(
                             onSelected: (value) async {
                                 if (value == 'Eliminar') {
-                                final contrato = trabajador.contratos.isNotEmpty ? trabajador.contratos.last : null;
-                                if (contrato == null) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('No se encontró contrato asociado')),
-                                  );
-                                  return;
-                                }
-
                                 final comentarioController = TextEditingController();
                                 bool comentarioInvalido = false;
                                 /*
@@ -225,6 +219,11 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                           ],
                                         ),
                                         const SizedBox(height: 12),
+                                        Text(
+                                          'Comentario: ${comentarioController.text.trim()}',
+                                          style: const TextStyle(fontStyle: FontStyle.italic),
+                                        ),
+                                        const SizedBox(height: 12),
                                         const Text(
                                           'Esta acción no se puede deshacer.',
                                         ),
@@ -244,27 +243,29 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                   );
 
                                   if (confirmacionFinal == true) {
-                                  try {
-                                    await actualizarContrato(
-                                    contrato['id'].toString(),
-                                    plazo: contrato['plazo_de_contrato'] ?? '',
-                                    comentario: comentarioController.text.trim(),
-                                    documento: contrato['documento_de_vacaciones_del_trabajador'] ?? '',
-                                    estado: 'Eliminado',
-                                    );
-                                    await provider.fetchTrabajadores();
-                                    if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Trabajador eliminado correctamente')),
-                                    );
+                                    try {
+                                      // Crea el comentario asociado al trabajador
+                                      await crearComentario(
+                                        idTrabajador: trabajador.id,
+                                        comentario: comentarioController.text.trim(),
+                                        fecha: DateTime.now(),
+                                        idContrato: null,
+                                      );
+                                      // Actualiza el estado del trabajador a "Eliminado"
+                                      await actualizarEstadoTrabajador(trabajador.id, 'Eliminado');
+                                      await provider.fetchTrabajadores();
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Trabajador eliminado correctamente')),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Error al eliminar: $e')),
+                                        );
+                                      }
                                     }
-                                  } catch (e) {
-                                    if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Error al eliminar: $e')),
-                                    );
-                                    }
-                                  }
                                   }
                                 }
                               } else if (value == 'Modificar') {
@@ -275,7 +276,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                 if (resultado is Map<String, dynamic>) {
                                   final cambios = <String, Map<String, dynamic>>{};
                                   final nuevosDatos = resultado['trabajador'] as Map<String, dynamic>;
-                                  final contratosNuevos = resultado['contratos'] as List<dynamic>;
+                                  final contratosNuevos = resultado['contratos'] as List<dynamic>? ?? [];
 
                                   // Compara datos del trabajador
                                   nuevosDatos.forEach((key, value) {
@@ -364,6 +365,208 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                     }
                                   }
                                 }
+                              } else if (value == 'EliminarContrato') {
+                                // Solo permite eliminar si hay al menos un contrato NO "Reemplazado"
+                                final contratos = (trabajador.contratos ?? [])
+                                    .where((contrato) => contrato['estado'] != 'Reemplazado')
+                                    .toList();
+
+                                if (contratos.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('El trabajador no tiene contratos activos para eliminar.')),
+                                  );
+                                  return;
+                                }
+
+                                // Selecciona el contrato a eliminar
+                                final contratoSeleccionado = await showDialog<Map<String, dynamic>?>(
+                                  context: context,
+                                  builder: (context) => SimpleDialog(
+                                    title: const Text('Selecciona un contrato a eliminar'),
+                                    children: contratos.map<Widget>((contrato) {
+                                      return SimpleDialogOption(
+                                        onPressed: () => Navigator.pop(context, contrato),
+                                        child: Text('Contrato ID: ${contrato['id']} - Estado: ${contrato['estado']}'),
+                                      );
+                                    }).toList(),
+                                  ),
+                                );
+
+                                if (contratoSeleccionado != null) {
+                                  // Pide comentario antes de eliminar
+                                  final comentarioController = TextEditingController();
+                                  bool comentarioInvalido = false;
+                                  final confirmar = await showDialog<bool>(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (context) {
+                                      return StatefulBuilder(
+                                        builder: (context, setState) => AlertDialog(
+                                          title: const Text('Confirmar eliminación de contrato'),
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                '¿Estás seguro que deseas eliminar el contrato ID: ${contratoSeleccionado['id']} del trabajador ${trabajador.nombreCompleto}?\n\nEsta acción no se puede deshacer.',
+                                              ),
+                                              const SizedBox(height: 16),
+                                              TextField(
+                                                controller: comentarioController,
+                                                maxLines: 3,
+                                                decoration: InputDecoration(
+                                                  labelText: 'Comentario obligatorio',
+                                                  errorText: comentarioInvalido ? 'El comentario es obligatorio' : null,
+                                                  border: const OutlineInputBorder(),
+                                                ),
+                                                onChanged: (_) {
+                                                  if (comentarioInvalido) setState(() => comentarioInvalido = false);
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context, false),
+                                              child: const Text('Cancelar'),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                if (comentarioController.text.trim().isEmpty) {
+                                                  setState(() => comentarioInvalido = true);
+                                                  return;
+                                                }
+                                                Navigator.pop(context, true);
+                                              },
+                                              child: const Text('Eliminar'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  );
+
+                                  if (confirmar == true) {
+                                    try {
+                                      await actualizarEstadoContrato(
+                                        contratoSeleccionado['id'].toString(),
+                                        'Reemplazado',
+                                      );
+                                      await crearComentario(
+                                        idTrabajador: trabajador.id,
+                                        idContrato: contratoSeleccionado['id'].toString(),
+                                        comentario: comentarioController.text.trim(),
+                                        fecha: DateTime.now(),
+                                      );
+                                      await provider.fetchTrabajadores();
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Contrato actualizado a "Reemplazado" y comentario guardado')),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Error al eliminar contrato: $e')),
+                                        );
+                                      }
+                                    }
+                                  }
+                                }
+                              } else if (value == 'CrearContrato') {
+                                final plazoController = TextEditingController();
+                                String estadoSeleccionado = 'Activo';
+                                bool camposInvalidos = false;
+
+                                final confirmar = await showDialog<bool>(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (context) {
+                                    return StatefulBuilder(
+                                      builder: (context, setState) => AlertDialog(
+                                        title: const Text('Crear nuevo contrato'),
+                                        content: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            TextField(
+                                              controller: plazoController,
+                                              decoration: InputDecoration(
+                                                labelText: 'Plazo del contrato',
+                                                errorText: camposInvalidos && plazoController.text.trim().isEmpty
+                                                    ? 'Campo obligatorio'
+                                                    : null,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            DropdownButtonFormField<String>(
+                                              value: estadoSeleccionado,
+                                              decoration: const InputDecoration(
+                                                labelText: 'Estado',
+                                                border: OutlineInputBorder(),
+                                              ),
+                                              items: const [
+                                                DropdownMenuItem(
+                                                  value: 'Activo',
+                                                  child: Text('Activo'),
+                                                ),
+                                                DropdownMenuItem(
+                                                  value: 'Reemplazado',
+                                                  child: Text('Reemplazado'),
+                                                ),
+                                                DropdownMenuItem(
+                                                  value: 'Finalizado',
+                                                  child: Text('Finalizado'),
+                                                ),
+                                              ],
+                                              onChanged: (value) {
+                                                if (value != null) setState(() => estadoSeleccionado = value);
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context, false),
+                                            child: const Text('Cancelar'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              if (plazoController.text.trim().isEmpty) {
+                                                setState(() => camposInvalidos = true);
+                                                return;
+                                              }
+                                              Navigator.pop(context, true);
+                                            },
+                                            child: const Text('Crear'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+
+                                if (confirmar == true) {
+                                  try {
+                                    await createContratoSupabase({
+                                      'plazo_de_contrato': plazoController.text.trim(),
+                                      'estado': estadoSeleccionado,
+                                      'fecha_de_contratacion': DateTime.now().toIso8601String().substring(0, 10),
+                                      'id_trabajadores': trabajador.id.toString(),
+                                    }, trabajador.id.toString());
+                                    await provider.fetchTrabajadores();
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Contrato creado correctamente')),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Error al crear contrato: $e')),
+                                      );
+                                    }
+                                  }
+                                }
                               }
                             },
                             itemBuilder: (context) => [
@@ -374,6 +577,14 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                               const PopupMenuItem(
                                 value: 'Eliminar',
                                 child: Text('Eliminar'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'EliminarContrato',
+                                child: Text('Eliminar Contrato'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'CrearContrato',
+                                child: Text('Crear Contrato'),
                               ),
                             ],
                             icon: const Icon(Icons.more_vert),

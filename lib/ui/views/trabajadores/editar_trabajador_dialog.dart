@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
+import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_trabajador.dart';
 
 class EditarTrabajadorDialog extends StatefulWidget {
   final Trabajador trabajador;
@@ -19,9 +20,7 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
   late TextEditingController previsionAfpController;
   late TextEditingController obraController;
   late TextEditingController rolController;
-
-  // Controladores para contratos
-  late List<Map<String, TextEditingController>> contratosControllers;
+  late TextEditingController estadoController;
 
   @override
   void initState() {
@@ -34,15 +33,7 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
     previsionAfpController = TextEditingController(text: widget.trabajador.previsionAfp);
     obraController = TextEditingController(text: widget.trabajador.obraEnLaQueTrabaja);
     rolController = TextEditingController(text: widget.trabajador.rolQueAsumeEnLaObra);
-
-    contratosControllers = widget.trabajador.contratos.map<Map<String, TextEditingController>>((contrato) {
-      return {
-        'plazo': TextEditingController(text: contrato['plazo_de_contrato'] ?? ''),
-        'estado': TextEditingController(text: contrato['estado'] ?? ''),
-        'comentario': TextEditingController(text: contrato['comentario_adicional_acerca_del_trabajador'] ?? ''),
-        'documento': TextEditingController(text: contrato['documento_de_vacaciones_del_trabajador'] ?? ''),
-      };
-    }).toList();
+    estadoController = TextEditingController(text: widget.trabajador.estado);
   }
 
   @override
@@ -55,25 +46,20 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
     previsionAfpController.dispose();
     obraController.dispose();
     rolController.dispose();
-    for (var map in contratosControllers) {
-      for (var c in map.values) {
-        c.dispose();
-      }
-    }
+    estadoController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Editar trabajador y contratos'),
+      title: const Text('Editar trabajador'),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // --- Datos del trabajador ---
               TextFormField(
                 controller: nombreCompletoController,
                 decoration: const InputDecoration(labelText: 'Nombre completo'),
@@ -114,52 +100,20 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
                 decoration: const InputDecoration(labelText: 'Rol que asume en la obra'),
                 validator: (v) => v == null || v.isEmpty ? 'Campo obligatorio' : null,
               ),
-              const SizedBox(height: 16),
-              // --- Contratos vinculados ---
-              const Text('Contratos vinculados', style: TextStyle(fontWeight: FontWeight.bold)),
-              ...List.generate(widget.trabajador.contratos.length, (i) {
-                final contrato = widget.trabajador.contratos[i];
-                final ctrls = contratosControllers[i];
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('ID: ${contrato['id'] ?? '-'}'),
-                        TextFormField(
-                          controller: ctrls['plazo'],
-                          decoration: const InputDecoration(labelText: 'Plazo de contrato'),
-                        ),
-                        DropdownButtonFormField<String>(
-                          value: (ctrls['estado']!.text == 'Activo' || ctrls['estado']!.text == 'Inactivo')
-                              ? ctrls['estado']!.text
-                              : null, // Si el estado actual no es válido, deja vacío
-                          items: const [
-                            DropdownMenuItem(value: 'Activo', child: Text('Activo')),
-                            DropdownMenuItem(value: 'Inactivo', child: Text('Inactivo')),
-                          ],
-                          onChanged: (value) {
-                            ctrls['estado']!.text = value ?? '';
-                            setState(() {});
-                          },
-                          decoration: const InputDecoration(labelText: 'Estado'),
-                        ),
-                        TextFormField(
-                          controller: ctrls['documento'],
-                          decoration: const InputDecoration(labelText: 'Documento de vacaciones del trabajador'),
-                        ),
-                        TextFormField(
-                          controller: ctrls['comentario'],
-                          decoration: const InputDecoration(labelText: 'Comentario adicional'),
-                        ),
-                        
-                      ],
-                    ),
-                  ),
-                );
-              }),
+              DropdownButtonFormField<String>(
+                value: estadoController.text.isNotEmpty ? estadoController.text : null,
+                items: const [
+                  DropdownMenuItem(value: 'Activo', child: Text('Activo')),
+                  DropdownMenuItem(value: 'Inactivo', child: Text('Inactivo')),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    estadoController.text = value;
+                  }
+                  setState(() {});
+                },
+                decoration: const InputDecoration(labelText: 'Estado'),
+              ),
             ],
           ),
         ),
@@ -172,9 +126,7 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
         ElevatedButton(
           onPressed: () async {
             if (_formKey.currentState!.validate()) {
-            // Retorna los datos editados, sin actualizar aún
-            Navigator.pop(context, {
-              'trabajador': {
+              final trabajadorData = {
                 'nombre_completo': nombreCompletoController.text,
                 'estado_civil': estadoCivilController.text,
                 'direccion': direccionController.text,
@@ -183,19 +135,50 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
                 'prevision_afp': previsionAfpController.text,
                 'obra_en_la_que_trabaja': obraController.text,
                 'rol_que_asume_en_la_obra': rolController.text,
-              },
-              'contratos': List.generate(widget.trabajador.contratos.length, (i) {
-                final ctrls = contratosControllers[i];
-                return {
-                  'id': widget.trabajador.contratos[i]['id'],
-                  'plazo_de_contrato': ctrls['plazo']!.text,
-                  'estado': ctrls['estado']!.text,
-                  'comentario_adicional_acerca_del_trabajador': ctrls['comentario']!.text,
-                  'documento_de_vacaciones_del_trabajador': ctrls['documento']!.text,
-                };
-              }),
-            });
-          }
+                'estado': estadoController.text,
+              };
+
+              final confirmacion = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Resumen de cambios'),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Datos del trabajador:'),
+                        ...trabajadorData.entries.map((e) => Text('${e.key}: ${e.value}')),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancelar'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Aceptar'),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirmacion == true) {
+                try {
+                  await actualizarTrabajador(widget.trabajador.id, trabajadorData);
+                  if (context.mounted) {
+                    Navigator.pop(context, true);
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error al guardar cambios: $e')),
+                    );
+                  }
+                }
+              }
+            }
           },
           child: const Text('Guardar'),
         ),

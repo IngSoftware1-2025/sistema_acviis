@@ -40,7 +40,7 @@ class _PersonalizedExpansionTileState extends State<PersonalizedExpansionTile> {
               Text('Previsión AFP: ${t.previsionAfp}'),
               Text('Obra en la que trabaja: ${t.obraEnLaQueTrabaja}'),
               Text('Rol que asume en la obra: ${t.rolQueAsumeEnLaObra}'),
-              //Text('Estado trabajador: ${t.estadoTrabajador}'),
+              Text('Estado en la empresa: ${t.estado}'),
             ],
           ),
         ),
