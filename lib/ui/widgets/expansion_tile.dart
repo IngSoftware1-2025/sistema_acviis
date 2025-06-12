@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
+import 'package:sistema_acviis/ui/styles/app_colors.dart';
 
 class PersonalizedExpansionTile extends StatefulWidget {
   final Trabajador trabajador;
-  final Widget? trailing; // <-- Agregado
+  final Widget? trailing;
 
   const PersonalizedExpansionTile({
     super.key,
     required this.trabajador,
-    this.trailing, // <-- Agregado
+    this.trailing,
   });
 
   @override
@@ -41,6 +42,21 @@ class _PersonalizedExpansionTileState extends State<PersonalizedExpansionTile> {
               Text('Obra en la que trabaja: ${t.obraEnLaQueTrabaja}'),
               Text('Rol que asume en la obra: ${t.rolQueAsumeEnLaObra}'),
               Text('Estado en la empresa: ${t.estado}'),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
+                label: const Text('Generar ficha PDF', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Colors.white),
+                ),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Funcionalidad aún no terminada xd')),
+                  );
+                },
+              ),
             ],
           ),
         ),
