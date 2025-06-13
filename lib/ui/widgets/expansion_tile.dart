@@ -5,11 +5,13 @@ import 'package:sistema_acviis/ui/styles/app_colors.dart';
 class PersonalizedExpansionTile extends StatefulWidget {
   final Trabajador trabajador;
   final Widget? trailing;
+  final VoidCallback? pdfCallback;  
 
   const PersonalizedExpansionTile({
     super.key,
     required this.trabajador,
     this.trailing,
+    this.pdfCallback, 
   });
 
   @override
@@ -51,11 +53,7 @@ class _PersonalizedExpansionTileState extends State<PersonalizedExpansionTile> {
                   foregroundColor: Colors.white,
                   side: const BorderSide(color: Colors.white),
                 ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Funcionalidad aún no terminada xd')),
-                  );
-                },
+                onPressed: widget.pdfCallback ?? () {}, 
               ),
             ],
           ),

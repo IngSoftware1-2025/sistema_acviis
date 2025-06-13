@@ -12,6 +12,10 @@ import 'package:sistema_acviis/backend/controllers/contratos/actualizar_contrato
 import 'package:sistema_acviis/backend/controllers/contratos/actualizar_estado_contrato.dart';
 import 'package:sistema_acviis/backend/controllers/comentarios/create_comentario.dart';
 import 'package:sistema_acviis/backend/controllers/contratos/create_contrato.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'package:open_file/open_file.dart';
 
 class ListaTrabajadores extends StatefulWidget {
   const ListaTrabajadores({super.key});
@@ -31,6 +35,31 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
             .setCheckBoxes(trabajadoresProvider.trabajadores.length);
       });
     });
+  }
+
+  //  función para descargar y abrir el PDF:
+  Future<void> descargarFichaPDF(BuildContext context, String trabajadorId, String rut) async {
+    try {
+      final url = Uri.parse('http://localhost:3000/trabajadores/$trabajadorId/ficha-pdf');
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final dir = await getTemporaryDirectory();
+        final file = File('${dir.path}/ficha_trabajador_${rut ?? trabajadorId}.pdf');
+        await file.writeAsBytes(response.bodyBytes);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('PDF descargado. Abriendo...')),
+        );
+        await OpenFile.open(file.path);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo generar la ficha PDF')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 
   @override
@@ -589,6 +618,10 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                             ],
                             icon: const Icon(Icons.more_vert),
                           ),
+                          // callback al botón para generar PDF:
+                          pdfCallback: () {
+                            descargarFichaPDF(context, trabajador.id, trabajador.rut);
+                          },
                         ),
                       ),
                     ],
