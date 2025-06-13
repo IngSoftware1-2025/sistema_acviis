@@ -394,11 +394,23 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                     }
                                   }
                                 }
-                              } else if (value == 'EliminarContrato') {
+                              } else if (value == 'Eliminar Contrato') {
                                 // Solo permite eliminar si hay al menos un contrato NO "Reemplazado"
+                                // Se podria modificar para mas filtros en caso de mas estados)?
                                 final contratos = (trabajador.contratos ?? [])
                                     .where((contrato) => contrato['estado'] != 'Reemplazado')
                                     .toList();
+
+                                // Si no hay ningún contrato activo ni finalizado, muestra mensaje
+                                
+                                final tieneContratoAsociado = (trabajador.contratos ?? [])
+                                    .any((contrato) => contrato['estado'] == 'Activo' || contrato['estado'] == 'Finalizado');
+                                if (!tieneContratoAsociado) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('No hay contrato asociado para eliminar.')),
+                                  );
+                                  return;
+                                }
 
                                 if (contratos.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -425,13 +437,13 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                   // Pide comentario antes de eliminar
                                   final comentarioController = TextEditingController();
                                   bool comentarioInvalido = false;
-                                  final confirmar = await showDialog<bool>(
+                                  final confirmarComentario = await showDialog<bool>(
                                     context: context,
                                     barrierDismissible: false,
                                     builder: (context) {
                                       return StatefulBuilder(
                                         builder: (context, setState) => AlertDialog(
-                                          title: const Text('Confirmar eliminación de contrato'),
+                                          title: const Text('Comentario para eliminar contrato'),
                                           content: Column(
                                             mainAxisSize: MainAxisSize.min,
                                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -467,7 +479,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                                 }
                                                 Navigator.pop(context, true);
                                               },
-                                              child: const Text('Eliminar'),
+                                              child: const Text('Siguiente'),
                                             ),
                                           ],
                                         ),
@@ -475,34 +487,85 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                     },
                                   );
 
-                                  if (confirmar == true) {
-                                    try {
-                                      await actualizarEstadoContrato(
-                                        contratoSeleccionado['id'].toString(),
-                                        'Reemplazado',
-                                      );
-                                      await crearComentario(
-                                        idTrabajador: trabajador.id,
-                                        idContrato: contratoSeleccionado['id'].toString(),
-                                        comentario: comentarioController.text.trim(),
-                                        fecha: DateTime.now(),
-                                      );
-                                      await provider.fetchTrabajadores();
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Contrato actualizado a "Reemplazado" y comentario guardado')),
+                                  if (confirmarComentario == true) {
+                                    // Pantalla de confirmación final
+                                    final confirmarFinal = await showDialog<bool>(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text('Confirmar eliminación de contrato'),
+                                        content: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text('¿Deseas eliminar el siguiente contrato?'),
+                                            const SizedBox(height: 12),
+                                            Text('Trabajador: ${trabajador.nombreCompleto ?? ''}'),
+                                            Text('RUT: ${trabajador.rut ?? ''}'),
+                                            Text('Contrato ID: ${contratoSeleccionado['id']}'),
+                                            Text('Estado: ${contratoSeleccionado['estado']}'),
+                                            Text('Plazo: ${contratoSeleccionado['plazo_de_contrato']}'),
+                                            const SizedBox(height: 12),
+                                            const Text('Comentario:', style: TextStyle(fontWeight: FontWeight.bold)),
+                                            Text(comentarioController.text.trim(), style: const TextStyle(fontStyle: FontStyle.italic)),
+                                            const SizedBox(height: 12),
+                                            const Text('Esta acción no se puede deshacer.'),
+                                          ],
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context, false),
+                                            child: const Text('Cancelar'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () => Navigator.pop(context, true),
+                                            child: const Text('Eliminar'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+
+                                    if (confirmarFinal == true) {
+                                      try {
+                                        await actualizarEstadoContrato(
+                                          contratoSeleccionado['id'].toString(),
+                                          'Reemplazado',
                                         );
-                                      }
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Error al eliminar contrato: $e')),
+                                        await crearComentario(
+                                          idTrabajador: trabajador.id,
+                                          idContrato: contratoSeleccionado['id'].toString(),
+                                          comentario: comentarioController.text.trim(),
+                                          fecha: DateTime.now(),
                                         );
+                                        await provider.fetchTrabajadores();
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Contrato actualizado a "Reemplazado" y comentario guardado')),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Error al eliminar contrato: $e')),
+                                          );
+                                        }
                                       }
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Se canceló la eliminación del contrato')),
+                                      );
                                     }
                                   }
                                 }
-                              } else if (value == 'CrearContrato') {
+                              } else if (value == 'Crear Contrato') {
+                                // Solo permite crear si NO tiene ningún contrato vinculado
+                                if ((trabajador.contratos ?? []).any((contrato) => contrato['estado'] == 'Activo')) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('El trabajador ya tiene un contrato activo vinculado.')),
+                                  );
+                                  return;
+                                }
+
                                 final plazoController = TextEditingController();
                                 String estadoSeleccionado = 'Activo';
                                 bool camposInvalidos = false;
@@ -527,6 +590,24 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                               ),
                                             ),
                                             const SizedBox(height: 12),
+                                            // se crea siempre como activo
+                                            const Align(
+                                              alignment: Alignment.centerLeft,
+                                              child: Padding(
+                                                padding: EdgeInsets.symmetric(vertical: 8.0),
+                                                child: Text(
+                                                  'Estado: Activo',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            /*
+                                            cambiar lo de arriba por un dropdown si se quiere
+                                            con mas opciones de estado
+
                                             DropdownButtonFormField<String>(
                                               value: estadoSeleccionado,
                                               decoration: const InputDecoration(
@@ -550,7 +631,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                               onChanged: (value) {
                                                 if (value != null) setState(() => estadoSeleccionado = value);
                                               },
-                                            ),
+                                            ),*/
                                           ],
                                         ),
                                         actions: [
@@ -566,7 +647,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                               }
                                               Navigator.pop(context, true);
                                             },
-                                            child: const Text('Crear'),
+                                            child: const Text('Siguiente'),
                                           ),
                                         ],
                                       ),
@@ -575,28 +656,311 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                 );
 
                                 if (confirmar == true) {
-                                  try {
-                                    await createContratoSupabase({
-                                      'plazo_de_contrato': plazoController.text.trim(),
-                                      'estado': estadoSeleccionado,
-                                      'fecha_de_contratacion': DateTime.now().toIso8601String().substring(0, 10),
-                                      'id_trabajadores': trabajador.id.toString(),
-                                    }, trabajador.id.toString());
-                                    await provider.fetchTrabajadores();
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Contrato creado correctamente')),
-                                      );
+                                  // Mostrar resumen antes de crear
+                                  final confirmarFinal = await showDialog<bool>(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Confirmar creación de contrato'),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text('Se creará el siguiente contrato para el trabajador:'),
+                                          const SizedBox(height: 12),
+                                          Text('Nombre: ${trabajador.nombreCompleto ?? ''}'),
+                                          Text('RUT: ${trabajador.rut ?? ''}'),
+                                          const SizedBox(height: 12),
+                                          const Text('Datos del contrato:', style: TextStyle(fontWeight: FontWeight.bold)),
+                                          Text('Plazo: ${plazoController.text.trim()}'),
+                                          Text('Estado: $estadoSeleccionado'),
+                                          Text('Fecha de contratación: ${DateTime.now().toIso8601String().substring(0, 10)}'),
+                                        ],
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context, false),
+                                          child: const Text('Cancelar'),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () => Navigator.pop(context, true),
+                                          child: const Text('Confirmar'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+
+                                  if (confirmarFinal == true) {
+                                    try {
+                                      await createContratoSupabase({
+                                        'plazo_de_contrato': plazoController.text.trim(),
+                                        'estado': estadoSeleccionado,
+                                        'fecha_de_contratacion': DateTime.now().toIso8601String().substring(0, 10),
+                                        'id_trabajadores': trabajador.id.toString(),
+                                      }, trabajador.id.toString());
+                                      await provider.fetchTrabajadores();
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Contrato creado correctamente')),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Error al crear contrato: $e')),
+                                        );
+                                      }
                                     }
-                                  } catch (e) {
-                                    if (context.mounted) {
+                                  }
+                                }
+                              } else if (value == 'Agregar Comentario') {
+                                final comentarioController = TextEditingController();
+                                bool comentarioInvalido = false;
+
+                                final confirmar = await showDialog<bool>(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (context) {
+                                    return StatefulBuilder(
+                                      builder: (context, setState) => AlertDialog(
+                                        title: const Text('Agregar comentario'),
+                                        content: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Por favor, ingresa un comentario acerca del trabajador:',
+                                              style: TextStyle(fontWeight: FontWeight.bold),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            TextField(
+                                              controller: comentarioController,
+                                              maxLines: 3,
+                                              decoration: InputDecoration(
+                                                labelText: 'Comentario',
+                                                errorText: comentarioInvalido ? 'El comentario es obligatorio' : null,
+                                                border: const OutlineInputBorder(),
+                                              ),
+                                              onChanged: (_) {
+                                                if (comentarioInvalido) setState(() => comentarioInvalido = false);
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context, false),
+                                            child: const Text('Cancelar'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              if (comentarioController.text.trim().isEmpty) {
+                                                setState(() => comentarioInvalido = true);
+                                                return;
+                                              }
+                                              Navigator.pop(context, true);
+                                            },
+                                            child: const Text('Siguiente'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+
+                                if (confirmar == true) {
+                                  // Mostrar resumen antes de agregar
+                                  final confirmarFinal = await showDialog<bool>(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Confirmar comentario'),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text('¿Deseas agregar el siguiente comentario al trabajador?'),
+                                          const SizedBox(height: 12),
+                                          Text('Nombre: ${trabajador.nombreCompleto ?? ''}'),
+                                          Text('RUT: ${trabajador.rut ?? ''}'),
+                                          const SizedBox(height: 12),
+                                          const Text('Comentario:', style: TextStyle(fontWeight: FontWeight.bold)),
+                                          Text(comentarioController.text.trim(), style: const TextStyle(fontStyle: FontStyle.italic)),
+                                        ],
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context, false),
+                                          child: const Text('Cancelar'),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () => Navigator.pop(context, true),
+                                          child: const Text('Confirmar'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+
+                                  if (confirmarFinal == true) {
+                                    try {
+                                      await crearComentario(
+                                        idTrabajador: trabajador.id,
+                                        comentario: comentarioController.text.trim(),
+                                        fecha: DateTime.now(),
+                                        idContrato: null,
+                                      );
+                                      await provider.fetchTrabajadores();
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Comentario agregado correctamente')),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Error al agregar comentario: $e')),
+                                        );
+                                      }
+                                    }
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Se canceló el comentario al trabajador')),
+                                    );
+                                  }
+                                }
+                              } else if (value == 'Agregar Comentario a Contrato') {
+                                  final contratosActivos = (trabajador.contratos ?? [])
+                                      .where((contrato) => contrato['estado'] == 'Activo')
+                                      .toList();
+
+                                  if (contratosActivos.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('No hay contrato activo para agregar comentario.')),
+                                    );
+                                    return;
+                                  }
+
+                                  final contrato = contratosActivos.first;
+                                  final comentarioController = TextEditingController();
+                                  bool comentarioInvalido = false;
+
+                                  final confirmarComentario = await showDialog<bool>(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (context) {
+                                      return StatefulBuilder(
+                                        builder: (context, setState) => AlertDialog(
+                                          title: const Text('Agregar comentario a contrato'),
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text('Trabajador: ${trabajador.nombreCompleto ?? ''}'),
+                                              Text('RUT: ${trabajador.rut ?? ''}'),
+                                              const SizedBox(height: 8),
+                                              Text('Contrato ID: ${contrato['id']}'),
+                                              Text('Estado: ${contrato['estado']}'),
+                                              Text('Plazo: ${contrato['plazo_de_contrato']}'),
+                                              const SizedBox(height: 12),
+                                              TextField(
+                                                controller: comentarioController,
+                                                maxLines: 3,
+                                                decoration: InputDecoration(
+                                                  labelText: 'Comentario',
+                                                  errorText: comentarioInvalido ? 'El comentario es obligatorio' : null,
+                                                  border: const OutlineInputBorder(),
+                                                ),
+                                                onChanged: (_) {
+                                                  if (comentarioInvalido) setState(() => comentarioInvalido = false);
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context, false),
+                                              child: const Text('Cancelar'),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                if (comentarioController.text.trim().isEmpty) {
+                                                  setState(() => comentarioInvalido = true);
+                                                  return;
+                                                }
+                                                Navigator.pop(context, true);
+                                              },
+                                              child: const Text('Siguiente'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  );
+
+                                  if (confirmarComentario == true) {
+                                    // Pantalla de confirmación final
+                                    final confirmarFinal = await showDialog<bool>(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text('Confirmar comentario'),
+                                        content: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text('¿Deseas agregar el siguiente comentario al contrato?'),
+                                            const SizedBox(height: 12),
+                                            Text('Trabajador: ${trabajador.nombreCompleto ?? ''}'),
+                                            Text('RUT: ${trabajador.rut ?? ''}'),
+                                            Text('Contrato ID: ${contrato['id']}'),
+                                            Text('Estado: ${contrato['estado']}'),
+                                            Text('Plazo: ${contrato['plazo_de_contrato']}'),
+                                            const SizedBox(height: 12),
+                                            const Text('Comentario:', style: TextStyle(fontWeight: FontWeight.bold)),
+                                            Text(comentarioController.text.trim(), style: const TextStyle(fontStyle: FontStyle.italic)),
+                                          ],
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context, false),
+                                            child: const Text('Cancelar'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () => Navigator.pop(context, true),
+                                            child: const Text('Confirmar'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+
+                                    if (confirmarFinal == true) {
+                                      try {
+                                        await crearComentario(
+                                          idTrabajador: trabajador.id,
+                                          idContrato: contrato['id'].toString(),
+                                          comentario: comentarioController.text.trim(),
+                                          fecha: DateTime.now(),
+                                        );
+                                        await provider.fetchTrabajadores();
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Comentario agregado al contrato con éxito')),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Error al agregar comentario: $e')),
+                                          );
+                                        }
+                                      }
+                                    } else {
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Error al crear contrato: $e')),
+                                        const SnackBar(content: Text('Se canceló el comentario al contrato')),
                                       );
                                     }
                                   }
                                 }
-                              }
                             },
                             itemBuilder: (context) => [
                               const PopupMenuItem(
@@ -608,12 +972,20 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                 child: Text('Eliminar'),
                               ),
                               const PopupMenuItem(
-                                value: 'EliminarContrato',
+                                value: 'Eliminar Contrato',
                                 child: Text('Eliminar Contrato'),
                               ),
                               const PopupMenuItem(
-                                value: 'CrearContrato',
+                                value: 'Crear Contrato',
                                 child: Text('Crear Contrato'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'Agregar Comentario',
+                                child: Text('Agregar Comentario al Trabajador'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'Agregar Comentario a Contrato',
+                                child: Text('Agregar Comentario a Contrato'),
                               ),
                             ],
                             icon: const Icon(Icons.more_vert),

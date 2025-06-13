@@ -105,6 +105,9 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
                 items: const [
                   DropdownMenuItem(value: 'Activo', child: Text('Activo')),
                   DropdownMenuItem(value: 'Inactivo', child: Text('Inactivo')),
+                  DropdownMenuItem(value: 'Suspendido', child: Text('Suspendido')),
+                  DropdownMenuItem(value: 'Despedido', child: Text('Despedido')),
+                  DropdownMenuItem(value: 'Renunció', child: Text('Renunció')),
                 ],
                 onChanged: (value) {
                   if (value != null) {
