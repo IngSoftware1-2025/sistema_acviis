@@ -22,7 +22,6 @@ Future<String> createAnexoSupabase(Map<String, String> data) async{ // Data incl
   if (response.statusCode == 200) {
     final responseData = jsonDecode(response.body);
     final anexoId = responseData['anexo']?['id']?.toString();
-    print('ID de anexo: $anexoId');
     return anexoId ?? '';
   } else {
     debugPrint('Error al crear anexo en supabase: ${response.statusCode}');
@@ -64,7 +63,7 @@ Future<void> createAnexoMongo(Map<String, String> data) async {
   );
 
   if (response.statusCode == 200) {
-    debugPrint('Anexo cargado correctamente en mongo: ${response.body}');
+    // debugPrint('Anexo cargado correctamente en mongo: ${response.body}');
   } else {
     debugPrint('Error al crear anexo en mongo: ${response.statusCode}');
     debugPrint('Respuesta del backend: ${response.body}');

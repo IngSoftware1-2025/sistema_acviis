@@ -136,19 +136,36 @@ class _HorizontalExpandableContractsState extends State<_HorizontalExpandableCon
                   itemCount: anexos.length,
                   separatorBuilder: (context, i) => const Divider(),
                   itemBuilder: (context, i) {
-                    final anexo = anexos[i];
-                    return ListTile(
-                      title: Text(anexo['tipo'] ?? 'Anexo ${i + 1}'),
-                      subtitle: Column(
+                  final anexo = anexos[anexos.length - 1 - i]; // Invertir el orden
+                  return ListTile(
+                    title: Text(anexo['tipo'] ?? 'Anexo ${anexo['id'] ?? i + 1}'),
+                    subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('ID: ${anexo['id'] ?? ''}'),
+                      Text('Fecha de creación: ${anexo['fecha_de_creacion']?.toString().split('T').first ?? ''}'),
+                      Text('Duración: ${anexo['duracion'] ?? ''}'),
+                      Text('Parámetros: ${anexo['parametros'] ?? ''}'),
+                      if ((anexo['comentarios'] as List?)?.isNotEmpty ?? false)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('ID: ${anexo['id'] ?? ''}'),
-                          Text('Fecha de creación: ${anexo['fecha_de_creacion']?.toString().split('T').first ?? ''}'),
-                          Text('Duración: ${anexo['duracion'] ?? ''}'),
-                          Text('Parámetros: ${anexo['parametros'] ?? ''}'),
+                          const Text('Comentario:', style: TextStyle(fontWeight: FontWeight.bold)),
+                          ...((anexo['comentarios'] as List).map<Widget>((comentario) => Padding(
+                            padding: const EdgeInsets.only(left: 8.0, bottom: 4.0),
+                            child: Text(
+                              '- ${comentario['comentario'] ?? ''}',
+                              style: const TextStyle(fontStyle: FontStyle.italic),
+                            ),
+                            ))),
                         ],
+                        ),
                       ),
-                    );
+                    ],
+                    ),
+                  );
                   },
                 ),
               )
