@@ -668,12 +668,20 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
 
                                   if (confirmarFinal == true) {
                                     try {
-                                      await createContratoSupabase({
+                                      final contratoData = {
                                         'plazo_de_contrato': plazoController.text.trim(),
                                         'estado': estadoSeleccionado,
                                         'fecha_de_contratacion': DateTime.now().toIso8601String().substring(0, 10),
                                         'id_trabajadores': trabajador.id.toString(),
-                                      }, trabajador.id.toString());
+                                      };
+
+                                      final trabajadorId = trabajador.id.toString();
+
+                                      final idContrato = await createContratoSupabase(contratoData, trabajadorId);
+                                      if (idContrato.isNotEmpty) {
+                                        await createContratoMongo(contratoData, trabajadorId, idContrato);
+                                      }
+
                                       await provider.fetchTrabajadores();
                                       if (context.mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(

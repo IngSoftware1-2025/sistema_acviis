@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-Future<void> createContratoMongo(Map<String, String> data, String id) async {
+Future<void> createContratoMongo(Map<String, String> data, String id, String contratoId) async {
   final url = Uri.parse('http://localhost:3000/contratos/mongo');
   final response = await http.post(
     url,
     headers: {'Content-type': 'application/json'},
-    body: jsonEncode({...data, 'id': id}),
+    body: jsonEncode({...data, 'id': id, 'id_contrato': contratoId}),
   );
 
   if (response.statusCode == 200){
@@ -19,7 +19,7 @@ Future<void> createContratoMongo(Map<String, String> data, String id) async {
   }
 }
 
-Future<void> createContratoSupabase(Map<String, String> data, String id) async {
+Future<String> createContratoSupabase(Map<String, String> data, String id) async {
   final url = Uri.parse('http://localhost:3000/contratos/supabase');
     final body = jsonEncode({
     'id_trabajadores': id,
@@ -35,7 +35,9 @@ Future<void> createContratoSupabase(Map<String, String> data, String id) async {
   
 
   if (response.statusCode == 200){
-    //debugPrint('Contrato cargado supabase correctamente: ${response.body}');
+    final responseData = jsonDecode(response.body);
+    final contratoId = responseData['contrato']?['id']?.toString();
+    return contratoId ?? '';
   } else {
     debugPrint('Error al crear contrato en supabase: ${response.statusCode}');
     debugPrint('Respuesta del backend: ${response.body}');

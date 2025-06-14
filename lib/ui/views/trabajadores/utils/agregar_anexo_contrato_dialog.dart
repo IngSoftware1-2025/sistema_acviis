@@ -140,7 +140,8 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
               'parametros': _parametrosController.text,
               'comentario': _comentarioControler.text,
             };
-            if (await createAnexoSupabase(data)) {
+            final idAnexo = await createAnexoSupabase(data);
+            if (idAnexo.isNotEmpty) {
               Map<String, String> data = {
               // Datos del trabajador
               'id': widget.trabajador.id,
@@ -156,13 +157,14 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
               'rol_que_asume_en_la_obra': widget.trabajador.rolQueAsumeEnLaObra,
               'estado': widget.trabajador.estado,
               // Datos del anexo
+              'id_anexo': idAnexo,
               'id_contrato': widget.idContrato,
               'tipo' : _tipoAnexoController.text,
               'duracion' : _duracionController.text,
               'parametros': _parametrosController.text,
               'comentario': _comentarioControler.text,
               };
-              //createAnexoMongo(data);
+              createAnexoMongo(data);
             }
             if (mounted) {
               Navigator.of(this.context).pop();

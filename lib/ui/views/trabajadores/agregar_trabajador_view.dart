@@ -120,15 +120,19 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
           rolQueAsumeEnLaObra: _rolController.text,
         );
         // Siempre crear contrato
-        final contratoData = {
-          'plazo_de_contrato': _plazoDeContratoController.text,
-          'estado': _estadoContratoController.text,
-          'fecha_de_contratacion': _fechaContratacionController.text,
-          'id_trabajadores': trabajadorId,
-        };
-        await createContratoMongo(contratoData, trabajadorId);
-        await createContratoSupabase(contratoData, trabajadorId);
-
+        if (_showContratoForm) {
+          final contratoData = {
+            'plazo_de_contrato': _plazoDeContratoController.text,
+            'estado': _estadoContratoController.text,
+            'fecha_de_contratacion': _fechaContratacionController.text,
+            'id_trabajadores': trabajadorId,
+          };
+          
+          final idContrato = await createContratoSupabase(contratoData, trabajadorId);
+          if (idContrato.isNotEmpty){
+            await createContratoMongo(contratoData, trabajadorId, idContrato);
+          } 
+        }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Trabajador creado exitosamente')),
