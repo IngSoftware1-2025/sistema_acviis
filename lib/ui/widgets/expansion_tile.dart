@@ -29,36 +29,196 @@ class _PersonalizedExpansionTileState extends State<PersonalizedExpansionTile> {
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Si el ancho es menor a 600, usa Column (móvil), si no, usa Row (escritorio/tablet)
+              final isMobile = constraints.maxWidth < 600;
+              final infoWidget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('ID: ${t.id}'),
+            Text('Nombre: ${t.nombreCompleto}'),
+            Text('Estado Civil: ${t.estadoCivil}'),
+            Text('RUT: ${t.rut}'),
+            Text('Fecha de Nacimiento: ${t.fechaDeNacimiento.toLocal().toString().split(' ')[0]}'),
+            Text('Dirección: ${t.direccion}'),
+            Text('Correo Electrónico: ${t.correoElectronico}'),
+            Text('Sistema de Salud: ${t.sistemaDeSalud}'),
+            Text('Previsión AFP: ${t.previsionAfp}'),
+            Text('Obra en la que trabaja: ${t.obraEnLaQueTrabaja}'),
+            Text('Rol que asume en la obra: ${t.rolQueAsumeEnLaObra}'),
+            Text('Estado en la empresa: ${t.estado}'),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
+              label: const Text('Generar ficha PDF', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                side: const BorderSide(color: Colors.white),
+              ),
+              onPressed: widget.pdfCallback ?? () {},
+            ),
+          ],
+              );
+
+              final contratosWidget = t.contratos.isNotEmpty
+            ? Padding(
+                padding: EdgeInsets.only(
+            left: isMobile ? 0 : 16,
+            top: isMobile ? 16 : 0,
+                ),
+                child: _HorizontalExpandableContracts(contratos: t.contratos),
+              )
+            : const SizedBox.shrink();
+
+              if (isMobile) {
+          // En móvil, muestra la info y luego los contratos en columna
+          return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('ID: ${t.id}'),
-              Text('Nombre: ${t.nombreCompleto}'),
-              Text('Estado Civil: ${t.estadoCivil}'),
-              Text('RUT: ${t.rut}'),
-              Text('Fecha de Nacimiento: ${t.fechaDeNacimiento.toLocal().toString().split(' ')[0]}'),
-              Text('Dirección: ${t.direccion}'),
-              Text('Correo Electrónico: ${t.correoElectronico}'),
-              Text('Sistema de Salud: ${t.sistemaDeSalud}'),
-              Text('Previsión AFP: ${t.previsionAfp}'),
-              Text('Obra en la que trabaja: ${t.obraEnLaQueTrabaja}'),
-              Text('Rol que asume en la obra: ${t.rolQueAsumeEnLaObra}'),
-              Text('Estado en la empresa: ${t.estado}'),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
-                label: const Text('Generar ficha PDF', style: TextStyle(color: Colors.white)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white),
-                ),
-                onPressed: widget.pdfCallback ?? () {}, 
-              ),
+              infoWidget,
+              contratosWidget,
             ],
+          );
+              } else {
+          // En escritorio/tablet, muestra en fila
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Flexible(flex: 2, child: infoWidget),
+              if (t.contratos.isNotEmpty)
+                Flexible(flex: 3, child: contratosWidget),
+            ],
+          );
+              }
+            },
           ),
         ),
       ],
+    );
+  }
+}
+
+class _HorizontalExpandableContracts extends StatefulWidget {
+  final List<dynamic> contratos;
+  const _HorizontalExpandableContracts({required this.contratos});
+
+  @override
+  State<_HorizontalExpandableContracts> createState() => _HorizontalExpandableContractsState();
+}
+class _HorizontalExpandableContractsState extends State<_HorizontalExpandableContracts> {
+  int expandedIndex = 0;
+  late List<dynamic> sortedContratos;
+
+  @override
+  void initState() {
+    super.initState();
+    sortedContratos = List<dynamic>.from(widget.contratos);
+    // Ordena poniendo el contrato con estado 'Activo' primero
+    sortedContratos.sort((a, b) {
+      if ((a['estado'] ?? '').toString().toLowerCase() == 'activo') return -1;
+      if ((b['estado'] ?? '').toString().toLowerCase() == 'activo') return 1;
+      return 0;
+    });
+  }
+
+  void _showAnexosDialog(List<dynamic> anexos) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Anexos del Contrato'),
+        content: anexos.isNotEmpty
+            ? SizedBox(
+                width: double.maxFinite,
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: anexos.length,
+                  separatorBuilder: (context, i) => const Divider(),
+                  itemBuilder: (context, i) {
+                    final anexo = anexos[i];
+                    return ListTile(
+                      title: Text(anexo['tipo'] ?? 'Anexo ${i + 1}'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('ID: ${anexo['id'] ?? ''}'),
+                          Text('Fecha de creación: ${anexo['fecha_de_creacion']?.toString().split('T').first ?? ''}'),
+                          Text('Duración: ${anexo['duracion'] ?? ''}'),
+                          Text('Parámetros: ${anexo['parametros'] ?? ''}'),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              )
+            : const Text('No hay anexos para este contrato.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: List.generate(sortedContratos.length, (i) {
+        final contrato = sortedContratos[i];
+        final anexos = contrato['anexos'] as List<dynamic>? ?? [];
+        return Flexible(
+          flex: expandedIndex == i ? 5 : 1,
+          child: GestureDetector(
+            onTap: () => setState(() => expandedIndex = i),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+              decoration: BoxDecoration(
+                color: expandedIndex == i ? Colors.blue[100] : Colors.grey[200],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: expandedIndex == i ? Colors.blue : Colors.grey,
+                  width: expandedIndex == i ? 2 : 1,
+                ),
+              ),
+              padding: const EdgeInsets.all(8),
+              child: expandedIndex == i
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                        Text('ID: ${contrato['id'] ?? ''}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        Text('Plazo: ${contrato['plazo_de_contrato'] ?? ''}'),
+                        Text('Estado: ${contrato['estado'] ?? ''}'),
+                        Text('Fecha: ${contrato['fecha_de_contratacion'] ?? ''}'),
+                        const SizedBox(height: 8),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.attach_file),
+                          label: const Text('Ver anexos'),
+                          style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          ),
+                          onPressed: anexos.isNotEmpty ? () => _showAnexosDialog(anexos) : null,
+                        ),
+                      ],
+                    )
+                  : Center(
+                      child: RotatedBox(
+                        quarterTurns: 3,
+                        child: Text(
+                          'Contrato ${i + 1}',
+                          style: const TextStyle(fontSize: 12, color: Colors.black54),
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+        );
+      }),
     );
   }
 }
