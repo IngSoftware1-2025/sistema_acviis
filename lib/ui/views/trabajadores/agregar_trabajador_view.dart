@@ -187,7 +187,7 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
                   if (value == null || value.isEmpty) {
                   return 'Campo requerido';
                   }
-                  final regExp = RegExp(r'^\d{7,8}-[0-9kK]$');
+                  final regExp = RegExp(r'^\d{8}-[0-9kK]$');
                   if (!regExp.hasMatch(value)) {
                   return 'Formato inválido (XXXXXXXX-X)';
                   }
