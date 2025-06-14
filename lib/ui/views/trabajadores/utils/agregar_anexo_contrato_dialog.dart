@@ -138,7 +138,7 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
               'comentario': _comentarioControler.text,
             };
             const String db = 'supabase';
-            createAnexo(data, db);
+            createAnexoSupabase(data, db);
             Navigator.of(context).pop();
           },
           child: Text('Guardar'),
