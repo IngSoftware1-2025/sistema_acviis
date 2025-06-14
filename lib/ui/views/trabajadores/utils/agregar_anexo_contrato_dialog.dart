@@ -15,14 +15,17 @@
 
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/backend/controllers/anexos/create_anexo.dart';
+import 'package:sistema_acviis/models/trabajador.dart';
 
 class AgregarAnexoContratoDialog extends StatefulWidget {
   final dynamic idContrato;
   final String idTrabajador;
+  final Trabajador trabajador;
   const AgregarAnexoContratoDialog({
     super.key,
     required this.idContrato,
     required this.idTrabajador,
+    required this.trabajador,
   });
   @override
   State<AgregarAnexoContratoDialog> createState() => _AgregarAnexoContratoDialogState();
@@ -128,7 +131,7 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
           child: Text('Cancelar'),
         ),
         ElevatedButton(
-          onPressed: () {
+          onPressed: () async {
             Map<String, String> data = {
               'id_trabajador' : widget.idTrabajador,
               'id_contrato' : widget.idContrato,
@@ -137,9 +140,33 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
               'parametros': _parametrosController.text,
               'comentario': _comentarioControler.text,
             };
-            const String db = 'supabase';
-            createAnexoSupabase(data, db);
-            Navigator.of(context).pop();
+            if (await createAnexoSupabase(data)) {
+              Map<String, String> data = {
+              // Datos del trabajador
+              'id': widget.trabajador.id,
+              'nombre_completo': widget.trabajador.nombreCompleto,
+              'estado_civil': widget.trabajador.estadoCivil,
+              'rut': widget.trabajador.rut,
+              'fecha_de_nacimiento': widget.trabajador.fechaDeNacimiento.toIso8601String(),
+              'direccion': widget.trabajador.direccion,
+              'correo_electronico': widget.trabajador.correoElectronico,
+              'sistema_de_salud': widget.trabajador.sistemaDeSalud,
+              'prevision_afp': widget.trabajador.previsionAfp,
+              'obra_en_la_que_trabaja': widget.trabajador.obraEnLaQueTrabaja,
+              'rol_que_asume_en_la_obra': widget.trabajador.rolQueAsumeEnLaObra,
+              'estado': widget.trabajador.estado,
+              // Datos del anexo
+              'id_contrato': widget.idContrato,
+              'tipo' : _tipoAnexoController.text,
+              'duracion' : _duracionController.text,
+              'parametros': _parametrosController.text,
+              'comentario': _comentarioControler.text,
+              };
+              //createAnexoMongo(data);
+            }
+            if (mounted) {
+              Navigator.of(this.context).pop();
+            }
           },
           child: Text('Guardar'),
         ),

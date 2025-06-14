@@ -973,7 +973,11 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                     );
                                     final idContrato = contratoActivo != null ? contratoActivo['id'] : null;
                                     final idTrabajador = trabajador.id;
-                                    return AgregarAnexoContratoDialog(idContrato: idContrato, idTrabajador: idTrabajador);
+                                    return AgregarAnexoContratoDialog(
+                                      idContrato: idContrato, 
+                                      idTrabajador: idTrabajador,
+                                      trabajador: trabajador,
+                                    );
                                     },
                                 );
                                 
