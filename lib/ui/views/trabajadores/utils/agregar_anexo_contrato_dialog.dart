@@ -18,40 +18,38 @@ import 'package:sistema_acviis/backend/controllers/anexos/create_anexo.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/utils/abrir_anexo_pdf.dart';
+import 'package:sistema_acviis/ui/views/trabajadores/func/descargar_anexo_pdf.dart';
 
 class AgregarAnexoContratoDialog extends StatefulWidget {
   final dynamic idContrato;
   final String idTrabajador;
   final Trabajador trabajador;
-  final bool soloVacaciones;
+  final bool tipoVacaciones;
   const AgregarAnexoContratoDialog({
     super.key,
     required this.idContrato,
     required this.idTrabajador,
     required this.trabajador,
-    this.soloVacaciones = false,
+    this.tipoVacaciones = false,
   });
   @override
   State<AgregarAnexoContratoDialog> createState() => _AgregarAnexoContratoDialogState();
 }
 
 class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog> {
-  final TextEditingController _tipoAnexoController = TextEditingController();
+  late final TextEditingController _tipoAnexoController;
   final TextEditingController _duracionController = TextEditingController();
   final TextEditingController _parametrosController = TextEditingController();
   final TextEditingController _comentarioControler = TextEditingController();
 
   bool _isLoading = false;
-  String? _tipoAnexoDropdownValue;
 
   @override
   void initState() {
     super.initState();
-    if (widget.soloVacaciones) {
-      _tipoAnexoController.text = 'Documento de vacaciones';
-      _tipoAnexoDropdownValue = 'Documento de vacaciones';
-    }
+    _tipoAnexoController = TextEditingController(
+      text: widget.tipoVacaciones ? 'Documento de vacaciones' : '',
+    );
   }
 
   @override
@@ -107,18 +105,18 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                     ),
                   ),
                   SizedBox(height: 8),
-                  // Tipo (Dropdown)
-                  widget.soloVacaciones
-                    ? TextField(
+                  // Tipo (dropdown si no es vacaciones, fijo si es vacaciones)
+                  widget.tipoVacaciones
+                    ? TextFormField(
                         controller: _tipoAnexoController,
                         enabled: false,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Tipo de Anexo',
                         ),
                       )
                     : DropdownButtonFormField<String>(
-                        value: _tipoAnexoDropdownValue,
-                        decoration: InputDecoration(
+                        value: _tipoAnexoController.text.isNotEmpty ? _tipoAnexoController.text : null,
+                        decoration: const InputDecoration(
                           labelText: 'Tipo de Anexo',
                         ),
                         items: [
@@ -132,9 +130,8 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                               child: Text(tipo),
                             )).toList(),
                         onChanged: (value) {
-                          _tipoAnexoController.text = value ?? '';
                           setState(() {
-                            _tipoAnexoDropdownValue = value;
+                            _tipoAnexoController.text = value ?? '';
                           });
                         },
                       ),
@@ -203,12 +200,19 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                         'comentario': _comentarioControler.text,
                       };
                       await createAnexoMongo(dataMongo);
+                      // Si es Documento de vacaciones, descargar y abrir PDF
+                      if (widget.tipoVacaciones && idAnexo.isNotEmpty) {
+                        await descargarAnexoPDF(context, idAnexo);
+                      }
                       if (mounted) {
                         ScaffoldMessenger.of(this.context).showSnackBar(
                           SnackBar(content: Text('Anexo guardado correctamente.')),
                         );
                         Provider.of<TrabajadoresProvider>(this.context, listen: false).fetchTrabajadores();
-                        await descargarYabrirAnexoPDF(this.context, idAnexo, _tipoAnexoController.text);
+                        setState(() {
+                          _isLoading = false;
+                        });
+                        Navigator.of(this.context).pop();
                       }
                     } else {
                       if (mounted) {
@@ -228,7 +232,6 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                     setState(() {
                       _isLoading = false;
                     });
-                    Navigator.of(this.context).pop();
                   }
                 },
                 child: Text('Guardar'),
