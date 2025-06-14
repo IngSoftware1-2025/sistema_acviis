@@ -182,12 +182,17 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
               ),
               TextFormField(
                 controller: _rutController,
-                decoration: const InputDecoration(labelText: 'RUT'),
-                validator:
-                    (value) =>
-                        value == null || value.isEmpty
-                            ? 'Campo requerido'
-                            : null,
+                decoration: const InputDecoration(labelText: 'RUT (Formato: 12345678-9)'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                  return 'Campo requerido';
+                  }
+                  final regExp = RegExp(r'^\d{7,8}-[0-9kK]$');
+                  if (!regExp.hasMatch(value)) {
+                  return 'Formato inválido (XXXXXXXX-X)';
+                  }
+                  return null;
+                },
               ),
               TextFormField(
                 controller: _fechaNacimientoController,
