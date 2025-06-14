@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
 import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_trabajador.dart';
+import 'package:provider/provider.dart';
+import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 
 class EditarTrabajadorDialog extends StatefulWidget {
   final Trabajador trabajador;
@@ -170,6 +172,13 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
               if (confirmacion == true) {
                 try {
                   await actualizarTrabajador(widget.trabajador.id, trabajadorData);
+
+                  final trabajadoresProvider = Provider.of<TrabajadoresProvider>(context, listen: false);
+                  await trabajadoresProvider.fetchTrabajadores();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Trabajador actualizado correctamente')),
+                  );
                   if (context.mounted) {
                     Navigator.pop(context, true);
                   }

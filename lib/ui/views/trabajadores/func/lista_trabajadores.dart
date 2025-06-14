@@ -306,8 +306,6 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                 if (resultado is Map<String, dynamic>) {
                                   final cambios = <String, Map<String, dynamic>>{};
                                   final nuevosDatos = resultado['trabajador'] as Map<String, dynamic>;
-                                  final contratosNuevos = resultado['contratos'] as List<dynamic>? ?? [];
-
                                   // Compara datos del trabajador
                                   nuevosDatos.forEach((key, value) {
                                     final original = trabajador.toJson()[key];
@@ -315,19 +313,6 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                       cambios[key] = {'antes': original, 'despues': value};
                                     }
                                   });
-
-                                  // Compara contratos
-                                  for (int i = 0; i < contratosNuevos.length; i++) {
-                                    final contratoOriginal = trabajador.contratos[i];
-                                    final contratoNuevo = contratosNuevos[i];
-                                    contratoNuevo.forEach((key, value) {
-                                      if (key == 'id') return;
-                                      final original = contratoOriginal[key];
-                                      if (original != value) {
-                                        cambios['Contrato ${contratoNuevo['id']} - $key'] = {'antes': original, 'despues': value};
-                                      }
-                                    });
-                                  }
 
                                   if (cambios.isEmpty) {
                                     ScaffoldMessenger.of(context).showSnackBar(
@@ -370,16 +355,6 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                     try {
                                       // Actualiza trabajador
                                       await actualizarTrabajador(trabajador.id, nuevosDatos);
-                                      // Actualiza contratos
-                                      for (final contrato in contratosNuevos) {
-                                        await actualizarContrato(
-                                          contrato['id'].toString(),
-                                          plazo: contrato['plazo_de_contrato'],
-                                          comentario: contrato['comentario_adicional_acerca_del_trabajador'],
-                                          documento: contrato['documento_de_vacaciones_del_trabajador'],
-                                          estado: contrato['estado'],
-                                        );
-                                      }
                                       await provider.fetchTrabajadores();
                                       if (context.mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(
