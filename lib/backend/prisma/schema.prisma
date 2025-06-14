@@ -9,16 +9,6 @@ datasource db {
 
 // backend/prisma/schema.prisma
 
-model Trabajador {
-  id        String   @id @default(uuid())
-  nombre    String   @db.VarChar(100)
-  apellido  String?
-  email     String   @unique 
-  edad      Int?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 model trabajadores {
   id                        String    @id @default(uuid())
   nombre_completo           String    @unique
@@ -44,21 +34,40 @@ model contratos {
   fecha_de_contratacion  DateTime
 
   trabajadores trabajadores @relation(fields: [id_trabajadores], references: [id])
+  anexos anexos[]
   comentarios comentarios[]
 
   @@index([id_trabajadores])
+}
+
+model anexos {
+  id                    String        @id @default(uuid())
+  id_contrato           String        @db.Uuid
+  fecha_de_creacion     DateTime
+  duracion              String
+  tipo                  String
+  parametros            String
+  
+  comentarios comentarios[]
+  contratos contratos @relation(fields: [id_contrato], references: [id])
+
+
+  @@index([id_contrato])
 }
 
 model comentarios {
   id              String      @id @default(uuid())
   id_trabajadores String      @db.Uuid
   id_contrato     String?     @db.Uuid
+  id_anexo        String?     @db.Uuid
   fecha           DateTime
   comentario      String
 
   trabajadores    trabajadores @relation(fields: [id_trabajadores], references: [id])
   contrato        contratos?   @relation(fields: [id_contrato], references: [id])
+  anexo           anexos?      @relation(fields: [id_anexo], references: [id])
 
   @@index([id_trabajadores])
   @@index([id_contrato])
+  @@index([id_anexo])
 }

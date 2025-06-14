@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
+import 'package:sistema_acviis/ui/views/trabajadores/utils/agregar_anexo_contrato_dialog.dart';
 import 'package:sistema_acviis/ui/widgets/checkbox.dart';
 import 'package:sistema_acviis/utils/constants/constants.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
@@ -960,7 +961,23 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                       );
                                     }
                                   }
-                                }
+                              } else if (value == 'Agregar anexo a contrato') {
+                                showDialog(
+                                  context: context,
+                                    builder: (context) {
+                                    // Busca el contrato activo del trabajador
+                                    final contratos = trabajador.contratos ?? [];
+                                    final contratoActivo = contratos.firstWhere(
+                                      (c) => c['estado'] == 'Activo',
+                                      orElse: () => null,
+                                    );
+                                    final idContrato = contratoActivo != null ? contratoActivo['id'] : null;
+                                    final idTrabajador = trabajador.id;
+                                    return AgregarAnexoContratoDialog(idContrato: idContrato, idTrabajador: idTrabajador);
+                                    },
+                                );
+                                
+                              }
                             },
                             itemBuilder: (context) => [
                               const PopupMenuItem(
@@ -986,6 +1003,10 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                               const PopupMenuItem(
                                 value: 'Agregar Comentario a Contrato',
                                 child: Text('Agregar Comentario a Contrato'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'Agregar anexo a contrato',
+                                child: Text('Agregar anexo a contrato'),
                               ),
                             ],
                             icon: const Icon(Icons.more_vert),

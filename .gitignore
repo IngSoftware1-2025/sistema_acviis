@@ -44,6 +44,13 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Directorio principal
+.env
+
+# Lib
+
+/lib/.env
+
 # Backend
 /lib/backend/node_modules
 /lib/backend/.env
