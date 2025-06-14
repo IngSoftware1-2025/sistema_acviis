@@ -18,14 +18,14 @@ import 'package:input_quantity/input_quantity.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 
-class FiltrosDisplay extends StatefulWidget {
-  const FiltrosDisplay({super.key});
+class TrabajadorFiltrosDisplay extends StatefulWidget {
+  const TrabajadorFiltrosDisplay({super.key});
 
   @override
-  State<FiltrosDisplay> createState() => _FiltrosDisplayState();
+  State<TrabajadorFiltrosDisplay> createState() => _TrabajadorFiltrosDisplayState();
 }
 
-class _FiltrosDisplayState extends State<FiltrosDisplay> {
+class _TrabajadorFiltrosDisplayState extends State<TrabajadorFiltrosDisplay> {
   // Controladores para los DropdownMenu
   String? _obraAsignada;
   String? _cargo;
@@ -110,32 +110,6 @@ class _FiltrosDisplayState extends State<FiltrosDisplay> {
               enableSearch: false,
               key: ValueKey(_cargo),
             ),
-          ],
-        ),
-
-        // ===================== Tiempo Restante de contrato =====================
-        Row(
-          children: [
-            Text('Tiempo restante de contrato'),
-            Spacer(),
-            InputQty(
-              minVal: 0,
-              maxVal: 12,
-              initVal: provider.tiempoContrato ?? 1,
-              qtyFormProps: QtyFormProps(
-                enableTyping: false
-              ),
-              decoration: QtyDecorationProps(
-                borderShape: BorderShapeBtn.circle,
-                btnColor: Colors.blue,
-                isBordered: false,
-              ),
-              onQtyChanged: (value) {
-                value = value is int ? value : (value is double ? value.toInt() : int.tryParse(value.toString()) ?? 0);
-                provider.actualizarFiltros(tiempoContrato: value);
-              },
-            ),
-            Text('Año${(provider.tiempoContrato ?? 1) > 1 ? "s" : ""}'),
           ],
         ),
 
@@ -242,7 +216,7 @@ class _FiltrosDisplayState extends State<FiltrosDisplay> {
           ]
         ),
 
-        // ===================== Estado (Temporal) =====================
+        // ===================== Estado =====================
         Row(
           children: [
             Text('Estado actual en la empresa'),

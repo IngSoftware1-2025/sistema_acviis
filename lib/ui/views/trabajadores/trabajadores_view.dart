@@ -4,6 +4,7 @@ import 'package:sistema_acviis/ui/widgets/buttons.dart';
 import 'package:sistema_acviis/ui/widgets/scaffold.dart';
 import 'package:sistema_acviis/utils/constants/constants.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/func/search_bar.dart';
+import 'package:sistema_acviis/utils/filtros/contratos.dart';
 import 'package:sistema_acviis/utils/filtros/trabajadores.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
@@ -180,11 +181,15 @@ class _TrabajadoresViewState extends State<TrabajadoresView> {
             
             // Filtros
             CascadeButton(
-              title: 'Filtros',
+              title: 'Filtros Trabajador',
               offset: 0.0,
               icon: Icon(Icons.filter_alt_sharp),
               children: [
-                FiltrosDisplay(),
+                TrabajadorFiltrosDisplay(),
+              ],
+              title2: 'Filtros Contratos',
+              children2: [
+                ContratosFiltrosDisplay(),
               ],
             )
           ],

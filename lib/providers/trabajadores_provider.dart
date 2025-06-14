@@ -7,16 +7,20 @@ class TrabajadoresProvider extends ChangeNotifier {
   List<Trabajador> _trabajadores = [];
   List<Trabajador> get trabajadores => _trabajadores;
 
-  // Filtros
+  // Filtros Trabajador
   String? obraAsignada;
   String? cargo;
-  int? tiempoContrato; // en años
   String? estadoCivil;
   RangeValues? rangoSueldo;
   RangeValues? rangoEdad;
   String? sistemaSalud;
   String? estadoEmpresa;
   String? textoBusqueda;
+  
+  // Filtros Contrato
+  String? estadoContrato;
+  int? tiempoContrato; // en años
+  int? cantidadContratos;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -33,23 +37,30 @@ class TrabajadoresProvider extends ChangeNotifier {
   }
 
   void actualizarFiltros({
+    // Filtros trabajador
     String? obraAsignada,
     String? cargo,
-    int? tiempoContrato, // en años
     String? estadoCivil,
     RangeValues? rangoSueldo,
     RangeValues? rangoEdad,
     String? sistemaSalud,
     String? estadoEmpresa,
+    // Filtros Contrato
+    String? estadoContrato,
+    int? tiempoContrato, // en años
+    int? cantidadContratos,
   }) {
     this.obraAsignada = obraAsignada ?? this.obraAsignada;
     this.cargo = cargo ?? this.cargo;
-    this.tiempoContrato = tiempoContrato ?? this.tiempoContrato;
     this.estadoCivil = estadoCivil ?? this.estadoCivil;
     this.rangoSueldo = rangoSueldo ?? this.rangoSueldo;
     this.rangoEdad = rangoEdad ?? this.rangoEdad;
     this.sistemaSalud = sistemaSalud ?? this.sistemaSalud;
     this.estadoEmpresa = estadoEmpresa ?? this.estadoEmpresa;
+
+    this.estadoContrato = estadoContrato ?? this.estadoContrato;
+    this.tiempoContrato = tiempoContrato ?? this.tiempoContrato;
+    this.cantidadContratos = cantidadContratos ?? this.cantidadContratos;
     filtrar();
   }
 
@@ -69,14 +80,7 @@ class TrabajadoresProvider extends ChangeNotifier {
       // Sistema de salud
       if (sistemaSalud != null && sistemaSalud!.isNotEmpty && t.sistemaDeSalud != sistemaSalud) return false;
       // Estado en la empresa
-      if (estadoEmpresa != null && estadoEmpresa!.isNotEmpty) {
-        // Busca el contrato activo (o el más reciente si no hay activo)
-        final contrato = t.contratos.firstWhere(
-          (c) => c['estado'] == estadoEmpresa,
-          orElse: () => null,
-        );
-        if (contrato == null) return false;
-      }
+      if (estadoEmpresa != null && estadoEmpresa!.isNotEmpty && t.estado != estadoEmpresa) return false; 
       // Edad
       if (rangoEdad != null) {
         final edad = _calcularEdad(t.fechaDeNacimiento);
@@ -86,8 +90,18 @@ class TrabajadoresProvider extends ChangeNotifier {
       // if (rangoSueldo != null && t.sueldo != null) {
       //   if (t.sueldo < rangoSueldo!.start * 1000000 || t.sueldo > rangoSueldo!.end * 1000000) return false;
       // }
+      
+      // Estado Contrato
+      if (estadoContrato != null) {
+        if (t.contratos.isEmpty) return false;
+        bool tieneContratoTipo = t.contratos.any((contrato) =>
+          contrato['estado'] == estadoContrato
+        );
+        if (!tieneContratoTipo) return false;
+      }
       // Tiempo de contrato (calcula el tiempo restante del contrato activo en años)
-      if (tiempoContrato != null && t.contratos.isNotEmpty) {
+      if (tiempoContrato != null) {
+        if (t.contratos.isEmpty) return false;
         final contratoActivo = t.contratos.firstWhere(
           (c) => c['estado'] == 'Activo',
           orElse: () => null,
@@ -117,8 +131,15 @@ class TrabajadoresProvider extends ChangeNotifier {
               if (tiempoRestanteAnios < tiempoContrato!) return false;
             }
           }
+        } else {
+          return false;
         }
       }
+      
+      if (cantidadContratos != null) {
+        if (t.contratos.length != cantidadContratos) return false;
+      }
+
       // Filtro por nombre
       if (textoBusqueda != null && textoBusqueda!.isNotEmpty) {
         if (!t.nombreCompleto.toLowerCase().contains(textoBusqueda!.toLowerCase())) return false;
@@ -131,13 +152,16 @@ class TrabajadoresProvider extends ChangeNotifier {
   void reiniciarFiltros() {
     obraAsignada = null;
     cargo = null;
-    tiempoContrato = null;
     estadoCivil = null;
     rangoSueldo = null;
     rangoEdad = null;
     sistemaSalud = null;
     estadoEmpresa = null;
     textoBusqueda = null;
+
+    estadoContrato = null;
+    tiempoContrato = null;
+    cantidadContratos = null;
     filtrar();
   }
 

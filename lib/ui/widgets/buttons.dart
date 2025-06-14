@@ -153,21 +153,26 @@ class BorderButtonBlue extends StatelessWidget {
     );
   }
 } 
-
 class CascadeButton extends StatefulWidget {
   final double offset;
   final Icon icon;
   final List<Widget> children;
+  final List<Widget>? children2;
   final bool? startRight;
   final String title;
+  final String? title2; // Nuevo parámetro opcional para el segundo título
+
   const CascadeButton({
     super.key,
     this.startRight = false,
     required this.title,
+    this.title2, // Permite ingresar el segundo título
     required this.offset,
     required this.icon,
     required this.children,
+    this.children2,
   });
+
   @override
   State<CascadeButton> createState() => _CascadeButtonState();
 }
@@ -176,6 +181,7 @@ class _CascadeButtonState extends State<CascadeButton> with WidgetsBindingObserv
   OverlayEntry? _overlayEntry;
   final LayerLink _layerLink = LayerLink();
   bool _abierto = false;
+  bool _showChildren2 = false;
 
   @override
   void initState() {
@@ -211,9 +217,7 @@ class _CascadeButtonState extends State<CascadeButton> with WidgetsBindingObserv
       return;
     }
 
-    // Notifica al gestor global
     CascadeManager.instance.register(this);
-
 
     final renderObject = context.findRenderObject();
     if (renderObject == null || renderObject is! RenderBox) return;
@@ -248,18 +252,46 @@ class _CascadeButtonState extends State<CascadeButton> with WidgetsBindingObserv
               constraints: BoxConstraints(
                 maxHeight: screenSize.height * 0.8,
               ),
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.all(normalPadding),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Center(child: Text(widget.title)),
-                      Divider(thickness: 1, color: Colors.grey.shade300, height: 24),
-                      ...widget.children,
-                    ],
-                  ),
-                ),
+              child: StatefulBuilder(
+                builder: (context, setStateOverlay) {
+                  List<Widget> currentChildren = widget.children2 != null && _showChildren2
+                      ? widget.children2!
+                      : widget.children;
+                  String currentTitle = widget.children2 != null && _showChildren2
+                      ? (widget.title2 ?? widget.title)
+                      : widget.title;
+                  return SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.all(normalPadding),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Center(child: Text(currentTitle)),
+                              if (widget.children2 != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 8.0),
+                                  child: IconButton(
+                                    icon: Icon(_showChildren2 ? Icons.swap_horiz : Icons.swap_horiz_outlined),
+                                    tooltip: 'Cambiar vista',
+                                    onPressed: () {
+                                      setStateOverlay(() {
+                                        _showChildren2 = !_showChildren2;
+                                      });
+                                    },
+                                  ),
+                                ),
+                            ],
+                          ),
+                          Divider(thickness: 1, color: Colors.grey.shade300, height: 24),
+                          ...currentChildren,
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -275,11 +307,11 @@ class _CascadeButtonState extends State<CascadeButton> with WidgetsBindingObserv
       _overlayEntry!.remove();
       _overlayEntry = null;
       if (mounted) {
-        // Difere setState para evitar errores durante el build
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
             setState(() {
               _abierto = false;
+              _showChildren2 = false;
             });
           }
         });
