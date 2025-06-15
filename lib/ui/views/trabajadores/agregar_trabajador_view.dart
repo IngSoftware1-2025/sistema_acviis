@@ -106,12 +106,19 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
       setState(() => _isLoading = true);
 
       try {
-        // Crear trabajador y obtener su id
+        // Convertir DD-MM-YYYY a DateTime
+        final parts = _fechaNacimientoController.text.split('-');
+        final fechaNacimiento = DateTime(
+          int.parse(parts[2]), // year
+          int.parse(parts[1]), // month
+          int.parse(parts[0]), // day
+        );
+
         final String trabajadorId = await createTrabajador(
           nombreCompleto: _nombreCompletoController.text,
           estadoCivil: _estadoCivilController.text,
           rut: _rutController.text,
-          fechaNacimiento: DateTime.parse(_fechaNacimientoController.text),
+          fechaNacimiento: fechaNacimiento,
           direccion: _direccionController.text,
           correoElectronico: _correoElectronicoController.text,
           sistemaDeSalud: _sistemaSaludController.text,
@@ -197,14 +204,22 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
               TextFormField(
                 controller: _fechaNacimientoController,
                 decoration: const InputDecoration(
-                  labelText: 'Fecha de nacimiento (YYYY-MM-DD)',
+                  labelText: 'Fecha de nacimiento (DD-MM-YYYY)',
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) return 'Campo requerido';
+                  final regExp = RegExp(r'^\d{2}-\d{2}-\d{4}$');
+                  if (!regExp.hasMatch(value)) {
+                    return 'Formato inválido (DD-MM-YYYY)';
+                  }
                   try {
-                    DateTime.parse(value);
+                    final parts = value.split('-');
+                    final day = int.parse(parts[0]);
+                    final month = int.parse(parts[1]);
+                    final year = int.parse(parts[2]);
+                    DateTime(year, month, day); // Valida la fecha
                   } catch (_) {
-                    return 'Formato inválido (YYYY-MM-DD)';
+                    return 'Fecha inválida';
                   }
                   return null;
                 },

@@ -41,7 +41,12 @@ class _PersonalizedExpansionTileState extends State<PersonalizedExpansionTile> {
             Text('Nombre: ${t.nombreCompleto}'),
             Text('Estado Civil: ${t.estadoCivil}'),
             Text('RUT: ${t.rut}'),
-            Text('Fecha de Nacimiento: ${t.fechaDeNacimiento.toLocal().toString().split(' ')[0]}'),
+            Text(
+  'Fecha de Nacimiento: '
+  '${t.fechaDeNacimiento.day.toString().padLeft(2, '0')}-'
+  '${t.fechaDeNacimiento.month.toString().padLeft(2, '0')}-'
+  '${t.fechaDeNacimiento.year}'
+),
             Text('Dirección: ${t.direccion}'),
             Text('Correo Electrónico: ${t.correoElectronico}'),
             Text('Sistema de Salud: ${t.sistemaDeSalud}'),
@@ -83,7 +88,7 @@ class _PersonalizedExpansionTileState extends State<PersonalizedExpansionTile> {
                       idContrato: idContrato,
                       idTrabajador: t.id,
                       trabajador: t,
-                      soloVacaciones: true,
+                      tipoVacaciones: true,
                     );
                   },
                 );
