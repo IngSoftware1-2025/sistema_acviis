@@ -38,11 +38,43 @@ class AgregarAnexoContratoDialog extends StatefulWidget {
 
 class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog> {
   late final TextEditingController _tipoAnexoController;
-  final TextEditingController _duracionController = TextEditingController();
   final TextEditingController _parametrosController = TextEditingController();
   final TextEditingController _comentarioControler = TextEditingController();
 
   bool _isLoading = false;
+  bool _showDuracionError = false;
+  DateTime? _fechaInicio;
+  DateTime? _fechaFin;
+
+  String get _duracionFormateada {
+    if (_fechaInicio == null || _fechaFin == null) return '';
+    String format(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+    return '${format(_fechaInicio!)} – ${format(_fechaFin!)}';
+  }
+
+  bool _validarDuracionVacaciones(String value) {
+    // Formato: dd/mm/yyyy – dd/mm/yyyy 
+    final regex = RegExp(r'^(\d{2})\/(\d{2})\/(\d{4}) – (\d{2})\/(\d{2})\/(\d{4})$');
+    final match = regex.firstMatch(value.trim());
+    if (match == null) return false;
+    try {
+      final d1 = int.parse(match.group(1)!);
+      final m1 = int.parse(match.group(2)!);
+      final y1 = int.parse(match.group(3)!);
+      final d2 = int.parse(match.group(4)!);
+      final m2 = int.parse(match.group(5)!);
+      final y2 = int.parse(match.group(6)!);
+      final fechaInicio = DateTime(y1, m1, d1);
+      final fechaFin = DateTime(y2, m2, d2);
+      // Verifica que las fechas sean válidas y que inicio <= fin
+      if (fechaInicio.isAfter(fechaFin)) return false;
+      // Verifica que los días y meses sean válidos (por si DateTime autocorrige)
+      if (fechaInicio.day != d1 || fechaInicio.month != m1 || fechaFin.day != d2 || fechaFin.month != m2) return false;
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 
   @override
   void initState() {
@@ -55,7 +87,6 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
   @override
   void dispose() {
     _tipoAnexoController.dispose();
-    _duracionController.dispose();
     _parametrosController.dispose();
     _comentarioControler.dispose();
     super.dispose();
@@ -96,13 +127,58 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                   Center(child: Text('Anexo asociado a contrato activo')),
                   SizedBox(height: 8),
                   // Duración
-                  TextField(
-                    controller: _duracionController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: 'Duración',
-                      hintText: 'Ingrese la duración',
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          readOnly: true,
+                          controller: TextEditingController(text: _fechaInicio == null ? '' : '${_fechaInicio!.day}/${_fechaInicio!.month}/${_fechaInicio!.year}'),
+                          decoration: InputDecoration(
+                            labelText: 'Fecha Inicio',
+                            hintText: 'dd/mm/yyyy',
+                          ),
+                          onTap: () async {
+                            final fecha = await showDatePicker(
+                              context: context,
+                              initialDate: _fechaInicio ?? DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2101),
+                            );
+                            if (fecha != null) {
+                              setState(() {
+                                _fechaInicio = fecha;
+                                _showDuracionError = !_validarDuracionVacaciones(_duracionFormateada);
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          readOnly: true,
+                          controller: TextEditingController(text: _fechaFin == null ? '' : '${_fechaFin!.day}/${_fechaFin!.month}/${_fechaFin!.year}'),
+                          decoration: InputDecoration(
+                            labelText: 'Fecha Fin',
+                            hintText: 'dd/mm/yyyy',
+                          ),
+                          onTap: () async {
+                            final fecha = await showDatePicker(
+                              context: context,
+                              initialDate: _fechaFin ?? DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2101),
+                            );
+                            if (fecha != null) {
+                              setState(() {
+                                _fechaFin = fecha;
+                                _showDuracionError = !_validarDuracionVacaciones(_duracionFormateada);
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(height: 8),
                   // Tipo (dropdown si no es vacaciones, fijo si es vacaciones)
@@ -162,7 +238,9 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                 child: Text('Cancelar'),
               ),
               ElevatedButton(
-                onPressed: () async {
+                onPressed: (widget.tipoVacaciones && _showDuracionError)
+                    ? null
+                    : () async {
                   setState(() {
                     _isLoading = true;
                   });
@@ -170,7 +248,7 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                     'id_trabajador': widget.idTrabajador,
                     'id_contrato': widget.idContrato,
                     'tipo': _tipoAnexoController.text,
-                    'duracion': _duracionController.text,
+                    'duracion': _duracionFormateada,
                     'parametros': _parametrosController.text,
                     'comentario': _comentarioControler.text,
                   };
@@ -195,7 +273,7 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                         'id_anexo': idAnexo,
                         'id_contrato': widget.idContrato,
                         'tipo': _tipoAnexoController.text,
-                        'duracion': _duracionController.text,
+                        'duracion': _duracionFormateada,
                         'parametros': _parametrosController.text,
                         'comentario': _comentarioControler.text,
                       };
