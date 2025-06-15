@@ -39,7 +39,9 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
   final TextEditingController
   _fechaNacimientoController = TextEditingController(
     text:
-        '${1980 + DateTime.now().millisecondsSinceEpoch % 30}-${(1 + DateTime.now().millisecondsSinceEpoch % 12).toString().padLeft(2, '0')}-${(1 + DateTime.now().millisecondsSinceEpoch % 28).toString().padLeft(2, '0')}',
+        '${(1 + DateTime.now().millisecondsSinceEpoch % 28).toString().padLeft(2, '0')}-'
+        '${(1 + DateTime.now().millisecondsSinceEpoch % 12 + 1).toString().padLeft(2, '0')}-'
+        '${1980 + DateTime.now().millisecondsSinceEpoch % 30}',
   );
   // ===================== Direccion
   final TextEditingController _direccionController = TextEditingController(
