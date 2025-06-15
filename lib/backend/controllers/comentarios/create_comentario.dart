@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+// crea un comentario en el servidor
 Future<void> crearComentario({
   required String idTrabajador,
   required String comentario,

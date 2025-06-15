@@ -12,6 +12,7 @@ import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_estad
 import 'package:sistema_acviis/backend/controllers/contratos/actualizar_estado_contrato.dart';
 import 'package:sistema_acviis/backend/controllers/comentarios/create_comentario.dart';
 import 'package:sistema_acviis/backend/controllers/contratos/create_contrato.dart';
+import 'package:sistema_acviis/providers/comentarios_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
@@ -66,6 +67,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
   Widget build(BuildContext context) {
     final provider = context.watch<TrabajadoresProvider>();
     final checkboxProvider = context.watch<CheckboxProvider>();
+    final listaDeComentarios = Provider.of<ComentariosProvider>(context).comentarios;
 
     // --- SINCRONIZA LOS CHECKBOXES ---
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -792,6 +794,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                         fecha: DateTime.now(),
                                         idContrato: null,
                                       );
+                                      
                                       await provider.fetchTrabajadores();
                                       if (context.mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(
@@ -924,6 +927,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                           comentario: comentarioController.text.trim(),
                                           fecha: DateTime.now(),
                                         );
+                                        await Provider.of<ComentariosProvider>(context, listen: false).fetchComentarios();
                                         await provider.fetchTrabajadores();
                                         if (context.mounted) {
                                           ScaffoldMessenger.of(context).showSnackBar(
