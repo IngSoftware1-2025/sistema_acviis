@@ -202,6 +202,7 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                       await createAnexoMongo(dataMongo);
                       // Si es Documento de vacaciones, descargar y abrir PDF
                       if (widget.tipoVacaciones && idAnexo.isNotEmpty) {
+                        await Future.delayed(const Duration(milliseconds: 500)); // IMPORTANTE PARA LA VISUALIZACIÓN DEL PDF: Espera para GridFS
                         await descargarAnexoPDF(context, idAnexo);
                       }
                       if (mounted) {
