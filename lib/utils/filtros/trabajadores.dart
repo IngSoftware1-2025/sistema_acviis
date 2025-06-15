@@ -14,7 +14,6 @@ Despido: -> Estado: {Activo, Inactivo, Despedido, Renuncio}
 
 */
 import 'package:flutter/material.dart';
-import 'package:input_quantity/input_quantity.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 

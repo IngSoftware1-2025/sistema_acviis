@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_estado_trabajador.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
 import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_trabajador.dart';
 import 'package:provider/provider.dart';
@@ -140,8 +141,11 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
                 'prevision_afp': previsionAfpController.text,
                 'obra_en_la_que_trabaja': obraController.text,
                 'rol_que_asume_en_la_obra': rolController.text,
-                'estado': estadoController.text,
               };
+              if (estadoController.text.isNotEmpty) {
+                trabajadorData['estado'] = estadoController.text;
+              }
+              await actualizarEstadoTrabajador(widget.trabajador.id, estadoController.text);
 
               final confirmacion = await showDialog<bool>(
                 context: context,

@@ -184,12 +184,12 @@ class _TrabajadoresViewState extends State<TrabajadoresView> {
               title: 'Filtros Trabajador',
               offset: 0.0,
               icon: Icon(Icons.filter_alt_sharp),
-              children: [
-                TrabajadorFiltrosDisplay(),
-              ],
               title2: 'Filtros Contratos',
               children2: [
                 ContratosFiltrosDisplay(),
+              ],
+              children: [
+                TrabajadorFiltrosDisplay(),
               ],
             )
           ],

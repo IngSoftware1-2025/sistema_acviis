@@ -8,7 +8,7 @@ Future<void> descargarAnexoPDF(BuildContext context, String idAnexo) async {
   print('[DEBUG] Iniciando descarga de PDF para idAnexo: $idAnexo');
   try {
     final url = Uri.parse('http://localhost:3000/anexos/mongo/descargar-pdf/$idAnexo');
-    print('[DEBUG] URL de descarga: ' + url.toString());
+    print('[DEBUG] URL de descarga: $url');
     final response = await http.get(url);
     print('[DEBUG] Código de respuesta: ${response.statusCode}');
     if (response.statusCode == 200) {

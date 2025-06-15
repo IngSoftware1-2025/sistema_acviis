@@ -9,7 +9,6 @@ import 'package:sistema_acviis/ui/widgets/expansion_tile.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/editar_trabajador_dialog.dart';
 import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_trabajador.dart';
 import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_estado_trabajador.dart';
-import 'package:sistema_acviis/backend/controllers/contratos/actualizar_contrato.dart';
 import 'package:sistema_acviis/backend/controllers/contratos/actualizar_estado_contrato.dart';
 import 'package:sistema_acviis/backend/controllers/comentarios/create_comentario.dart';
 import 'package:sistema_acviis/backend/controllers/contratos/create_contrato.dart';
