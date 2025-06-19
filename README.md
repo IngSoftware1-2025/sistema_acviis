@@ -1,39 +1,171 @@
-# sistema_acviis
-## Estructura de Carpetas del Proyecto
+# Sistema Acviis
 
-A continuación, se describe brevemente la función de cada carpeta del sistema:
+## Estructura de Carpetas del proyecto
 
+_A continuacion se muestran el distribucion de carpetas (Desde Lib), estos siendo los mas relevantes, y los que constituyen el proyecto en si._
 
-### 🧩 Descripción de carpetas asociadas al backend
+### 🌎 Descripcion de carpetas de forma general
 
-| Carpeta / Archivo     | Descripción |
-|-----------------------|-------------|
-| `index.js`            | Archivo principal que inicializa el servidor y configura middlewares. |
-| `routes/`             | Define los endpoints de la API para cada entidad (modularizado). [usuarios.js, contratos.js, etc.]|
-| `controllers/`        | Contiene funciones que controlan la lógica de cada ruta. [getUsuarios.dart, crearUsuario.dart, etc]|
-| `services/`           | Contiene la lógica de negocio que interactúa con la base de datos. [Donde se utilizara Prisma y Mongoose para conectar con Supabase y MongoDB ]|
-| `middlewares/`        | Middleware reutilizable para autenticación, validación, logging, etc. |
-| `prisma/`             | Configuración de Prisma ORM, esquema de base de datos y migraciones. |
-| `.env`                | Archivo para variables de entorno (no debe subirse al repositorio). |
+<table>
+  <thead>
+    <tr>
+      <th>Carpeta / Archivo</th>
+      <th>Descripción</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>backend/</code></td>
+      <td>
+        Contiene toda la lógica de backend, API, controladores, servicios y conexión a bases de datos.<br>
+        <strong><em>Se explica en detalle más abajo.</em></strong>
+      </td>
+    </tr>
+    <tr>
+      <td><code>models/</code></td>
+      <td>Modelos de datos del sistema (trabajador, contrato, etc.) en Dart.</td>
+    </tr>
+    <tr>
+      <td><code>providers/</code></td>
+      <td>Providers de estado y lógica de negocio para la app Flutter.</td>
+    </tr>
+    <tr>
+      <td><code>test/</code></td>
+      <td>Archivos de testeo por parte del equipo.</td>
+    </tr>
+    <tr>
+      <td><code>ui/</code></td>
+      <td>
+        Interfaz gráfica, vistas, widgets y recursos estáticos.<br>
+        <strong><em>Se explica en detalle más abajo.</em></strong>
+      </td>
+    </tr>
+    <tr>
+      <td><code>utils/</code></td>
+      <td>Funciones y utilidades auxiliares para el sistema.</td>
+    </tr>
+    <tr>
+      <td><code>main.dart</code></td>
+      <td>Punto de entrada principal de la aplicación Flutter.</td>
+    </tr>
+  </tbody>
+</table>
 
 ---
 
+### 🛜 Descripcion de carpetas del **`BACKEND`**
 
-- **`constants/`**: Define constantes globales utilizadas a lo largo del proyecto, como rutas, textos, colores o configuraciones fijas.
+<table>
+  <thead>
+    <tr>
+      <th>Carpeta / Archivo</th>
+      <th>Descripción</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>index.js</code></td>
+      <td>Archivo principal que inicializa el servidor.</td>
+    </tr>
+    <tr>
+      <td><code>.env</code></td>
+      <td>Variables de entorno <strong>(no subir al repositorio)</strong>.</td>
+    </tr>
+    <tr>
+      <td><code>controllers/</code></td>
+      <td>
+        Controladores para la lógica de cada entidad (contratos, trabajadores, anexos, etc.).<br>
+        <em>
+          Aquí se definen las funciones que gestionan las <strong>peticiones al servidor</strong>.<br>
+          Todas están implementadas en <strong>Dart</strong> para integrarse fácilmente con el resto del sistema.
+        </em>
+      </td>
+    </tr>
+    <tr>
+      <td><code>formatos/</code></td>
+      <td>Generadores de PDF y formatos para contratos, anexos y fichas.</td>
+    </tr>
+    <tr>
+      <td><code>middlewares/</code></td>
+      <td>Middlewares reutilizables (autenticación, validación, etc.) <strong>[Aun no implementadas]</strong>.</td>
+    </tr>
+    <tr>
+      <td><code>prisma/</code></td>
+      <td>Configuración de Prisma ORM y esquema de base de datos.<br>
+      <b>En:</b>
+      <ul>
+        <li><code>schema.prisma</code></li>
+      </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><code>routes/</code></td>
+      <td>
+        Rutas de la API, organizadas por entidad y tecnología.<br>
+        <b>Rutas:</b>
+        <ul>
+          <li><code>comentarios.js</code> (PostgreSQL) </li>
+          <li><code>protected.js</code> (PostgreSQL) </li>
+          <li><code>trabajadores.js</code> (PostgreSQL) </li>
+          <li>
+            <b>contratos/</b>
+            <ul>
+              <li><code>c_supabase.js</code> (PostgreSQL) </li>
+              <li><code>c_mongoDB.js</code> (BSON) </li>
+            </ul>
+          </li>
+          <li>
+            <b>anexos/</b>
+            <ul>
+              <li><code>a_supabase.js</code> (PostgreSQL) </li>
+              <li><code>a_mongoDB.js</code> (BSON) </li>
+            </ul>
+          </li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><code>services/</code></td>
+      <td>Servicios de conexión a bases de datos (MongoDB, Supabase).</td>
+    </tr>
+  </tbody>
+</table>
 
-- **`models/`**: Contiene las clases que representan los modelos de datos del sistema (por ejemplo, Trabajador, Contrato, Obra, etc.).
+---
 
-- **`providers/`**: Incluye los proveedores de estado o servicios que gestionan la comunicación entre el modelo y la interfaz de usuario.
+### 🖼️ Descripcion de carpetas de **`UI`**
 
-- **`test/`**: Almacena pruebas automatizadas del sistema, tanto de componentes individuales como de integración.
-
-- **`ui/`**: Contiene toda la interfaz gráfica del sistema.
-  - **`assets/`**: Recursos estáticos como imágenes, íconos o archivos de estilo.
-  - **`views/`**: Vistas principales del sistema divididas por módulos funcionales.
-    - **`contratos/`**, **`finanzas/`**, **`logistica/`**, **`obras/`**, **`trabajadores/`**: Cada carpeta representa un módulo funcional con sus respectivas pantallas y componentes.
-  - **`widgets/`**: Componentes reutilizables de la interfaz, como botones, formularios, encabezados, etc.
-
-- **`utils/`**: Funciones auxiliares o clases de utilidad utilizadas en diversas partes del sistema.
-
-- **`.gitkeep`**: Archivos temporales (borrar una vez se agregue algo a su respectiva carpeta.) 
-
+<table>
+  <thead>
+    <tr>
+      <th>Carpeta / Archivo</th>
+      <th>Descripción</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>assets/</code></td>
+      <td>Recursos estáticos como imágenes, íconos y estilos.</td>
+    </tr>
+    <tr>
+      <td><code>styles/</code></td>
+      <td>Archivos de estilos y colores para la UI.</td>
+    </tr>
+    <tr>
+      <td><code>views/</code></td>
+      <td>Vistas principales del sistema, organizadas por módulos:<br>
+        <ul>
+          <li><code>contratos/</code></li>
+          <li><code>trabajadores/</code> ⬅️ Este siendo el mas relevante para el incremento 1.</li>
+          <li><code>finanzas/</code></li>
+          <li><code>logistica/</code></li>
+          <li><code>obras/</code></li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><code>widgets/</code></td>
+      <td>Componentes reutilizables de la interfaz (botones, formularios, etc.).</td>
+    </tr>
+  </tbody>
+</table>
