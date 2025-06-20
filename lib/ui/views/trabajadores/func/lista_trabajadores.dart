@@ -136,7 +136,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                           trabajador: trabajador,
                           trailing: PopupMenuButton<String>(
                             onSelected: (value) async {
-                                if (value == 'Eliminar') {
+                                if (value == 'Eliminar') { // ===================== ELIMINAR TRABAJADOR
                                 final comentarioController = TextEditingController();
                                 bool comentarioInvalido = false;
                                 /*
@@ -299,7 +299,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                     }
                                   }
                                 }
-                              } else if (value == 'Modificar') {
+                              } else if (value == 'Modificar') {// ===================== MODIFICAR TRABAJADOR
                                 final resultado = await showDialog(
                                   context: context,
                                   builder: (context) => EditarTrabajadorDialog(trabajador: trabajador),
@@ -371,7 +371,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                     }
                                   }
                                 }
-                              } else if (value == 'Eliminar Contrato') {
+                              } else if (value == 'Eliminar Contrato') { // ===================== ELIMINAR CONTRATO
                                 // Solo permite eliminar si hay al menos un contrato NO "Reemplazado"
                                 // Se podria modificar para mas filtros en caso de mas estados)?
                                 final contratos = (trabajador.contratos ?? [])
@@ -534,7 +534,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                     }
                                   }
                                 }
-                              } else if (value == 'Crear Contrato') {
+                              } else if (value == 'Crear Contrato') { // ===================== CREAR CONTRATO
                                 // Solo permite crear si NO tiene ningún contrato vinculado
                                 if ((trabajador.contratos ?? []).any((contrato) => contrato['estado'] == 'Activo')) {
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -698,7 +698,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                     }
                                   }
                                 }
-                              } else if (value == 'Agregar Comentario') {
+                              } else if (value == 'Agregar Comentario') { // ===================== AGREGAR COMENTARIO
                                 final comentarioController = TextEditingController();
                                 bool comentarioInvalido = false;
 
@@ -814,7 +814,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                     );
                                   }
                                 }
-                              } else if (value == 'Agregar Comentario a Contrato') {
+                              } else if (value == 'Agregar Comentario a Contrato') { // ===================== AGREGAR COMENTARIO A CONTRATO
                                   final contratosActivos = (trabajador.contratos ?? [])
                                       .where((contrato) => contrato['estado'] == 'Activo')
                                       .toList();
@@ -947,7 +947,7 @@ class _ListaTrabajadoresState extends State<ListaTrabajadores> {
                                       );
                                     }
                                   }
-                              } else if (value == 'Agregar anexo a contrato') {
+                              } else if (value == 'Agregar anexo a contrato') { // ===================== AGREGAR ANEXO A CONTRATO
                                 showDialog(
                                   context: context,
                                     builder: (context) {
