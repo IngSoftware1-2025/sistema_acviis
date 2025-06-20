@@ -46,6 +46,7 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
   DateTime? _fechaInicio;
   DateTime? _fechaFin;
 
+
   String get _duracionFormateada {
     if (_fechaInicio == null || _fechaFin == null) return '';
     String format(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
@@ -201,6 +202,7 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                           'Anexo de jornada laboral o pacto de obra',
                           'Anexo de sueldo',
                           'Anexo de cargo',
+                          'Documento de vacaciones'
                         ].map((tipo) => DropdownMenuItem(
                               value: tipo,
                               child: Text(tipo),
@@ -279,7 +281,7 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                       };
                       await createAnexoMongo(dataMongo);
                       // Si es Documento de vacaciones, descargar y abrir PDF
-                      if (widget.tipoVacaciones && idAnexo.isNotEmpty) {
+                      if (idAnexo.isNotEmpty) {
                         await Future.delayed(const Duration(milliseconds: 500)); // IMPORTANTE PARA LA VISUALIZACIÓN DEL PDF: Espera para GridFS
                         await descargarAnexoPDF(context, idAnexo);
                       }

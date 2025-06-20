@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
 import 'package:sistema_acviis/ui/widgets/comentarios_contrato_tile.dart';
+import 'package:sistema_acviis/ui/views/trabajadores/utils/agregar_anexo_contrato_dialog.dart';
 
 class PersonalizedExpansionTile extends StatefulWidget {
   final Trabajador trabajador;
@@ -57,6 +58,35 @@ class _PersonalizedExpansionTileState extends State<PersonalizedExpansionTile> {
                       side: const BorderSide(color: Colors.white),
                     ),
                     onPressed: widget.pdfCallback ?? () {},
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.beach_access, color: Colors.white),
+                    label: const Text('Generar documento vacaciones', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.white),
+                    ),
+                    onPressed: () {
+                      final contratos = t.contratos;
+                      final contratoActivo = contratos.isNotEmpty ? contratos.firstWhere(
+                        (c) => (c['estado'] ?? '').toString().toLowerCase() == 'activo',
+                        orElse: () => null,
+                      ) : null;
+                      final idContrato = contratoActivo != null ? contratoActivo['id'] : null;
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AgregarAnexoContratoDialog(
+                            idContrato: idContrato,
+                            idTrabajador: t.id,
+                            trabajador: t,
+                            tipoVacaciones: true,
+                          );
+                        },
+                      );
+                    },
                   ),
                 ],
               );
