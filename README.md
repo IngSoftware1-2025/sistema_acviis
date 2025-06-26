@@ -73,15 +73,6 @@
       <td>Archivo principal que inicializa el servidor.</td>
     </tr>
     <tr>
-      <td><code>scriptsDB</code></td>
-      <td>Scripts de Bases de datos<br>
-        <b>En:</b>
-        <ul>
-          <li><code>postgreSQL.sql</code></li>
-        </ul>
-      </td>
-    </tr>
-    <tr>
       <td><code>.env</code></td>
       <td>Variables de entorno <strong>(no subir al repositorio)</strong>.</td>
     </tr>
