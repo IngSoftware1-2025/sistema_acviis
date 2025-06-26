@@ -1,10 +1,15 @@
 # Sistema Acviis
 
 ## Estructura de Carpetas del proyecto
+--- 
+> _**IMPORTANTE: Carpetas no presentes en `lib/`, son automaticas de flutter.**_
 
-_A continuacion se muestran el distribucion de carpetas (Desde Lib), estos siendo los mas relevantes, y los que constituyen el proyecto en si._
+--- 
+> **📁 Estructura principal del proyecto (desde `lib/`):**
+>
+> _A continuación se muestra la distribución de carpetas más relevantes que constituyen el núcleo del sistema:_
 
-### 🌎 Descripcion de carpetas de forma general
+### 🌎 Descripcion de carpetas de forma general _(Para `lib/`)_
 
 <table>
   <thead>
@@ -53,7 +58,7 @@ _A continuacion se muestran el distribucion de carpetas (Desde Lib), estos siend
 
 ---
 
-### 🛜 Descripcion de carpetas del **`BACKEND`**
+### 🛜 Descripcion de carpetas del **`BACKEND`** _(Para `lib/backend/`)_
 
 <table>
   <thead>
@@ -66,6 +71,15 @@ _A continuacion se muestran el distribucion de carpetas (Desde Lib), estos siend
     <tr>
       <td><code>index.js</code></td>
       <td>Archivo principal que inicializa el servidor.</td>
+    </tr>
+    <tr>
+      <td><code>scriptsDB</code></td>
+      <td>Scripts de Bases de datos<br>
+        <b>En:</b>
+        <ul>
+          <li><code>postgreSQL.sql</code></li>
+        </ul>
+      </td>
     </tr>
     <tr>
       <td><code>.env</code></td>
@@ -133,7 +147,7 @@ _A continuacion se muestran el distribucion de carpetas (Desde Lib), estos siend
 
 ---
 
-### 🖼️ Descripcion de carpetas de **`UI`**
+### 🖼️ Descripcion de carpetas de **`UI`** _(Para `lib/ui/`)_
 
 <table>
   <thead>
