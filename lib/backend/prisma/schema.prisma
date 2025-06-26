@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// backend/prisma/schema.prisma
+
+model trabajadores {
+  id                        String    @id @default(uuid())
+  nombre_completo           String    @unique
+  estado_civil              String
+  rut                       String    @unique
+  fecha_de_nacimiento       DateTime
+  direccion                 String
+  correo_electronico        String    @unique
+  sistema_de_salud          String
+  prevision_afp             String
+  obra_en_la_que_trabaja    String
+  rol_que_asume_en_la_obra  String
+  estado                    String
+  contratos   contratos[]
+  comentarios comentarios[]
+}
+
+model contratos {
+  id                     String        @id @default(uuid())
+  id_trabajadores        String        @db.Uuid
+  plazo_de_contrato      String
+  estado                 String
+  fecha_de_contratacion  DateTime
+
+  trabajadores trabajadores @relation(fields: [id_trabajadores], references: [id])
+  anexos anexos[]
+  comentarios comentarios[]
+
+  @@index([id_trabajadores])
+}
+
+model anexos {
+  id                    String        @id @default(uuid())
+  id_contrato           String        @db.Uuid
+  fecha_de_creacion     DateTime
+  duracion              String
+  tipo                  String
+  parametros            String
+  
+  comentarios comentarios[]
+  contratos contratos @relation(fields: [id_contrato], references: [id])
+
+
+  @@index([id_contrato])
+}
+
+model comentarios {
+  id              String      @id @default(uuid())
+  id_trabajadores String      @db.Uuid
+  id_contrato     String?     @db.Uuid
+  id_anexo        String?     @db.Uuid
+  fecha           DateTime
+  comentario      String
+
+  trabajadores    trabajadores @relation(fields: [id_trabajadores], references: [id])
+  contrato        contratos?   @relation(fields: [id_contrato], references: [id])
+  anexo           anexos?      @relation(fields: [id_anexo], references: [id])
+
+  @@index([id_trabajadores])
+  @@index([id_contrato])
+  @@index([id_anexo])
+}
