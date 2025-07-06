@@ -23,16 +23,75 @@ class TrabajadoresProvider extends ChangeNotifier {
   int? cantidadContratos;
 
   bool _isLoading = false;
+  Map<String, bool> _trabajadorIsLoading = {};
   bool get isLoading => _isLoading;
+  bool trabajadorIsLoading(String id) => _trabajadorIsLoading[id] ?? false;
 
   Future<void> fetchTrabajadores() async {
-    _isLoading = true;
-    notifyListeners();
-
-    _todos = await fetchTrabajadoresFromApi();
+    if (_todos.isEmpty) {
+      _isLoading = true;
+      notifyListeners();
+    }
+    if (_todos.isEmpty) {
+      _todos = await fetchTrabajadoresFromApi();
+     
+    }
+    else {
+      List<Trabajador> _nuevos = await fetchTrabajadoresFromApi();
+      for (var nuevo in _nuevos) {
+        final index = _todos.indexWhere((t) => t.id == nuevo.id);
+        if (index != -1) {
+          // Si el rut del existente NO es nulo
+            if (_todos[index].rut != '') {
+            continue;
+          }
+          _todos[index] = nuevo;
+        } else {
+          _todos.add(nuevo);
+        }
+      }
+    }
+    
     _trabajadores = List.from(_todos);
 
     _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> fetchTrabajadorId(String id) async {
+    final t = _todos.firstWhere(
+      (e) => e.id == id,
+      orElse: () => Trabajador(
+        id: '',
+        rut: '',
+        nombreCompleto: '',
+        fechaDeNacimiento: DateTime(1900),
+        direccion: '',
+        estadoCivil: '',
+        sistemaDeSalud: '',
+        estado: '',
+        obraEnLaQueTrabaja: '',
+        rolQueAsumeEnLaObra: '',
+        contratos: [],
+        correoElectronico: '',
+        previsionAfp: '',
+      ),
+    );
+    if (t.id == '' || t.rut != '') {
+      return;
+    }
+    _trabajadorIsLoading[id] = true;
+    notifyListeners();
+
+    Trabajador trabajador = await fetchTrabajadorFromApi(id);
+
+    final index = _todos.indexWhere((e) => e.id == trabajador.id);
+    if (index != -1) {
+      _todos[index] = trabajador;
+      filtrar();
+    }
+
+    _trabajadorIsLoading[id] = false;
     notifyListeners();
   }
 

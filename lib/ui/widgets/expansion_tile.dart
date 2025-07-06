@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
+import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:sistema_acviis/ui/widgets/comentarios_contrato_tile.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/utils/agregar_anexo_contrato_dialog.dart';
 
@@ -23,104 +25,121 @@ class _PersonalizedExpansionTileState extends State<PersonalizedExpansionTile> {
   @override
   Widget build(BuildContext context) {
     final t = widget.trabajador;
+    
     return ExpansionTile(
       title: Text(t.nombreCompleto),
       leading: const Icon(Icons.keyboard_arrow_down),
       trailing: widget.trailing,
+      onExpansionChanged: (expanded) {
+        if (expanded) {
+          final trabajadoresProvider = Provider.of<TrabajadoresProvider>(context, listen: false);
+          trabajadoresProvider.fetchTrabajadorId(t.id);
+        }
+      },
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isMobile = constraints.maxWidth < 600;
-              final infoWidget = Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('ID: ${t.id}'),
-                  Text('Nombre: ${t.nombreCompleto}'),
-                  Text('Estado Civil: ${t.estadoCivil}'),
-                  Text('RUT: ${t.rut}'),
-                  Text('Fecha de Nacimiento: ${t.fechaDeNacimiento.toLocal().toString().split(' ')[0]}'),
-                  Text('Dirección: ${t.direccion}'),
-                  Text('Correo Electrónico: ${t.correoElectronico}'),
-                  Text('Sistema de Salud: ${t.sistemaDeSalud}'),
-                  Text('Previsión AFP: ${t.previsionAfp}'),
-                  Text('Obra en la que trabaja: ${t.obraEnLaQueTrabaja}'),
-                  Text('Rol que asume en la obra: ${t.rolQueAsumeEnLaObra}'),
-                  Text('Estado en la empresa: ${t.estado}'),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
-                    label: const Text('Generar ficha PDF', style: TextStyle(color: Colors.white)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: Colors.white),
-                    ),
-                    onPressed: widget.pdfCallback ?? () {},
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.beach_access, color: Colors.white),
-                    label: const Text('Generar documento vacaciones', style: TextStyle(color: Colors.white)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: Colors.white),
-                    ),
-                    onPressed: () {
-                      final contratos = t.contratos;
-                      final contratoActivo = contratos.isNotEmpty ? contratos.firstWhere(
-                        (c) => (c['estado'] ?? '').toString().toLowerCase() == 'activo',
-                        orElse: () => null,
-                      ) : null;
-                      final idContrato = contratoActivo != null ? contratoActivo['id'] : null;
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AgregarAnexoContratoDialog(
-                            idContrato: idContrato,
-                            idTrabajador: t.id,
-                            trabajador: t,
-                            tipoVacaciones: true,
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ],
-              );
-
-              final contratosWidget = t.contratos.isNotEmpty
-                  ? Padding(
-                      padding: EdgeInsets.only(
-                        left: isMobile ? 0 : 16,
-                        top: isMobile ? 16 : 0,
-                      ),
-                      child: _HorizontalExpandableContracts(
-                        contratos: t.contratos,
-                      ),
-                    )
-                  : const SizedBox.shrink();
-
-              if (isMobile) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    infoWidget,
-                    contratosWidget,
-                  ],
-                );
-              } else {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Flexible(flex: 2, child: infoWidget),
-                    if (t.contratos.isNotEmpty)
-                      Flexible(flex: 3, child: contratosWidget),
-                  ],
+          child: Consumer<TrabajadoresProvider>(
+            builder: (context, trabajadoresProvider, child) {
+              if (trabajadoresProvider.trabajadorIsLoading(t.id)) {
+                return const Center(
+                  child: CircularProgressIndicator(),
                 );
               }
+              // ...existing code...
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final isMobile = constraints.maxWidth < 600;
+                  final infoWidget = Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('ID: ${t.id}'),
+                      Text('Nombre: ${t.nombreCompleto}'),
+                      Text('Estado Civil: ${t.estadoCivil}'),
+                      Text('RUT: ${t.rut}'),
+                      Text('Fecha de Nacimiento: ${t.fechaDeNacimiento.toLocal().toString().split(' ')[0]}'),
+                      Text('Dirección: ${t.direccion}'),
+                      Text('Correo Electrónico: ${t.correoElectronico}'),
+                      Text('Sistema de Salud: ${t.sistemaDeSalud}'),
+                      Text('Previsión AFP: ${t.previsionAfp}'),
+                      Text('Obra en la que trabaja: ${t.obraEnLaQueTrabaja}'),
+                      Text('Rol que asume en la obra: ${t.rolQueAsumeEnLaObra}'),
+                      Text('Estado en la empresa: ${t.estado}'),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
+                        label: const Text('Generar ficha PDF', style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.white),
+                        ),
+                        onPressed: widget.pdfCallback ?? () {},
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.beach_access, color: Colors.white),
+                        label: const Text('Generar documento vacaciones', style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.white),
+                        ),
+                        onPressed: () {
+                          final contratos = t.contratos;
+                          final contratoActivo = contratos.isNotEmpty ? contratos.firstWhere(
+                            (c) => (c['estado'] ?? '').toString().toLowerCase() == 'activo',
+                            orElse: () => null,
+                          ) : null;
+                          final idContrato = contratoActivo != null ? contratoActivo['id'] : null;
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AgregarAnexoContratoDialog(
+                                idContrato: idContrato,
+                                idTrabajador: t.id,
+                                trabajador: t,
+                                tipoVacaciones: true,
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  );
+
+                  final contratosWidget = t.contratos.isNotEmpty
+                      ? Padding(
+                          padding: EdgeInsets.only(
+                            left: isMobile ? 0 : 16,
+                            top: isMobile ? 16 : 0,
+                          ),
+                          child: _HorizontalExpandableContracts(
+                            contratos: t.contratos,
+                          ),
+                        )
+                      : const SizedBox.shrink();
+
+                  if (isMobile) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        infoWidget,
+                        contratosWidget,
+                      ],
+                    );
+                  } else {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Flexible(flex: 2, child: infoWidget),
+                        if (t.contratos.isNotEmpty)
+                          Flexible(flex: 3, child: contratosWidget),
+                      ],
+                    );
+                  }
+                },
+              );
             },
           ),
         ),

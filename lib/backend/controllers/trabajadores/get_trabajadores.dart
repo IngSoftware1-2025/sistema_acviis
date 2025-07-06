@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -21,5 +22,16 @@ Future<List<Trabajador>> fetchTrabajadoresFromApi() async {
         .toList();
   } else {
     throw Exception('Error al obtener trabajadores');
+  }
+}
+
+Future<Trabajador> fetchTrabajadorFromApi(String id) async {
+  final response = await http.get(Uri.parse('http://localhost:3000/trabajadores/$id'));
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> trabajador = jsonDecode(response.body);
+    return Trabajador.fromJson(trabajador);
+  } else{
+    debugPrint('Error al obtener trabajador de id: $id: ${response.statusCode} - ${response.reasonPhrase}');
+    throw Exception('Error al obtener trabajador');
   }
 }

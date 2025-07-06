@@ -35,17 +35,19 @@ class Trabajador {
     return Trabajador(
       id: json['id'],
       nombreCompleto: json['nombre_completo'],
-      estadoCivil: json['estado_civil'],
-      rut: json['rut'],
-      fechaDeNacimiento: DateTime.parse(json['fecha_de_nacimiento']),
-      direccion: json['direccion'],
-      correoElectronico: json['correo_electronico'],
-      sistemaDeSalud: json['sistema_de_salud'],
-      previsionAfp: json['prevision_afp'],
-      obraEnLaQueTrabaja: json['obra_en_la_que_trabaja'],
-      rolQueAsumeEnLaObra: json['rol_que_asume_en_la_obra'],
-      estado: json['estado'] as String,
-      contratos: json['contratos']
+      estadoCivil: json['estado_civil'] ?? '',
+      rut: json['rut'] ?? '',
+      fechaDeNacimiento: json['fecha_de_nacimiento'] != null
+        ? DateTime.parse(json['fecha_de_nacimiento'])
+        : DateTime.now(),
+      direccion: json['direccion'] ?? '',
+      correoElectronico: json['correo_electronico'] ?? '',
+      sistemaDeSalud: json['sistema_de_salud'] ?? '',
+      previsionAfp: json['prevision_afp'] ?? '',
+      obraEnLaQueTrabaja: json['obra_en_la_que_trabaja'] ?? '',
+      rolQueAsumeEnLaObra: json['rol_que_asume_en_la_obra'] ?? '',
+      estado: json['estado'] ?? '',
+      contratos: json['contratos'] ?? [],
     );
   }
 
