@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/func/lista_trabajadores.dart';
 import 'package:sistema_acviis/ui/widgets/buttons.dart';
 import 'package:sistema_acviis/ui/widgets/scaffold.dart';
-import 'package:sistema_acviis/utils/constants/constants.dart';
+import 'package:sistema_acviis/ui/utils/constants/constants.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/func/search_bar.dart';
-import 'package:sistema_acviis/utils/filtros/contratos.dart';
-import 'package:sistema_acviis/utils/filtros/trabajadores.dart';
+import 'package:sistema_acviis/ui/utils/filtros/contratos.dart';
+import 'package:sistema_acviis/ui/utils/filtros/trabajadores.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:provider/provider.dart';
@@ -29,7 +29,7 @@ class _TrabajadoresViewState extends State<TrabajadoresView> {
       body: Column(
         children: [
         
-        // Barra de busqueda especializada para Trabajadores
+        // Parte superior Lista de trabajadores
         Row(
           children: [
             // Acciones lista de trabajadores

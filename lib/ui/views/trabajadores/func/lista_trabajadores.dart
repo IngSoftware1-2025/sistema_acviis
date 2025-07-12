@@ -4,7 +4,7 @@ import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/func/agregar_comentario_func.dart';
 import 'package:sistema_acviis/ui/views/trabajadores/utils/agregar_anexo_contrato_dialog.dart';
 import 'package:sistema_acviis/ui/widgets/checkbox.dart';
-import 'package:sistema_acviis/utils/constants/constants.dart';
+import 'package:sistema_acviis/ui/utils/constants/constants.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
 import 'package:sistema_acviis/ui/widgets/expansion_tile.dart';
 import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_estado_trabajador.dart';

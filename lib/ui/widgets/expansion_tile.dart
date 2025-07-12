@@ -46,7 +46,7 @@ class _PersonalizedExpansionTileState extends State<PersonalizedExpansionTile> {
                   child: CircularProgressIndicator(),
                 );
               }
-              // ...existing code...
+              
               return LayoutBuilder(
                 builder: (context, constraints) {
                   final isMobile = constraints.maxWidth < 600;
