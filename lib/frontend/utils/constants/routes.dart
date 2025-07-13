@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:sistema_acviis/ui/views/contratos/contratos_view.dart';
-import 'package:sistema_acviis/ui/views/home_page.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/agregar_trabajador_view.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/contratos_anexos.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/eliminar_trabajadores_view.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/modificar_trabajadores_view.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/trabajadores_view.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/eliminar_contratos_view.dart';
+import 'package:sistema_acviis/frontend/views/contratos/contratos_view.dart';
+import 'package:sistema_acviis/frontend/views/home_page.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/agregar_trabajador_view.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/contratos_anexos.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/eliminar_trabajadores_view.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/modificar_trabajadores_view.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/trabajadores_view.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/eliminar_contratos_view.dart';
 /*
   Aqui se importaran todas las vistas presentes en el sistema
   (Para el primer incremento serian todas las vistas asociadas

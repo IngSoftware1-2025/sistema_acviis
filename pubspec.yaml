@@ -27,11 +27,11 @@ flutter:
   fonts:
     - family: Satoshi
       fonts:
-        - asset: lib/ui/styles/Satoshi-Light.otf
+        - asset: lib/frontend/styles/Satoshi-Light.otf
           weight: 300
-        - asset: lib/ui/styles/Satoshi-Medium.otf
+        - asset: lib/frontend/styles/Satoshi-Medium.otf
           weight: 500
-        - asset: lib/ui/styles/Satoshi-Bold.otf
+        - asset: lib/frontend/styles/Satoshi-Bold.otf
           weight: 700
-        - asset: lib/ui/styles/Satoshi-Black.otf
+        - asset: lib/frontend/styles/Satoshi-Black.otf
           weight: 900

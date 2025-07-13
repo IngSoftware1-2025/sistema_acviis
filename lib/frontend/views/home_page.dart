@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:sistema_acviis/ui/widgets/cards.dart';
-import 'package:sistema_acviis/ui/widgets/scaffold.dart';
-import 'package:sistema_acviis/ui/styles/app_colors.dart';
+import 'package:sistema_acviis/frontend/widgets/cards.dart';
+import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
+import 'package:sistema_acviis/frontend/styles/app_colors.dart';
 
 
 
@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
             'icon': Icon(Icons.attach_money, color: AppColors.primaryDarker)
           },
           {
-            'title': 'Contratos',
+            'title': 'Logística',
             'description': 'Funciones de logística: Herramientas, EPP, Vehículos, etc',
             'icon': Icon(Icons.inventory_outlined, color: AppColors.primaryDarker)
           },

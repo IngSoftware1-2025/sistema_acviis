@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/editar_trabajador_dialog.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/editar_trabajador_dialog.dart';
 import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_trabajador.dart';
 
 Future<void> mostrarDialogoModificarTrabajador({

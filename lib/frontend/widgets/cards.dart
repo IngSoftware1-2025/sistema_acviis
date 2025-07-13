@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sistema_acviis/ui/styles/app_colors.dart';
+import 'package:sistema_acviis/frontend/styles/app_colors.dart';
 
 class PrimaryCard extends StatelessWidget {
   final String title;

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/func/agregar_comentario_func.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/utils/agregar_anexo_contrato_dialog.dart';
-import 'package:sistema_acviis/ui/widgets/checkbox.dart';
-import 'package:sistema_acviis/ui/utils/constants/constants.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/func/agregar_comentario_func.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/utils/agregar_anexo_contrato_dialog.dart';
+import 'package:sistema_acviis/frontend/widgets/checkbox.dart';
+import 'package:sistema_acviis/frontend/utils/constants/constants.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
-import 'package:sistema_acviis/ui/widgets/expansion_tile.dart';
+import 'package:sistema_acviis/frontend/widgets/expansion_tile.dart';
 import 'package:sistema_acviis/backend/controllers/trabajadores/actualizar_estado_trabajador.dart';
 import 'package:sistema_acviis/backend/controllers/comentarios/create_comentario.dart';
 import 'package:sistema_acviis/providers/comentarios_provider.dart';
@@ -14,10 +14,10 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:open_file/open_file.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/func/eliminar_trabajador_func.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/func/modificar_trabajador_func.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/func/crear_contrato_func.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/func/eliminar_contrato_func.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/func/eliminar_trabajador_func.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/func/modificar_trabajador_func.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/func/crear_contrato_func.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/func/eliminar_contrato_func.dart';
 
 class ListaTrabajadores extends StatefulWidget {
   const ListaTrabajadores({super.key});

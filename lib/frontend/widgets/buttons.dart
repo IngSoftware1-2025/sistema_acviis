@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:sistema_acviis/ui/styles/app_colors.dart';
-import 'package:sistema_acviis/ui/utils/constants/constants.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/func/cascade_manager.dart';
+import 'package:sistema_acviis/frontend/styles/app_colors.dart';
+import 'package:sistema_acviis/frontend/utils/constants/constants.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/func/cascade_manager.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;

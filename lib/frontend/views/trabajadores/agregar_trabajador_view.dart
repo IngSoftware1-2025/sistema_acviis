@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/backend/controllers/trabajadores/create_trabajador.dart';
 import 'package:sistema_acviis/backend/controllers/contratos/create_contrato.dart';
-import 'package:sistema_acviis/ui/widgets/scaffold.dart';
+import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
 
 class AgregarTrabajadorView extends StatefulWidget {
   const AgregarTrabajadorView({super.key});

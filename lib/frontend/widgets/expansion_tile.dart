@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
-import 'package:sistema_acviis/ui/widgets/comentarios_contrato_tile.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/utils/agregar_anexo_contrato_dialog.dart';
+import 'package:sistema_acviis/frontend/widgets/comentarios_contrato_tile.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/utils/agregar_anexo_contrato_dialog.dart';
 
 class PersonalizedExpansionTile extends StatefulWidget {
   final Trabajador trabajador;

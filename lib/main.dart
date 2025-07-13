@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
-import 'package:sistema_acviis/ui/views/home_page.dart';
-import 'package:sistema_acviis/ui/utils/constants/routes.dart';
+import 'package:sistema_acviis/frontend/views/home_page.dart';
+import 'package:sistema_acviis/frontend/utils/constants/routes.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:sistema_acviis/providers/contratos_provider.dart';

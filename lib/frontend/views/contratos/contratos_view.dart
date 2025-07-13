@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/providers/contratos_provider.dart';
 import 'package:sistema_acviis/test/mongo_connection.dart';
-import 'package:sistema_acviis/ui/utils/constants/constants.dart';
-import 'package:sistema_acviis/ui/widgets/scaffold.dart';
+import 'package:sistema_acviis/frontend/utils/constants/constants.dart';
+import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
 
 class ContratosView extends StatefulWidget {
   const ContratosView({super.key});

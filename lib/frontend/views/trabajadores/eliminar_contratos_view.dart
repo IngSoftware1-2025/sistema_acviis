@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/backend/controllers/comentarios/create_comentario.dart';
-import 'package:sistema_acviis/ui/widgets/scaffold.dart';
+import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
 import 'package:sistema_acviis/backend/controllers/contratos/actualizar_estado_contrato.dart';
 
 Future<void> actualizarContrato(String idContrato, {required String estado, String? comentario}) async {

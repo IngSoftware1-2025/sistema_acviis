@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
-import 'package:sistema_acviis/ui/styles/app_colors.dart';
-import 'package:sistema_acviis/ui/widgets/scaffold.dart';
+import 'package:sistema_acviis/frontend/styles/app_colors.dart';
+import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
 
 class Trabajador {
   final String nombre;

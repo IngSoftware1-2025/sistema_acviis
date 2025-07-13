@@ -18,7 +18,7 @@ import 'package:sistema_acviis/backend/controllers/anexos/create_anexo.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:sistema_acviis/ui/views/trabajadores/func/descargar_anexo_pdf.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/func/descargar_anexo_pdf.dart';
 
 class AgregarAnexoContratoDialog extends StatefulWidget {
   final dynamic idContrato;
