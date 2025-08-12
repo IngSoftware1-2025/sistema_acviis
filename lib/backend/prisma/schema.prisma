@@ -86,7 +86,7 @@ model herramientas {
   estado      String    @db.VarChar
   garantia    DateTime? @db.Date
   cantidad    Int       @db.SmallInt
-  obra_asig   String?   @db.VarChar
+  obra_asig   String?   @db.VarChar // Cuando hagamos todo el tema de las obras, este campo debería ser una FK a la obra.
   asig_inicio DateTime? @db.Date
   asig_fin    DateTime? @db.Date
 }
