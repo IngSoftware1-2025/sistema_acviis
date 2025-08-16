@@ -30,7 +30,8 @@ class PrimaryCard extends StatelessWidget {
                 radius: anchoPantalla * 0.035,
                 child: Icon(
                   icon.icon,
-                  size: anchoPantalla * 0.055,
+                  size: anchoPantalla * 0.7, // No funciona no entiendo qué pasa
+                  //size: 300, // No funciona tampoco
                   color: AppColors.primaryDarker,
                 ),
               ),
@@ -71,40 +72,53 @@ class PrimaryCard extends StatelessWidget {
 }
 
 class GridCards extends StatelessWidget {
-  final List<Map<String, dynamic>> opciones;   
-
-  
-  const GridCards({required this.opciones, super.key});
+  final List<Map<String, dynamic>> opciones;
+  const GridCards({super.key, required this.opciones});
 
   @override
   Widget build(BuildContext context) {
-    final anchoPantalla = MediaQuery.of(context).size.width;
-    final anchoCard = anchoPantalla * 0.3;
-    return Padding(
-      padding: const EdgeInsets.only(top: 16.0),
-      child: Wrap(
-        spacing: 16,
-        runSpacing: 16,
-        alignment: WrapAlignment.center,
-        children: opciones.map((opcion) {
-          return InkWell(
-            onTap: () {
-              Navigator.pushNamed(
-                context,
-                opcion['screen'],
-              );
-            },
-            child: SizedBox(
-              width: anchoCard,
-              child: PrimaryCard(
-                title: opcion['title'],
-                description: opcion['description'],
-                icon: opcion['icon']
+    return GridView.builder(
+      padding: const EdgeInsets.all(32),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3, // 3 columnas
+        crossAxisSpacing: 32,
+        mainAxisSpacing: 32,
+        childAspectRatio: 1.4,
+      ),
+      itemCount: opciones.length,
+      itemBuilder: (context, index) {
+        final opcion = opciones[index];
+        return Card(
+          elevation: 6,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          color: Colors.lightBlueAccent.shade100,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: opcion['screen'] != null
+                ? () => Navigator.pushNamed(context, opcion['screen'])
+                : null,
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  opcion['icon'] ?? const SizedBox.shrink(),
+                  const SizedBox(height: 18),
+                  Text(
+                    opcion['title'] ?? '',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    opcion['description'] ?? '',
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
-          );
-        }).toList() 
-      ),
+          ),
+        );
+      },
     );
   }
 }

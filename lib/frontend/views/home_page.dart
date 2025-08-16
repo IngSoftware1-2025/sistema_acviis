@@ -4,11 +4,8 @@ import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
 import 'package:sistema_acviis/frontend/styles/app_colors.dart';
 import 'package:sistema_acviis/frontend/widgets/vertical_side_bar.dart';
 
-
 class HomePage extends StatefulWidget {
-  const HomePage({
-    super.key
-  });
+  const HomePage({super.key});
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -65,15 +62,14 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: GridCards(opciones: opciones),
           ),
-          const SizedBox(width: 24),
-          //VerticalSideBar(items: opciones),
+          // Si quieres la barra lateral de íconos, puedes agregarla aquí después de que el grid funcione.
+          // const SizedBox(width: 24),
+          // VerticalSideBar(items: opciones),
         ],
       ),
     );
   }
 }
-
-
 
 
 
