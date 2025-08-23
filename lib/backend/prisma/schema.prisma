@@ -71,3 +71,14 @@ model comentarios {
   @@index([id_contrato])
   @@index([id_anexo])
 }
+
+model proveedores {
+  id              String   @id @default(uuid()) @db.Uuid
+  nombre          String   @db.VarChar
+  rut             String   @db.VarChar
+  direccion       String   @db.VarChar
+  correo_electronico String @db.VarChar
+  telefono        String   @db.VarChar
+  estado          String   @db.VarChar
+  fecha_registro  DateTime @db.Date
+}

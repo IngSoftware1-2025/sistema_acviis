@@ -12,10 +12,14 @@ class ContratosProvider extends ChangeNotifier {
   Future<void> fetchContratos() async {
     _isLoading = true;
     notifyListeners();
-
-    _contratos = await fetchContratosFromApi();
-
-    _isLoading = false;
-    notifyListeners();
+    try {
+      _contratos = await fetchContratosFromApi();
+    } catch (e) {
+      print('Error al obtener contratos: $e');
+      _contratos = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }
