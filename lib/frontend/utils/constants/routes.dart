@@ -7,6 +7,7 @@ import 'package:sistema_acviis/frontend/views/trabajadores/eliminar_trabajadores
 import 'package:sistema_acviis/frontend/views/trabajadores/modificar_trabajadores_view.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/trabajadores_view.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/eliminar_contratos_view.dart';
+import 'package:sistema_acviis/frontend/views/logistica/herramientas_view.dart';
 /*
   Aqui se importaran todas las vistas presentes en el sistema
   (Para el primer incremento serian todas las vistas asociadas
@@ -33,5 +34,6 @@ final Map<String, WidgetBuilder> routes = {
   '/home_page/trabajadores_view/modificar_trabajadores_view' : (BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as List<dynamic>;
     return ModificarTrabajadoresView(trabajadores: args);
-  }
+  },
+  '/home_page/herramientas_view' : (BuildContext context) => HerramientasView(),
 };

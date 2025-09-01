@@ -45,7 +45,8 @@ class _HomePageState extends State<HomePage> {
           {
             'title': 'Obras',
             'description': 'Funciones de obras: Crear, Charlas, Asistencia, etc',
-            'icon': Icon(Icons.construction, color: AppColors.primaryDarker)
+            'icon': Icon(Icons.construction, color: AppColors.primaryDarker),
+            'screen': '/home_page/herramientas_view'
           },
           {
             'title': 'Opciones',
