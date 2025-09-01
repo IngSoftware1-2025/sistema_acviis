@@ -7,6 +7,10 @@ import 'package:sistema_acviis/frontend/views/trabajadores/eliminar_trabajadores
 import 'package:sistema_acviis/frontend/views/trabajadores/modificar_trabajadores_view.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/trabajadores_view.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/eliminar_contratos_view.dart';
+import 'package:sistema_acviis/models/proveedor.dart';
+import 'package:sistema_acviis/frontend/views/proveedores/modificar_proveedor_view.dart';
+import 'package:sistema_acviis/frontend/views/proveedores/proveedores_view.dart';
+import 'package:sistema_acviis/frontend/views/proveedores/agregar_proveedor_view.dart';
 import 'package:sistema_acviis/frontend/views/logistica/herramientas_view.dart';
 /*
   Aqui se importaran todas las vistas presentes en el sistema
@@ -35,5 +39,12 @@ final Map<String, WidgetBuilder> routes = {
     final args = ModalRoute.of(context)!.settings.arguments as List<dynamic>;
     return ModificarTrabajadoresView(trabajadores: args);
   },
+  '/home_page/proveedores_view/modificar_proveedor_view': (context) {
+    final args = ModalRoute.of(context)!.settings.arguments as Proveedor;
+    return ModificarProveedorView(proveedor: args);
+  },
+  '/home_page/proveedores_view': (BuildContext context) => ProveedoresView(),
+  '/home_page/proveedores_view/agregar_proveedor_view': (BuildContext context) => AgregarProveedorView(),
+  
   '/home_page/herramientas_view' : (BuildContext context) => HerramientasView(),
 };
