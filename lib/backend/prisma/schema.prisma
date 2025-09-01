@@ -3,82 +3,106 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-// backend/prisma/schema.prisma
-
 model trabajadores {
-  id                        String    @id @default(uuid())
-  nombre_completo           String    @unique
-  estado_civil              String
-  rut                       String    @unique
-  fecha_de_nacimiento       DateTime
-  direccion                 String
-  correo_electronico        String    @unique
-  sistema_de_salud          String
-  prevision_afp             String
-  obra_en_la_que_trabaja    String
-  rol_que_asume_en_la_obra  String
-  estado                    String
-  contratos   contratos[]
-  comentarios comentarios[]
+  id                       String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre_completo          String        @unique @db.VarChar
+  estado_civil             String        @db.VarChar
+  rut                      String        @unique @db.VarChar
+  fecha_de_nacimiento      DateTime      @db.Date
+  direccion                String        @db.VarChar
+  correo_electronico       String        @unique @db.VarChar
+  sistema_de_salud         String        @db.VarChar
+  prevision_afp            String        @db.VarChar
+  obra_en_la_que_trabaja   String        @db.VarChar
+  rol_que_asume_en_la_obra String        @db.VarChar
+  estado                   String        @db.VarChar
+  comentarios              comentarios[]
+  contratos                contratos[]
 }
 
 model contratos {
-  id                     String        @id @default(uuid())
-  id_trabajadores        String        @db.Uuid
-  plazo_de_contrato      String
-  estado                 String
-  fecha_de_contratacion  DateTime
+  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_trabajadores       String        @db.Uuid
+  plazo_de_contrato     String        @db.VarChar
+  estado                String        @db.VarChar
+  fecha_de_contratacion DateTime      @db.Date
+  anexos                anexos[]
+  comentarios           comentarios[]
+  trabajadores          trabajadores  @relation(fields: [id_trabajadores], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_contrato_trabajador")
 
-  trabajadores trabajadores @relation(fields: [id_trabajadores], references: [id])
-  anexos anexos[]
-  comentarios comentarios[]
-
-  @@index([id_trabajadores])
+  @@index([id_trabajadores], map: "idx_contratos_id_trabajadores")
 }
 
 model anexos {
-  id                    String        @id @default(uuid())
-  id_contrato           String        @db.Uuid
-  fecha_de_creacion     DateTime
-  duracion              String
-  tipo                  String
-  parametros            String
-  
-  comentarios comentarios[]
-  contratos contratos @relation(fields: [id_contrato], references: [id])
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_contrato       String        @db.Uuid
+  fecha_de_creacion DateTime      @db.Date
+  duracion          String        @db.VarChar
+  tipo              String        @db.VarChar
+  parametros        String        @default("") @db.VarChar
+  contratos         contratos     @relation(fields: [id_contrato], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_anexo_contrato")
+  comentarios       comentarios[]
 
-
-  @@index([id_contrato])
+  @@index([id_contrato], map: "idx_anexos_id_contrato")
 }
 
 model comentarios {
-  id              String      @id @default(uuid())
-  id_trabajadores String      @db.Uuid
-  id_contrato     String?     @db.Uuid
-  id_anexo        String?     @db.Uuid
-  fecha           DateTime
-  comentario      String
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id_trabajadores String       @db.Uuid
+  id_contrato     String?      @db.Uuid
+  fecha           DateTime     @db.Timestamp(6)
+  comentario      String       @db.VarChar
+  id_anexo        String?      @db.Uuid
+  anexo           anexos?      @relation(fields: [id_anexo], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_comentario_anexo")
+  contrato        contratos?   @relation(fields: [id_contrato], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_comentario_contrato")
+  trabajadores    trabajadores @relation(fields: [id_trabajadores], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_comentario_trabajador")
 
-  trabajadores    trabajadores @relation(fields: [id_trabajadores], references: [id])
-  contrato        contratos?   @relation(fields: [id_contrato], references: [id])
-  anexo           anexos?      @relation(fields: [id_anexo], references: [id])
-
-  @@index([id_trabajadores])
-  @@index([id_contrato])
-  @@index([id_anexo])
+  @@index([id_anexo], map: "idx_comentarios_id_anexo")
+  @@index([id_contrato], map: "idx_comentarios_id_contrato")
+  @@index([id_trabajadores], map: "idx_comentarios_id_trabajadores")
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model proveedores {
-  id              String   @id @default(uuid()) @db.Uuid
-  nombre          String   @db.VarChar
-  rut             String   @db.VarChar
-  direccion       String   @db.VarChar
-  correo_electronico String @db.VarChar
-  telefono        String   @db.VarChar
-  estado          String   @db.VarChar
-  fecha_registro  DateTime @db.Date
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre             String    @db.VarChar
+  rut                String    @unique @db.VarChar
+  direccion          String?   @db.VarChar
+  correo_electronico String?   @db.VarChar
+  telefono           String?   @db.VarChar
+  estado             String?   @default("\"Activo\" para proveedores disponibles, \"Inactivo\" para proveedores no disponibles.") @db.VarChar
+  fecha_registro     DateTime? @db.Date
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model herramientas {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tipo        String    @db.VarChar
+  estado      String    @db.VarChar
+  garantia    DateTime? @db.Date
+  cantidad    Int       @db.SmallInt
+  obra_asig   String?   @db.VarChar
+  asig_inicio DateTime? @db.Date
+  asig_fin    DateTime? @db.Date
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model vehiculos {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patente           String   @unique @db.VarChar
+  permiso_circ      String   @db.VarChar
+  revision_tecnica  DateTime @db.Date
+  revision_gases    DateTime @db.Date
+  ultima_mantencion DateTime @db.Date
+  descripcion_mant  String?  @db.VarChar
+  capacidad_kg      Int
+  neumaticos        String   @db.VarChar
+  rueda_repuesto    Boolean
+  observaciones     String?  @db.VarChar
+  estado            String   @db.VarChar
 }

@@ -11,6 +11,7 @@ import 'package:sistema_acviis/models/proveedor.dart';
 import 'package:sistema_acviis/frontend/views/proveedores/modificar_proveedor_view.dart';
 import 'package:sistema_acviis/frontend/views/proveedores/proveedores_view.dart';
 import 'package:sistema_acviis/frontend/views/proveedores/agregar_proveedor_view.dart';
+import 'package:sistema_acviis/frontend/views/logistica/herramientas_view.dart';
 /*
   Aqui se importaran todas las vistas presentes en el sistema
   (Para el primer incremento serian todas las vistas asociadas
@@ -44,4 +45,6 @@ final Map<String, WidgetBuilder> routes = {
   },
   '/home_page/proveedores_view': (BuildContext context) => ProveedoresView(),
   '/home_page/proveedores_view/agregar_proveedor_view': (BuildContext context) => AgregarProveedorView(),
+  
+  '/home_page/herramientas_view' : (BuildContext context) => HerramientasView(),
 };
