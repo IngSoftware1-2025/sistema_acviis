@@ -33,7 +33,7 @@ class _LogisticaViewState extends State<LogisticaView> {
                 'title': 'Herramientas',
                 'description': 'Gestión de herramientas: Inventario, Asignación, Mantenimiento',
                 'icon': Icon(Icons.build, color: AppColors.primaryDarker),
-                // 'screen': '/home_page/logistica_view/herramientas_view' // Para futuro incremento
+                'screen': '/home_page/logistica_view/herramientas_view'
               },
               {
                 'title': 'Vehículos',
