@@ -11,6 +11,10 @@ import 'package:sistema_acviis/models/proveedor.dart';
 import 'package:sistema_acviis/frontend/views/proveedores/modificar_proveedor_view.dart';
 import 'package:sistema_acviis/frontend/views/proveedores/proveedores_view.dart';
 import 'package:sistema_acviis/frontend/views/proveedores/agregar_proveedor_view.dart';
+import 'package:sistema_acviis/frontend/views/finanzas/finanzas_main_view.dart';
+import 'package:sistema_acviis/frontend/views/finanzas/facturas_view.dart';
+import 'package:sistema_acviis/frontend/views/finanzas/pagos_pendientes_view.dart';
+
 /*
   Aqui se importaran todas las vistas presentes en el sistema
   (Para el primer incremento serian todas las vistas asociadas
@@ -44,4 +48,7 @@ final Map<String, WidgetBuilder> routes = {
   },
   '/home_page/proveedores_view': (BuildContext context) => ProveedoresView(),
   '/home_page/proveedores_view/agregar_proveedor_view': (BuildContext context) => AgregarProveedorView(),
+  '/home_page/finanzas_main_view': (BuildContext context) => FinanzasMainView(),
+  '/home_page/finanzas_main_view/facturas_view': (BuildContext context) => FacturasView(),
+  '/home_page/finanzas_main_view/pagos_pendientes_view': (BuildContext context) => PagosPendientesView(),
 };

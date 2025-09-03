@@ -82,3 +82,19 @@ model proveedores {
   estado          String   @db.VarChar
   fecha_registro  DateTime @db.Date
 }
+
+model pagos {
+  id                  String   @id @default(uuid())
+  nombre_mandante     String
+  rut_mandante        String
+  direccion_comercial String
+  codigo              String
+  servicio_ofrecido   String
+  valor               Float
+  plazo_pagar         DateTime
+  estado_pago         String
+  fotografia_id       String
+  tipo_pago           String
+  sentido             Boolean
+  visualizacion       String   @default("activo")
+}
