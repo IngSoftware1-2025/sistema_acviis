@@ -8,6 +8,8 @@ class TrabajadoresProvider extends ChangeNotifier {
   List<Trabajador> get trabajadores => _trabajadores;
 
   // Filtros Trabajador
+  String? textoBusqueda;
+
   String? obraAsignada;
   String? cargo;
   String? estadoCivil;
@@ -15,7 +17,6 @@ class TrabajadoresProvider extends ChangeNotifier {
   RangeValues? rangoEdad;
   String? sistemaSalud;
   String? estadoEmpresa;
-  String? textoBusqueda;
   
   // Filtros Contrato
   String? estadoContrato;
@@ -129,7 +130,14 @@ class TrabajadoresProvider extends ChangeNotifier {
   }
 
   void filtrar() {
+    /*
+    Estos filtros funcionan de la siguiente forma:
+      - La lista de trabajadores se maneja con la variable _trabajadores
+      - Se filtra por los trabajadores ya existentes en la lista _todos -> aplicandole los filtros
+        retornando una lista filtrada 
+    */
     _trabajadores = _todos.where((t) {
+    /*
       // Obra asignada
       if (obraAsignada != null && obraAsignada!.isNotEmpty && t.obraEnLaQueTrabaja != obraAsignada) return false;
       // Cargo
@@ -198,7 +206,7 @@ class TrabajadoresProvider extends ChangeNotifier {
       if (cantidadContratos != null) {
         if (t.contratos.length != cantidadContratos) return false;
       }
-
+    */
       // Filtro por nombre
       if (textoBusqueda != null && textoBusqueda!.isNotEmpty) {
         if (!t.nombreCompleto.toLowerCase().contains(textoBusqueda!.toLowerCase())) return false;
