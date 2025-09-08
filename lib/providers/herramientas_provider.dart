@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sistema_acviis/backend/controllers/herramientas/actualizar_estado_herramientas.dart';
 import 'package:sistema_acviis/models/herramienta.dart';
 import 'package:sistema_acviis/backend/controllers/herramientas/get_herramientas.dart';
 
@@ -20,6 +21,12 @@ class HerramientasProvider extends ChangeNotifier {
     }
     _isLoading = false;
     notifyListeners();
+  }
+
+  Future<void> darDeBaja(List<String> ids) async {
+    await darDeBajaHerramientas(ids); 
+    // Recargar la lista completa después de dar de baja
+    await fetchHerramientas(); 
   }
 
   // Filtros

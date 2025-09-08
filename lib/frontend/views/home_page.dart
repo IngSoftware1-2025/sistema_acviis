@@ -34,13 +34,13 @@ class _HomePageState extends State<HomePage> {
       {
         'title': 'Logística',
         'description': 'Funciones de logística: Herramientas, EPP, Vehículos, etc',
-        'icon': Icon(Icons.inventory_outlined, color: AppColors.primaryDarker)
+        'icon': Icon(Icons.inventory_outlined, color: AppColors.primaryDarker),
+        'screen': '/home_page/logistica_view'
       },
       {
         'title': 'Obras',
         'description': 'Funciones de obras: Crear, Charlas, Asistencia, etc',
         'icon': Icon(Icons.construction, color: AppColors.primaryDarker),
-            'screen': '/home_page/herramientas_view'
       },
       {
         'title': 'Opciones',
