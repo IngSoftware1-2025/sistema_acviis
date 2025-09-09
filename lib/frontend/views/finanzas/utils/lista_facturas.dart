@@ -5,7 +5,7 @@ import 'package:sistema_acviis/models/pagos.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:open_file/open_file.dart';
-
+import 'package:sistema_acviis/frontend/views/finanzas/Dialogs/editar_pago_dialog.dart';
 class ListaFacturas extends StatefulWidget {
   final Function(List<Pago>)? onSeleccionadasChanged;
   const ListaFacturas({super.key, this.onSeleccionadasChanged});
@@ -148,7 +148,6 @@ class _ListaFacturasState extends State<ListaFacturas> {
                       }
                       await Provider.of<PagosProvider>(context, listen: false)
                           .fetchFacturas();
-                      // Limpia la selección después de eliminar
                       Provider.of<PagosProvider>(context, listen: false)
                           .facturasSeleccionadas.clear();
                     }
@@ -201,6 +200,17 @@ class _ListaFacturasState extends State<ListaFacturas> {
                         );
                       },
                       child: const Text('Descargar PDF'),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(),
+                      onPressed: () async {
+                        await showDialog(
+                          context: context,
+                          builder: (context) => EditarPagoDialog(pago: factura),
+                        );
+                      },
+                      child: const Text('Modificar'),
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(

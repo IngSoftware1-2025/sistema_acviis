@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sistema_acviis/models/pagos.dart';
 import 'package:sistema_acviis/backend/controllers/finanzas/get_pagos.dart';
 import 'package:sistema_acviis/backend/controllers/finanzas/actualizar_visualizacion_pago.dart';
+import 'package:sistema_acviis/backend/controllers/finanzas/actualizar_pago.dart';
 
 class PagosProvider extends ChangeNotifier {
   List<Pago> _facturas = [];
@@ -70,4 +71,14 @@ class PagosProvider extends ChangeNotifier {
     await fetchFacturas();
     await fetchOtrosPagos();
   }
+  Future<void> actualizarPagoFactura(String id, Map<String, dynamic> data) async {
+  await actualizarPago(id, data);
+  await fetchFacturas();
+  notifyListeners();
+}
+Future<void> actualizarPagoPendientes(String id, Map<String, dynamic> data) async {
+  await actualizarPago(id, data);
+  await fetchOtrosPagos();
+  notifyListeners();
+}
 }

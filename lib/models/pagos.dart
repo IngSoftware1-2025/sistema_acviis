@@ -73,4 +73,36 @@ class Pago {
 
   @override
   int get hashCode => id.hashCode;
+
+  Pago copyWith({
+    String? id,
+    String? nombreMandante,
+    String? rutMandante,
+    String? direccionComercial,
+    String? codigo,
+    String? servicioOfrecido,
+    double? valor,
+    DateTime? plazoPagar,
+    String? estadoPago,
+    String? fotografiaId,
+    String? tipoPago,
+    bool? sentido,
+    String? visualizacion,
+  }) {
+    return Pago(
+      id: id ?? this.id,
+      nombreMandante: nombreMandante ?? this.nombreMandante,
+      rutMandante: rutMandante ?? this.rutMandante,
+      direccionComercial: direccionComercial ?? this.direccionComercial,
+      codigo: codigo ?? this.codigo,
+      servicioOfrecido: servicioOfrecido ?? this.servicioOfrecido,
+      valor: valor ?? this.valor,
+      plazoPagar: plazoPagar ?? this.plazoPagar,
+      estadoPago: estadoPago ?? this.estadoPago,
+      fotografiaId: fotografiaId ?? this.fotografiaId,
+      tipoPago: tipoPago ?? this.tipoPago,
+      sentido: sentido ?? this.sentido,
+      visualizacion: visualizacion ?? this.visualizacion,
+    );
+  }
 }
