@@ -22,7 +22,34 @@ class _ListaFacturasState extends State<ListaFacturas> {
       Provider.of<PagosProvider>(context, listen: false).fetchFacturas();
     });
   }
-
+  Future<void> descargarYAbrirPdf(String fotografiaId) async {
+  final url = 'http://localhost:3000/finanzas/download-pdf/$fotografiaId';
+  try {
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final downloadsDir = Directory('${Platform.environment['USERPROFILE']}\\Downloads');
+      if (!await downloadsDir.exists()) {
+        await downloadsDir.create(recursive: true);
+      }
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filePath = '${downloadsDir.path}/factura_${fotografiaId}_$timestamp.pdf';
+      final file = File(filePath);
+      await file.writeAsBytes(response.bodyBytes);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('PDF guardado en Descargas. Abriendo...')),
+      );
+      await OpenFile.open(filePath);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo descargar el PDF')),
+      );
+    }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al descargar el PDF: $e')),
+      );
+    }
+  }
   Future<void> descargarFacturaPDF(BuildContext context, String facturaId, String codigo) async {
     try {
       final url = Uri.parse('http://localhost:3000/pagos/$facturaId/pdf');
@@ -158,6 +185,13 @@ class _ListaFacturasState extends State<ListaFacturas> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (factura.fotografiaId.isNotEmpty)
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.download),
+                        label: Text('Descargar PDF Mongo'),
+                        onPressed: () => descargarYAbrirPdf(factura.fotografiaId),
+                      ),
+                    const SizedBox(width: 8),
                     ElevatedButton(
                       onPressed: () {
                         descargarFacturaPDF(

@@ -4,6 +4,10 @@ import 'package:sistema_acviis/models/pagos.dart';
 import 'package:sistema_acviis/backend/controllers/finanzas/create_pago.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/providers/pagos_provider.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 class AgregarPagoDialog extends StatefulWidget {
   const AgregarPagoDialog({super.key});
@@ -38,6 +42,8 @@ class _AgregarPagoDialogState extends State<AgregarPagoDialog> {
 
   bool mostrarResumen = false;
 
+  PlatformFile? archivoPdf;
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +70,31 @@ class _AgregarPagoDialogState extends State<AgregarPagoDialog> {
   }
 
   void enviarPago() async {
+    String? pdfId;
+    if (archivoPdf != null) {
+      final uri = Uri.parse('http://localhost:3000/finanzas/upload-pdf');
+      final request = http.MultipartRequest('POST', uri);
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'pdf',
+          archivoPdf!.bytes!,
+          filename: archivoPdf!.name,
+          contentType: MediaType('application', 'pdf'),
+        ),
+      );
+      final response = await request.send();
+      if (response.statusCode == 200) {
+        final respStr = await response.stream.bytesToString();
+        final respJson = jsonDecode(respStr);
+        pdfId = respJson['fileId'];
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al subir el PDF')),
+        );
+        return;
+      }
+    }
+
     final pago = Pago(
       id: '',
       nombreMandante: nombreMandanteController.text,
@@ -74,7 +105,7 @@ class _AgregarPagoDialogState extends State<AgregarPagoDialog> {
       valor: double.tryParse(valorController.text) ?? 0,
       plazoPagar: plazoPagar ?? DateTime.now(),
       estadoPago: estadoPagoController.text,
-      fotografiaId: fotografiaIdController.text,
+      fotografiaId: pdfId ?? fotografiaIdController.text,
       tipoPago: tipoPago,
       sentido: sentido,
       visualizacion: 'activo',
@@ -138,6 +169,8 @@ class _AgregarPagoDialogState extends State<AgregarPagoDialog> {
                   Text('Fotografía ID: $fotografiaId'),
                   Text('Tipo: $tipoPago'),
                   Text('Sentido: ${sentido ? 'hacia otra empresa' : 'hacia mi empresa'}'),
+                  if (archivoPdf != null)
+                    Text('PDF adjunto: ${archivoPdf!.name}'),
                 ],
               ),
             )
@@ -214,6 +247,24 @@ class _AgregarPagoDialogState extends State<AgregarPagoDialog> {
                         );
                         if (!mounted) return;
                         if (fecha != null) setState(() => plazoPagar = fecha);
+                      },
+                    ),
+                    ListTile(
+                      title: Text(archivoPdf == null
+                          ? 'Selecciona archivo PDF'
+                          : 'Archivo seleccionado: ${archivoPdf!.name}'),
+                      trailing: Icon(Icons.attach_file),
+                      onTap: () async {
+                        final result = await FilePicker.platform.pickFiles(
+                          type: FileType.custom,
+                          allowedExtensions: ['pdf'],
+                          withData: true,
+                        );
+                        if (result != null && result.files.isNotEmpty) {
+                          setState(() {
+                            archivoPdf = result.files.first;
+                          });
+                        }
                       },
                     ),
                   ],
