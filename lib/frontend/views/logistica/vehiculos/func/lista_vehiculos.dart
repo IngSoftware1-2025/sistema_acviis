@@ -2,54 +2,55 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/frontend/utils/constants/constants.dart';
 import 'package:sistema_acviis/frontend/widgets/checkbox.dart';
-import 'package:sistema_acviis/frontend/widgets/expansion_tile_herramienta.dart';
+import 'package:sistema_acviis/frontend/widgets/expansion_tile_vehiculos.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
-import 'package:sistema_acviis/providers/herramientas_provider.dart';
+import 'package:sistema_acviis/providers/vehiculos_provider.dart';
 
-class ListaHerramientas extends StatefulWidget {
-  const ListaHerramientas({super.key});
+class ListaVehiculos extends StatefulWidget {
+  const ListaVehiculos({super.key});
 
   @override
-  State<ListaHerramientas> createState() => _ListaHerramientasState();
+  State<ListaVehiculos> createState() => _ListaVehiculosState();
 }
 
-class _ListaHerramientasState extends State<ListaHerramientas> {
+class _ListaVehiculosState extends State<ListaVehiculos> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final herramientasProvider = Provider.of<HerramientasProvider>(context, listen: false);
-      herramientasProvider.fetchHerramientas().then((_) {
+      final vehiculosProvider = Provider.of<VehiculosProvider>(context, listen: false);
+      vehiculosProvider.fetchVehiculos().then((_) {
         if (!mounted) return; // <-- Agregado
         Provider.of<CheckboxProvider>(context, listen: false)
-            .setCheckBoxes(herramientasProvider.herramientas.length);
+            .setCheckBoxes(vehiculosProvider.vehiculos.length);
       });
     });
   }
 
   Widget build(BuildContext context) {
-    final provider = context.watch<HerramientasProvider>();
+    final provider = context.watch<VehiculosProvider>();
     final checkboxProvider = context.watch<CheckboxProvider>();
 
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (checkboxProvider.checkBoxes.length != provider.herramientas.length + 1) {
-      checkboxProvider.setCheckBoxes(provider.herramientas.length);
+    if (checkboxProvider.checkBoxes.length != provider.vehiculos.length + 1) {
+      checkboxProvider.setCheckBoxes(provider.vehiculos.length);
     }
     });
 
     if (provider.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (provider.herramientas.isEmpty) {
-      return const Center(child: Text('No hay herramientas para mostrar.'));
+    if (provider.vehiculos.isEmpty) {
+      return const Center(child: Text('No hay vehículos para mostrar.'));
     }
-    if (checkboxProvider.checkBoxes.length != (provider.herramientas.length + 1)) {
+    if (checkboxProvider.checkBoxes.length != (provider.vehiculos.length + 1)) {
       return const Center(child: CircularProgressIndicator());
     }
     final double tableWidth = MediaQuery.of(context).size.width > 600
         ? MediaQuery.of(context).size.width
         : 600;
+
 
     return Expanded(
       child: SingleChildScrollView(
@@ -68,7 +69,7 @@ class _ListaHerramientasState extends State<ListaHerramientas> {
                     flex: 2,
                     child: Center(
                       child: Text(
-                      'Lista de Herramientas Registradas',
+                      'Lista de Vehículos Registrados',
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                     ),
@@ -85,16 +86,16 @@ class _ListaHerramientasState extends State<ListaHerramientas> {
               ),
 
               const Divider(),
-              ...List.generate(provider.herramientas.length, (i) {
-                final herramienta = provider.herramientas[i];
+              ...List.generate(provider.vehiculos.length, (i) {
+                final vehiculo = provider.vehiculos[i];
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 1.0),
                   child: Row(
                     children: [
                       PrimaryCheckbox(customCheckbox: checkboxProvider.checkBoxes[i + 1]),
                       Expanded(
-                        child: ExpansionTileHerramienta(
-                          herramienta: herramienta,                        
+                        child: ExpansionTileVehiculos(
+                          vehiculo: vehiculo,                        
                         ),
                       ),
                     ],

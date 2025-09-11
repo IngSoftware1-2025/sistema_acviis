@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sistema_acviis/frontend/utils/filtros/herramientas.dart';
+import 'package:sistema_acviis/frontend/utils/filtros/vehiculos.dart';
+import 'package:sistema_acviis/frontend/views/logistica/vehiculos/func/lista_vehiculos.dart';
+import 'package:sistema_acviis/frontend/views/logistica/vehiculos/func/search_bar.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
-import 'package:sistema_acviis/providers/herramientas_provider.dart';
 import 'package:sistema_acviis/frontend/utils/constants/constants.dart';
-import 'package:sistema_acviis/frontend/views/logistica/herramientas/func/lista_herramientas.dart';
-import 'package:sistema_acviis/frontend/views/logistica/herramientas/func/search_bar.dart';
 import 'package:sistema_acviis/frontend/widgets/buttons.dart';
 import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
+import 'package:sistema_acviis/providers/vehiculos_provider.dart';
 
-class HerramientasView extends StatefulWidget {
-  const HerramientasView({super.key});
+class VehiculosView extends StatefulWidget {
+  const VehiculosView({super.key});
 
   @override
-  State<HerramientasView> createState() => _HerramientasViewState();
+  State<VehiculosView> createState() => _VehiculosViewState();
 }
 
-class _HerramientasViewState extends State<HerramientasView> {
+class _VehiculosViewState extends State<VehiculosView> {
   @override
   Widget build(BuildContext context) {  
     return PrimaryScaffold(
-      title: 'Herrmamientas',
+      title: 'Vehículos',
       body: Column(
         children: [
           Row(
@@ -31,7 +31,7 @@ class _HerramientasViewState extends State<HerramientasView> {
                 icon: Icon(Icons.menu),
                 children: [
                   PrimaryButton(
-                    text: 'Agregar herramienta',
+                    text: 'Agregar vehículo',
                     onPressed: () {
                       Navigator.pushReplacementNamed(context, '/home_page/logistica_view/herramientas_view/agregar_herramientas_view');
                     },
@@ -42,33 +42,33 @@ class _HerramientasViewState extends State<HerramientasView> {
                 PrimaryButton(
                   onPressed: () {
                   final checkboxProvider = Provider.of<CheckboxProvider>(context, listen: false);
-                  final herramientasProvider = Provider.of<HerramientasProvider>(context, listen: false);
+                  final vehiculosProvider = Provider.of<VehiculosProvider>(context, listen: false);
 
-                  final seleccionadas = <int>[];
+                  final seleccionados = <int>[];
                   for (int i = 1; i < checkboxProvider.checkBoxes.length; i++) {
                     if (checkboxProvider.checkBoxes[i].isSelected) {
-                      seleccionadas.add(i - 1); 
+                      seleccionados.add(i - 1); 
                     }
                   }
 
-                  if (seleccionadas.isEmpty) {
+                  if (seleccionados.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Debes seleccionar al menos una herramienta.')),
+                      const SnackBar(content: Text('Debes seleccionar al menos un vehículo.')),
                     );
                     return;
                   }
 
-                  final herramientasSeleccionadas = seleccionadas
-                      .map((i) => herramientasProvider.herramientas[i])
+                  final vehiculosSeleccionados = seleccionados
+                      .map((i) => vehiculosProvider.vehiculos[i])
                       .toList();
 
                   Navigator.pushReplacementNamed(
                     context,
                     '/home_page/logistica_view/herramientas_view/modificar_herramientas_view',
-                    arguments: herramientasSeleccionadas,
+                    arguments: vehiculosSeleccionados,
                   );
                 },
-                  text: 'Modificar herramientas',
+                  text: 'Modificar vehículos',
                 ),
 
                   SizedBox(height: normalPadding,),
@@ -76,43 +76,43 @@ class _HerramientasViewState extends State<HerramientasView> {
                 PrimaryButton(
                   onPressed: () async {
                   final checkboxProvider = Provider.of<CheckboxProvider>(context, listen: false);
-                  final herramientasProvider = Provider.of<HerramientasProvider>(context, listen: false);
+                  final vehiculosProvider = Provider.of<VehiculosProvider>(context, listen: false);
 
-                  final seleccionadas = <int>[];
+                  final seleccionados = <int>[];
                   for (int i = 1; i < checkboxProvider.checkBoxes.length; i++) {
                     if (checkboxProvider.checkBoxes[i].isSelected) {
-                      seleccionadas.add(i - 1); 
+                      seleccionados.add(i - 1); 
                     }
                   }
 
-                  if (seleccionadas.isEmpty) {
+                  if (seleccionados.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Debes seleccionar al menos una herramienta.')),
+                      const SnackBar(content: Text('Debes seleccionar al menos un vehículo.')),
                     );
                     return;
                   }
 
-                  final herramientasSeleccionadas = seleccionadas
-                      .map((i) => herramientasProvider.herramientas[i])
+                  final vehiculosSeleccionados = seleccionados
+                      .map((i) => vehiculosProvider.vehiculos[i])
                       .toList();
 
-                  final idsSeleccionados = herramientasSeleccionadas.map((h) => h.id).toList();
+                  final idsSeleccionados = vehiculosSeleccionados.map((v) => v.id).toList();
 
                   try {
-                    await herramientasProvider.darDeBaja(idsSeleccionados);
+                    await vehiculosProvider.darDeBaja(idsSeleccionados);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Todas las herramientas seleccionadas fueron dadas de baja.')),
+                      const SnackBar(content: Text('Todos los vehículos seleccionados fueron dados de baja.')),
                     );
                     Provider.of<CheckboxProvider>(context, listen: false)
-                      .setCheckBoxes(herramientasProvider.herramientas.length);
+                      .setCheckBoxes(vehiculosProvider.vehiculos.length);
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Hubo un error al dar de baja herramientas.')),
+                      const SnackBar(content: Text('Hubo un error al dar de baja vehículos.')),
                     );
-                    print("Hubo un error al dar de baja herramientas: $e");
+                    print("Hubo un error al dar de baja vehículos: $e");
                   }
                 },
-                  text: 'Dar de baja herramientas',
+                  text: 'Dar de baja vehículos',
                 ),
                 ]
               ),
@@ -120,17 +120,17 @@ class _HerramientasViewState extends State<HerramientasView> {
               SizedBox(width: normalPadding,),
 
               Expanded(
-                child: HerramientasSearchBar(),
+                child: VehiculosSearchBar(),
               ),  
 
               SizedBox(width: normalPadding,),
 
               CascadeButton(
-                title: 'Filtros Herramientas',
+                title: 'Filtros Vehiculos',
                 offset: 0.0,
                 icon: Icon(Icons.filter_alt_sharp),
                 children: [
-                  HerramientasFiltrosDisplay()
+                  VehiculosFiltrosDisplay()
                 ],
               ),
             ],
@@ -148,7 +148,7 @@ class _HerramientasViewState extends State<HerramientasView> {
             ),
             ),
           ),
-          ListaHerramientas()
+          ListaVehiculos()
         ],
       ),
     );

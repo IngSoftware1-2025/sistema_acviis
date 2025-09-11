@@ -39,7 +39,7 @@ class _LogisticaViewState extends State<LogisticaView> {
                 'title': 'Vehículos',
                 'description': 'Gestión de vehículos: Mantenimiento, Asignación, Combustible',
                 'icon': Icon(Icons.directions_car, color: AppColors.primaryDarker),
-                // 'screen': '/home_page/logistica_view/vehiculos_view' // Para futuro incremento
+                'screen': '/home_page/logistica_view/vehiculos_view' 
               },
             ]
           ),

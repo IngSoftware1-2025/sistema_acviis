@@ -4,6 +4,7 @@ import 'package:sistema_acviis/frontend/views/contratos/contratos_view.dart';
 import 'package:sistema_acviis/frontend/views/home_page.dart';
 import 'package:sistema_acviis/frontend/views/logistica/herramientas/agregar_herramientas_view.dart';
 import 'package:sistema_acviis/frontend/views/logistica/logistica_view.dart';
+import 'package:sistema_acviis/frontend/views/logistica/vehiculos/vehiculos_view.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/agregar_trabajador_view.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/contratos_anexos.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/eliminar_trabajadores_view.dart';
@@ -57,4 +58,7 @@ final Map<String, WidgetBuilder> routes = {
   final args = ModalRoute.of(context)!.settings.arguments as List<dynamic>;
   return ModificarHerramientasView(herramientas: args);
   },
+
+  '/home_page/logistica_view/vehiculos_view' : (BuildContext context) => VehiculosView(),
+  
 };

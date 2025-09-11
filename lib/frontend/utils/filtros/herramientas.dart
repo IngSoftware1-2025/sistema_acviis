@@ -222,7 +222,10 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
           ],
         ),
         const SizedBox(height: 16),
-        PrimaryButton(text: 'Aplicar Filtros', size: const Size(220, 35), onPressed: (){
+        PrimaryButton(
+          text: 'Aplicar Filtros',
+          size: const Size(220, 35),
+          onPressed: (){
           provider.actualizarFiltros(
             tipo: _tipo,
             estado: _estado,
