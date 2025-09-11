@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sistema_acviis/frontend/widgets/buttons.dart';
 import 'package:sistema_acviis/providers/herramientas_provider.dart';
 
 class HerramientasFiltrosDisplay extends StatefulWidget {
@@ -18,6 +19,9 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
   String? _obraAsig;
   RangeValues? _rangoCantidad;
 
+  late TextEditingController _tipoController;
+  late TextEditingController _obraController;
+
 
   @override
   void initState() {
@@ -29,6 +33,16 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
     _garantiaHasta = provider.garantiaHasta;
     _obraAsig = provider.obraAsig;
     _rangoCantidad = provider.rangoCantidad;
+
+    _tipoController = TextEditingController(text: context.read<HerramientasProvider>().tipo ?? '');
+    _obraController = TextEditingController(text: context.read<HerramientasProvider>().obraAsig ?? '');
+  }
+
+  @override
+  void dispose() {
+    _tipoController.dispose();
+    _obraController.dispose();
+    super.dispose();
   }
 
   void _resetDropdowns() {
@@ -39,6 +53,8 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
       _garantiaHasta = null;
       _obraAsig = null;
       _rangoCantidad = null;
+      _tipoController.clear();
+      _obraController.clear();
     });
   }
 
@@ -46,6 +62,23 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
   Widget build(BuildContext context) {
 
     final provider = Provider.of<HerramientasProvider>(context);
+
+    final tiposUnicos = provider
+      .herramientas
+      .map((h) => h.tipo)
+      .toSet()
+      .toList();
+
+
+    final obrasUnicas = provider
+      .herramientas
+      .map((h) => h.obraAsig)
+      .where((obra) => obra != null && obra.isNotEmpty)
+      .cast<String>()
+      .toSet()
+      .toList();
+
+    
 
 
     return Column(
@@ -55,34 +88,23 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
           children: [
             const Text('Tipo de herramienta'),
             const Spacer(),
-            Expanded(
-              flex: 2,
-              child: Autocomplete<String>(
-                initialValue: TextEditingValue(text: _tipo ?? ''),
-                optionsBuilder: (TextEditingValue textEditingValue) {
-                  if (textEditingValue.text.isEmpty) {
-                    return const Iterable<String>.empty();
-                  }
-                 
-                  final tiposUnicos = context.read<HerramientasProvider>()
-                      .herramientas
-                      .map((h) => h.tipo)
-                      .where((tipo) => tipo.isNotEmpty)
-                      .toSet()
-                      .toList();
-
-                  return tiposUnicos.where((tipo) =>
-                      tipo.toLowerCase().contains(textEditingValue.text.toLowerCase()));
-                },
-                onSelected: (String tipo) {
-                  setState(() {
-                    _tipo = tipo; 
-                  });
-                },
-              ),
+            DropdownMenu<String>(
+              initialSelection: _tipo,
+              hintText: 'Selecciona tipo',
+              key: ValueKey(_tipo),
+              dropdownMenuEntries: tiposUnicos
+                  .map((tipo) => DropdownMenuEntry(value: tipo, label: tipo ?? 'Sin filtro'))
+                  .toList(),
+              onSelected: (String? value) {
+                setState(() {
+                  _tipo = value;
+                });
+              },
+              enableFilter: true,
             ),
           ],
         ),
+
 
         // ===================== Estado =====================
         Row(
@@ -92,8 +114,9 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
             DropdownMenu<String>(
               initialSelection: _estado,
               hintText: 'Estado',
+              key: ValueKey(_estado),
               dropdownMenuEntries: const [
-                DropdownMenuEntry(value: 'Activa', label: 'Activa'),
+                DropdownMenuEntry(value: 'Activo', label: 'Activo'),
                 DropdownMenuEntry(value: 'De baja', label: 'De baja'),
               ],
               onSelected: (String? value) {
@@ -120,7 +143,6 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
                   lastDate: DateTime(2100),
                 );
                 if (fecha != null) {
-                  provider.actualizarFiltros(garantiaDesde: fecha);
                 }
               },
               child: Text(
@@ -140,7 +162,6 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
                   lastDate: DateTime(2100),
                 );
                 if (fecha != null) {
-                  provider.actualizarFiltros(garantiaHasta: fecha);
                 }
               },
               child: Text(
@@ -157,31 +178,18 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
           children: [
             const Text('Obra asignada'),
             const Spacer(),
-            Expanded(
-              flex: 2,
-              child: Autocomplete<String>(
-                initialValue: TextEditingValue(text: _obraAsig ?? ''),
-                optionsBuilder: (TextEditingValue textEditingValue) {
-                  if (textEditingValue.text.isEmpty) {
-                    return const Iterable<String>.empty();
-                  }
-                 
-                  final obrasUnicas = context.read<HerramientasProvider>()
-                      .herramientas
-                      .map((h) => h.obraAsig ?? '')
-                      .where((obra) => obra.isNotEmpty)
-                      .toSet()
-                      .toList();
-
-                  return obrasUnicas.where((obra) =>
-                      obra.toLowerCase().contains(textEditingValue.text.toLowerCase()));
-                },
-                onSelected: (String obra) {
-                  setState(() {
-                    _obraAsig = obra; 
-                  });
-                },
-              ),
+            DropdownMenu<String>(
+              initialSelection: _obraAsig,
+              hintText: 'Selecciona obra',
+              key: ValueKey(_obraAsig),
+              dropdownMenuEntries: obrasUnicas
+                  .map((obra) => DropdownMenuEntry(value: obra, label: obra))
+                  .toList(),
+              onSelected: (String? value) {
+                setState(() {
+                  _obraAsig = value;
+                });
+              },
             ),
           ],
         ),
@@ -202,7 +210,9 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
                   (_rangoCantidad?.end.round() ?? 10000).toString(),
                 ),
                 onChanged: (RangeValues values) {
-                  provider.actualizarFiltros(rangoCantidad: values);
+                  setState(() {
+                    _rangoCantidad = values;
+                  });
                 },
               ),
             ),
@@ -212,6 +222,17 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
           ],
         ),
         const SizedBox(height: 16),
+        PrimaryButton(text: 'Aplicar Filtros', size: const Size(220, 35), onPressed: (){
+          provider.actualizarFiltros(
+            tipo: _tipo,
+            estado: _estado,
+            garantiaDesde: _garantiaDesde,
+            garantiaHasta: _garantiaHasta,
+            obraAsig: _obraAsig,
+            rangoCantidad: _rangoCantidad,
+          );
+        }),
+        const SizedBox(height: 12),
         ElevatedButton.icon(
           icon: const Icon(Icons.delete_sweep),
           label: const Text('Limpiar todos los filtros'),
