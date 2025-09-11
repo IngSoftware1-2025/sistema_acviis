@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/backend/controllers/herramientas/actualizar_estado_herramientas.dart';
+import 'package:sistema_acviis/frontend/utils/filtros/herramientas.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
 import 'package:sistema_acviis/providers/herramientas_provider.dart';
 import 'package:sistema_acviis/frontend/utils/constants/constants.dart';
@@ -129,7 +130,9 @@ class _HerramientasViewState extends State<HerramientasView> {
                 title: 'Filtros Herramientas',
                 offset: 0.0,
                 icon: Icon(Icons.filter_alt_sharp),
-                children: [],
+                children: [
+                  HerramientasFiltrosDisplay()
+                ],
               ),
             ],
           ),
