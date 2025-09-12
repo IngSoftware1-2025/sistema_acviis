@@ -93,7 +93,7 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
               hintText: 'Selecciona tipo',
               key: ValueKey(_tipo),
               dropdownMenuEntries: tiposUnicos
-                  .map((tipo) => DropdownMenuEntry(value: tipo, label: tipo ?? 'Sin filtro'))
+                  .map((tipo) => DropdownMenuEntry(value: tipo, label: tipo))
                   .toList(),
               onSelected: (String? value) {
                 setState(() {

@@ -96,7 +96,7 @@ class _AgregarHerramientasViewState extends State<AgregarHerramientasView> {
             const SnackBar(content: Text('Herramienta creada exitosamente')),
           );
           Navigator.of(context).pushNamedAndRemoveUntil(
-            '/home_page/herramientas_view',
+            '/home_page/logistica_view/herramientas_view',
             (Route<dynamic> route) => false,
           );
         }

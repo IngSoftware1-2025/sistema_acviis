@@ -33,7 +33,7 @@ class _VehiculosViewState extends State<VehiculosView> {
                   PrimaryButton(
                     text: 'Agregar vehículo',
                     onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/home_page/logistica_view/herramientas_view/agregar_herramientas_view');
+                      Navigator.pushReplacementNamed(context, '/home_page/logistica_view/vehiculos_view/agregar_vehiculos_view');
                     },
                   ),
 
@@ -64,7 +64,7 @@ class _VehiculosViewState extends State<VehiculosView> {
 
                   Navigator.pushReplacementNamed(
                     context,
-                    '/home_page/logistica_view/herramientas_view/modificar_herramientas_view',
+                    '/home_page/logistica_view/vehiculos_view/modificar_vehiculos_view',
                     arguments: vehiculosSeleccionados,
                   );
                 },

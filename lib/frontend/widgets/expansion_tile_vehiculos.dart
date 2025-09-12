@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/models/vehiculo.dart';
+import 'package:intl/intl.dart';
 
 class ExpansionTileVehiculos extends StatelessWidget {
   final Vehiculo vehiculo;
@@ -18,23 +19,23 @@ class ExpansionTileVehiculos extends StatelessWidget {
         ),
         ListTile(
           title: const Text('Revisión técnica'),
-          subtitle: Text(vehiculo.revisionTecnica.toLocal().toString().split(' ')[0]),
+          subtitle: Text(DateFormat('yyyy-MM-dd').format(vehiculo.revisionTecnica)),
         ),
         ListTile(
           title: const Text('Revisión de gases'),
-          subtitle: Text(vehiculo.revisionGases.toLocal().toString().split(' ')[0]),
+          subtitle: Text(DateFormat('yyyy-MM-dd').format(vehiculo.revisionGases)),
         ),
         ListTile(
           title: const Text('Última mantención'),
-          subtitle: Text(vehiculo.ultimaMantencion.toLocal().toString().split(' ')[0]),
-        ),
-        ListTile(
-          title: const Text('Próxima mantención'),
-          subtitle: Text(vehiculo.proximaMantencion.toLocal().toString().split(' ')[0]),
+          subtitle: Text(DateFormat('yyyy-MM-dd').format(vehiculo.ultimaMantencion)),
         ),
         ListTile(
           title: const Text('Descripción de mantención'),
           subtitle: Text(vehiculo.descripcionMant ?? 'Sin descripción'),
+        ),
+        ListTile(
+          title: const Text('Próxima mantención'),
+          subtitle: Text(DateFormat('yyyy-MM-dd').format(vehiculo.proximaMantencion)),
         ),
         ListTile(
           title: const Text('Capacidad (kg)'),

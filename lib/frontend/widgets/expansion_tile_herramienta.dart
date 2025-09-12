@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/models/herramienta.dart';
+import 'package:intl/intl.dart';
 
 class ExpansionTileHerramienta extends StatelessWidget {
   final Herramienta herramienta;
@@ -14,7 +15,11 @@ class ExpansionTileHerramienta extends StatelessWidget {
       children: [
         ListTile(
           title: Text('Garantía'),
-          subtitle: Text(herramienta.garantia != null ? herramienta.garantia!.toLocal().toString().split(' ')[0] : 'Sin garantía'),
+          subtitle: Text(
+            herramienta.garantia != null 
+            ? DateFormat('yyyy-MM-dd').format(herramienta.garantia!) :
+            'Sin garantía',
+          ),
         ),
         ListTile(
           title: Text('Cantidad'),
@@ -25,12 +30,20 @@ class ExpansionTileHerramienta extends StatelessWidget {
           subtitle: Text(herramienta.obraAsig ?? 'Sin asignar'),
         ),
         ListTile(
-          title: Text('Asignación inicio'),
-          subtitle: Text(herramienta.asigInicio != null ? herramienta.asigInicio!.toLocal().toString().split(' ')[0] : 'No asignada'),
+          title: Text('Inicio de asignación'),
+          subtitle: Text(
+            herramienta.asigInicio != null 
+            ? DateFormat('yyyy-MM-dd').format(herramienta.asigInicio!) :
+            'No asignada',
+          ),
         ),
         ListTile(
-          title: Text('Asignación fin'),
-          subtitle: Text(herramienta.asigFin != null ? herramienta.asigFin!.toLocal().toString().split(' ')[0] : 'No asignada'),
+          title: Text('Fin de asignación'),
+          subtitle: Text(
+            herramienta.asigFin != null 
+            ? DateFormat('yyyy-MM-dd').format(herramienta.asigFin!) :
+            'No asignada',
+          ),
         ),
       ],
     );
