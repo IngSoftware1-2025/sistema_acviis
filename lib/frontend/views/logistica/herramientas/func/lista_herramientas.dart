@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sistema_acviis/backend/controllers/PDF/generacionPDF.dart';
 import 'package:sistema_acviis/frontend/utils/constants/constants.dart';
 import 'package:sistema_acviis/frontend/widgets/checkbox.dart';
 import 'package:sistema_acviis/frontend/widgets/expansion_tile_herramienta.dart';
@@ -95,6 +96,22 @@ class _ListaHerramientasState extends State<ListaHerramientas> {
                       Expanded(
                         child: ExpansionTileHerramienta(
                           herramienta: herramienta,                        
+                        ),
+                      ),
+                      Flexible(
+                        flex: 0,
+                        fit: FlexFit.tight,
+                        child: IconButton(
+                          icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
+                          tooltip: "Descargar ficha PDF",
+                          onPressed: () {
+                            descargarFichaPDFGenerico(
+                              context,
+                              "herramientas",
+                              herramienta.id,
+                              herramienta.tipo, // puedes usar tipo, estado o lo que quieras
+                            );
+                          },
                         ),
                       ),
                     ],
