@@ -3,9 +3,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/models/pagos.dart';
 import 'package:sistema_acviis/providers/pagos_provider.dart';
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
-import 'dart:convert';
 
 class EditarPagoDialog extends StatefulWidget {
   final Pago pago;
@@ -67,27 +64,10 @@ class _EditarPagoDialogState extends State<EditarPagoDialog> {
     if (_formKey.currentState!.validate()) {
       String? nuevoPdfId = fotografiaId;
       if (archivoPdf != null) {
-        final uri = Uri.parse('http://localhost:3000/finanzas/upload-pdf');
-        final request = http.MultipartRequest('POST', uri);
-        request.files.add(
-          http.MultipartFile.fromBytes(
-            'pdf',
-            archivoPdf!.bytes!,
-            filename: archivoPdf!.name,
-            contentType: MediaType('application', 'pdf'),
-          ),
-        );
-        final response = await request.send();
-        if (response.statusCode == 200) {
-          final respStr = await response.stream.bytesToString();
-          final respJson = jsonDecode(respStr);
-          nuevoPdfId = respJson['fileId'];
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error al subir el PDF')),
-          );
-          return;
-        }
+        final idPdf = await Provider.of<PagosProvider>(context, listen: false)
+            .subirPDF(archivoPdf!, context);
+        if (idPdf == null) return;
+        nuevoPdfId = idPdf;
       }
 
       final data = {

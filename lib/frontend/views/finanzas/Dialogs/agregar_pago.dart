@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:sistema_acviis/models/pagos.dart';
-import 'package:sistema_acviis/backend/controllers/finanzas/create_pago.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/providers/pagos_provider.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
 
 class AgregarPagoDialog extends StatefulWidget {
   const AgregarPagoDialog({super.key});
@@ -56,7 +52,6 @@ class _AgregarPagoDialogState extends State<AgregarPagoDialog> {
     valor = (random.nextDouble() * 100000).roundToDouble();
     plazoPagar = DateTime.now().add(Duration(days: random.nextInt(60)));
     estadoPago = random.nextBool() ? 'Pagado' : 'Pendiente';
-    fotografiaId = 'foto${random.nextInt(1000)}';
     sentido = true; // siempre "hacia otra empresa"
 
     nombreMandanteController = TextEditingController(text: nombreMandante);
@@ -69,32 +64,13 @@ class _AgregarPagoDialogState extends State<AgregarPagoDialog> {
     fotografiaIdController = TextEditingController(text: fotografiaId);
   }
 
-  void enviarPago() async {
+  void crearPago() async {
     String? pdfId;
     if (archivoPdf != null) {
-      final uri = Uri.parse('http://localhost:3000/finanzas/upload-pdf');
-      final request = http.MultipartRequest('POST', uri);
-      request.files.add(
-        http.MultipartFile.fromBytes(
-          'pdf',
-          archivoPdf!.bytes!,
-          filename: archivoPdf!.name,
-          contentType: MediaType('application', 'pdf'),
-        ),
-      );
-      final response = await request.send();
-      if (response.statusCode == 200) {
-        final respStr = await response.stream.bytesToString();
-        final respJson = jsonDecode(respStr);
-        pdfId = respJson['fileId'];
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al subir el PDF')),
-        );
-        return;
-      }
+      pdfId = await Provider.of<PagosProvider>(context, listen: false)
+          .subirPDF(archivoPdf!, context);
+      if (pdfId == null) return;
     }
-
     final pago = Pago(
       id: '',
       nombreMandante: nombreMandanteController.text,
@@ -110,12 +86,10 @@ class _AgregarPagoDialogState extends State<AgregarPagoDialog> {
       sentido: sentido,
       visualizacion: 'activo',
     );
+
     try {
-      await crearPago(pago);
-      if (mounted) {
-        await Provider.of<PagosProvider>(context, listen: false).fetchOtrosPagos();
-        Navigator.of(context).pop(true);
-      }
+      await Provider.of<PagosProvider>(context, listen: false).agregarPagosOtros(pago);
+      Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -134,6 +108,12 @@ class _AgregarPagoDialogState extends State<AgregarPagoDialog> {
             child: Text('Siguiente'),
             onPressed: () {
               if (_formKey.currentState?.validate() == true && plazoPagar != null) {
+                if (archivoPdf == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Se debe adjuntar un archivo PDF')),
+                  );
+                  return;
+                }
                 setState(() => mostrarResumen = true);
               } else {
                 if (!mounted) return;
@@ -145,7 +125,15 @@ class _AgregarPagoDialogState extends State<AgregarPagoDialog> {
           ),
         if (mostrarResumen)
           TextButton(
-            onPressed: enviarPago,
+            onPressed: () {
+              if (archivoPdf == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Debes adjuntar un archivo PDF')),
+                );
+                return;
+              }
+              crearPago();
+            },
             child: Text('Aceptar y Guardar'),
           ),
         TextButton(
@@ -166,7 +154,6 @@ class _AgregarPagoDialogState extends State<AgregarPagoDialog> {
                   Text('Valor: $valor'),
                   Text('Plazo de pago: ${plazoPagar?.toLocal().toString().split(' ')[0]}'),
                   Text('Estado: $estadoPago'),
-                  Text('Fotografía ID: $fotografiaId'),
                   Text('Tipo: $tipoPago'),
                   Text('Sentido: ${sentido ? 'hacia otra empresa' : 'hacia mi empresa'}'),
                   if (archivoPdf != null)
@@ -220,12 +207,6 @@ class _AgregarPagoDialogState extends State<AgregarPagoDialog> {
                       decoration: InputDecoration(labelText: 'Estado Pago'),
                       controller: estadoPagoController,
                       onChanged: (v) => estadoPago = v,
-                      validator: (v) => v == null || v.isEmpty ? 'Campo requerido' : null,
-                    ),
-                    TextFormField(
-                      decoration: InputDecoration(labelText: 'Fotografía ID'),
-                      controller: fotografiaIdController,
-                      onChanged: (v) => fotografiaId = v,
                       validator: (v) => v == null || v.isEmpty ? 'Campo requerido' : null,
                     ),
                     SwitchListTile(

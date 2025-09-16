@@ -3,6 +3,10 @@ import 'package:sistema_acviis/models/pagos.dart';
 import 'package:sistema_acviis/backend/controllers/finanzas/get_pagos.dart';
 import 'package:sistema_acviis/backend/controllers/finanzas/actualizar_visualizacion_pago.dart';
 import 'package:sistema_acviis/backend/controllers/finanzas/actualizar_pago.dart';
+import 'package:sistema_acviis/backend/controllers/finanzas/subirPDF.dart';
+import 'package:sistema_acviis/backend/controllers/finanzas/create_pago.dart';
+import 'package:sistema_acviis/backend/controllers/finanzas/manejoPDF.dart';
+import 'package:file_picker/file_picker.dart';
 
 class PagosProvider extends ChangeNotifier {
   List<Pago> _facturas = [];
@@ -68,17 +72,43 @@ class PagosProvider extends ChangeNotifier {
 
   Future<void> actualizarVisualizacion(String id, String visualizacion) async {
     await actualizarVisualizacionFromAPI(id, visualizacion);
-    await fetchFacturas();
-    await fetchOtrosPagos();
   }
+
   Future<void> actualizarPagoFactura(String id, Map<String, dynamic> data) async {
-  await actualizarPago(id, data);
-  await fetchFacturas();
-  notifyListeners();
-}
-Future<void> actualizarPagoPendientes(String id, Map<String, dynamic> data) async {
-  await actualizarPago(id, data);
-  await fetchOtrosPagos();
-  notifyListeners();
-}
+    await actualizarPago(id, data);
+    await fetchFacturas();
+    notifyListeners();
+  }
+
+  Future<void> actualizarPagoPendientes(String id, Map<String, dynamic> data) async {
+    await actualizarPago(id, data);
+    await fetchOtrosPagos();
+    notifyListeners();
+  }
+
+  Future<String?> subirPDF(PlatformFile archivoPdf, BuildContext context) async {
+    return await subirPdfPago(archivoPdf, context);
+  }
+
+  Future<void> agregarPagosOtros(Pago pago) async {
+    await crearPago(pago);
+    await fetchOtrosPagos();
+    notifyListeners();
+  }
+  Future<void> agregarPagosFacturas(Pago pago) async {
+    await crearPago(pago);
+    await fetchFacturas();
+    notifyListeners();
+  }
+  // Descarga la ficha PDF con los datos
+  // ingresados de la factura o del pago pendiente
+  Future<void> descargarFicha(BuildContext context, String facturaId, String codigo) async {
+    await descargarFichaPDF(context, facturaId, codigo);
+  }
+  // Descarga el archivo PDF asociado a la factura o pago pendiente
+  Future<void> descargarArchivoPDF(BuildContext context, String fotografiaId) async {
+    await descargarYAbrirPdf(context, fotografiaId);
+  }
+
+  
 }
