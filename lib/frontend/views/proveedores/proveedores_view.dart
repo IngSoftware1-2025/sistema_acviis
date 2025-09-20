@@ -88,13 +88,8 @@ class _ProveedoresViewState extends State<ProveedoresView> {
                                   onPressed: () async {
                                     final exito = await Provider.of<ProveedoresProvider>(context, listen: false)
                                         .eliminarProveedor(p.id);
-                                    if (!mounted) return;
-                                    if (exito) {
-                                      // Solo refresca la lista, no actualices filtros aquí
-                                      await Provider.of<ProveedoresProvider>(context, listen: false).fetchProveedores();
-                                      // Si quieres mantener el filtro, puedes hacerlo aquí:
-                                      Provider.of<ProveedoresProvider>(context, listen: false).actualizarFiltros(estado: provider.estado);
-                                    }
+                                    // No vuelvas a llamar a fetchProveedores ni actualizarFiltros aquí
+                                    // El provider ya lo hace automáticamente
                                   },
                                 ),
                               ],

@@ -62,9 +62,12 @@ class ProveedoresProvider extends ChangeNotifier {
   }
 
   Future<bool> eliminarProveedor(String id) async {
-    // En vez de borrar, actualiza el estado a 'Inactivo'
-    final exito = await actualizarProveedor(id, {'estado': 'Inactivo'});
-    if (exito) await fetchProveedores();
+    // Actualiza el estado a 'Inactivo'
+    final exito = await updateProveedor(id, {'estado': 'Inactivo'});
+    if (exito) {
+      await fetchProveedores();
+      actualizarFiltros(estado: 'Activo');
+    }
     return exito;
   }
 
