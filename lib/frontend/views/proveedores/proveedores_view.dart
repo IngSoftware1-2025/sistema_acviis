@@ -15,7 +15,10 @@ class _ProveedoresViewState extends State<ProveedoresView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ProveedoresProvider>(context, listen: false).fetchProveedores();
+      final provider = Provider.of<ProveedoresProvider>(context, listen: false);
+      provider.fetchProveedores().then((_) {
+        provider.actualizarFiltros(estado: 'Activo');
+      });
     });
   }
 
@@ -28,60 +31,91 @@ class _ProveedoresViewState extends State<ProveedoresView> {
           ? const Center(child: CircularProgressIndicator())
           : provider.proveedores.isEmpty
               ? const Center(child: Text('No hay proveedores registrados.'))
-              : ListView.builder(
-                  itemCount: provider.proveedores.length,
-                  itemBuilder: (context, i) {
-                    final p = provider.proveedores[i];
-                    return ListTile(
-                      title: Text(p.nombre),
-                      subtitle: Text(p.rut),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ModificarProveedorView(proveedor: p),
-                                ),
-                              );
+              : Column(
+                  children: [
+                    Row(
+                      children: [
+                        DropdownButton<String>(
+                          value: provider.estado ?? 'Activo',
+                          items: ['Activo', 'Inactivo'].map((estado) {
+                            return DropdownMenuItem(
+                              value: estado,
+                              child: Text(estado),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            provider.actualizarFiltros(estado: value);
+                          },
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextField(
+                            decoration: const InputDecoration(
+                              labelText: 'Buscar proveedor',
+                              border: OutlineInputBorder(),
+                            ),
+                            onChanged: (value) {
+                              provider.actualizarFiltros(textoBusqueda: value);
                             },
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () async {
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Eliminar proveedor'),
-                                  content: const Text('¿Seguro que deseas eliminar este proveedor?'),
-                                  actions: [
-                                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-                                    ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Eliminar')),
-                                  ],
+                        ),
+                      ],
+                    ),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: provider.proveedores.length,
+                        itemBuilder: (context, i) {
+                          final p = provider.proveedores[i];
+                          return ListTile(
+                            title: Text(p.nombre),
+                            subtitle: Text(p.rut),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => ModificarProveedorView(proveedor: p),
+                                      ),
+                                    );
+                                  },
                                 ),
-                              );
-                              if (confirm == true) {
-                                final exito = await Provider.of<ProveedoresProvider>(context, listen: false)
-                                    .eliminarProveedor(p.id);
-                                if (exito && context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Proveedor eliminado')),
-                                  );
-                                }
-                              }
-                            },
-                          ),
-                        ],
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () async {
+                                    final exito = await Provider.of<ProveedoresProvider>(context, listen: false)
+                                        .eliminarProveedor(p.id);
+                                    if (!mounted) return;
+                                    if (exito) {
+                                      // Solo refresca la lista, no actualices filtros aquí
+                                      await Provider.of<ProveedoresProvider>(context, listen: false).fetchProveedores();
+                                      // Si quieres mantener el filtro, puedes hacerlo aquí:
+                                      Provider.of<ProveedoresProvider>(context, listen: false).actualizarFiltros(estado: provider.estado);
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
+                    ),
+                  ],
                 ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/home_page/proveedores_view/agregar_proveedor_view');
+        onPressed: () async {
+          // Espera el resultado de la pantalla de agregar proveedor
+          final resultado = await Navigator.pushNamed(
+            context,
+            '/home_page/proveedores_view/agregar_proveedor_view',
+          );
+          // Si se agregó un proveedor, actualiza la lista
+          if (resultado == true) {
+            Provider.of<ProveedoresProvider>(context, listen: false).fetchProveedores();
+          }
         },
         child: const Icon(Icons.add),
       ),

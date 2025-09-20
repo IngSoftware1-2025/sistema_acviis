@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sistema_acviis/backend/controllers/proveedores/create_proveedor.dart';
+import 'package:sistema_acviis/models/proveedor.dart';
+import 'package:sistema_acviis/providers/proveedores_provider.dart';
+import 'package:uuid/uuid.dart'; // Agrega esto arriba
 
 class AgregarProveedorView extends StatefulWidget {
   const AgregarProveedorView({super.key});
@@ -53,34 +57,27 @@ class _AgregarProveedorViewState extends State<AgregarProveedorView> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _isLoading
-                    ? null
-                    : () async {
-                        if (_formKey.currentState!.validate()) {
-                          setState(() => _isLoading = true);
-                          final data = {
-                            'nombre': _nombreController.text,
-                            'rut': _rutController.text,
-                            'direccion': _direccionController.text,
-                            'correo_electronico': _correoController.text,
-                            'telefono': _telefonoController.text,
-                            'estado': 'Activo',
-                            'fecha_registro': DateTime.now().toIso8601String(),
-                          };
-                          final exito = await createProveedor(data);
-                          setState(() => _isLoading = false);
-                          if (exito && mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Proveedor registrado correctamente')),
-                            );
-                            Navigator.pop(context);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Error al registrar proveedor')),
-                            );
-                          }
-                        }
-                      },
+                onPressed: () async {
+                  final nuevoProveedor = Proveedor(
+                    id: const Uuid().v4(), // Genera un UUID único
+                    nombre: _nombreController.text,
+                    rut: _rutController.text,
+                    direccion: _direccionController.text,
+                    correoElectronico: _correoController.text,
+                    telefono: _telefonoController.text,
+                    estado: 'Activo',
+                    fechaRegistro: DateTime.now(), // Usa DateTime, no String
+                  );
+                  final exito = await Provider.of<ProveedoresProvider>(context, listen: false)
+                      .agregarProveedor(nuevoProveedor);
+                  if (exito) {
+                    Navigator.pop(context, true);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Error al registrar proveedor')),
+                    );
+                  }
+                },
                 child: _isLoading
                     ? const CircularProgressIndicator()
                     : const Text('Registrar'),

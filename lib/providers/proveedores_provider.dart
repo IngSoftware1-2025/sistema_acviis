@@ -3,6 +3,7 @@ import 'package:sistema_acviis/models/proveedor.dart';
 import 'package:sistema_acviis/backend/controllers/proveedores/get_proveedores.dart';
 import 'package:sistema_acviis/backend/controllers/proveedores/update_proveedor.dart';
 import 'package:sistema_acviis/backend/controllers/proveedores/delete_proveedor.dart';
+import 'package:sistema_acviis/backend/controllers/proveedores/create_proveedor.dart';
 
 class ProveedoresProvider extends ChangeNotifier {
   List<Proveedor> _todos = [];
@@ -61,7 +62,14 @@ class ProveedoresProvider extends ChangeNotifier {
   }
 
   Future<bool> eliminarProveedor(String id) async {
-    final exito = await deleteProveedor(id);
+    // En vez de borrar, actualiza el estado a 'Inactivo'
+    final exito = await actualizarProveedor(id, {'estado': 'Inactivo'});
+    if (exito) await fetchProveedores();
+    return exito;
+  }
+
+  Future<bool> agregarProveedor(Proveedor proveedor) async {
+    final exito = await createProveedor(proveedor.toMap());
     if (exito) await fetchProveedores();
     return exito;
   }
