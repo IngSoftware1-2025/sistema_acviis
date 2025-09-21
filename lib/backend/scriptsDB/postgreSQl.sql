@@ -44,3 +44,19 @@ CREATE TABLE public.comentarios (
   CONSTRAINT fk_comentario_contrato FOREIGN KEY (id_contrato) REFERENCES public.contratos(id),
   CONSTRAINT fk_comentario_trabajador FOREIGN KEY (id_trabajadores) REFERENCES public.trabajadores(id)
 );
+create table public.pagos (
+  id uuid not null default gen_random_uuid (),
+  nombre_mandante text not null,
+  rut_mandante character varying not null,
+  direccion_comercial text not null,
+  codigo text not null,
+  servicio_ofrecido text not null,
+  valor double precision not null,
+  plazo_pagar date not null,
+  estado_pago text not null,
+  fotografia_id text not null,
+  tipo_pago text not null,
+  sentido boolean not null,
+  constraint facturas_pkey primary key (id),
+  visualizacion text not null
+) TABLESPACE pg_default;
