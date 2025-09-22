@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sistema_acviis/providers/herramientas_provider.dart';
 import 'package:sistema_acviis/frontend/utils/constants/constants.dart';
 
 
@@ -28,7 +30,7 @@ class _HerramientasSearchBarState extends State<HerramientasSearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    // final provider = Provider.of<HerramientasProvider>(context, listen: false);
+    final provider = Provider.of<HerramientasProvider>(context, listen: false);
 
     return SizedBox(
       height: normalPadding * 2.5,
@@ -41,7 +43,7 @@ class _HerramientasSearchBarState extends State<HerramientasSearchBar> {
           border: const OutlineInputBorder(),
         ),
         onChanged: (value) {
-          // provider.actualizarBusqueda(value);
+          provider.actualizarBusqueda(value);
         },
       ),
     );

@@ -17,6 +17,7 @@ dependencies:
   open_file: ^3.3.2
   input_quantity: ^2.5.1
   uuid: ^4.5.1
+  pdf: ^3.11.3
 
 dev_dependencies:
   flutter_test:

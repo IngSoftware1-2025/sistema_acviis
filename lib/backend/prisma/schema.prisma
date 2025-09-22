@@ -70,13 +70,14 @@ model comentarios {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model proveedores {
   id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  nombre             String    @db.VarChar
   rut                String    @unique @db.VarChar
   direccion          String?   @db.VarChar
-  correo_electronico String?   @db.VarChar
-  telefono           String?   @db.VarChar
-  estado             String?   @default("\"Activo\" para proveedores disponibles, \"Inactivo\" para proveedores no disponibles.") @db.VarChar
+  correo_vendedor    String?   @db.VarChar
+  telefono_vendedor  String?   @db.VarChar
   fecha_registro     DateTime? @db.Date
+  nombre_vendedor    String?   @db.VarChar
+  producto_vervicio  String?   @db.VarChar
+  credito_disponible Int?
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -93,16 +94,35 @@ model herramientas {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model vehiculos {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  patente           String   @unique @db.VarChar
-  permiso_circ      String   @db.VarChar
-  revision_tecnica  DateTime @db.Date
-  revision_gases    DateTime @db.Date
-  ultima_mantencion DateTime @db.Date
-  descripcion_mant  String?  @db.VarChar
-  capacidad_kg      Int
-  neumaticos        String   @db.VarChar
-  rueda_repuesto    Boolean
-  observaciones     String?  @db.VarChar
-  estado            String   @db.VarChar
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patente            String   @unique @db.VarChar
+  permiso_circ       String   @db.VarChar
+  revision_tecnica   DateTime @db.Date
+  revision_gases     DateTime @db.Date
+  ultima_mantencion  DateTime @db.Date
+  descripcion_mant   String?  @db.VarChar
+  capacidad_kg       Int
+  neumaticos         String   @db.VarChar
+  rueda_repuesto     Boolean
+  observaciones      String?  @db.VarChar
+  estado             String   @db.VarChar
+  proxima_mantencion DateTime @db.Date
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pagos {
+  id                  String   @id(map: "facturas_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre_mandante     String
+  rut_mandante        String   @db.VarChar
+  direccion_comercial String
+  codigo              String
+  servicio_ofrecido   String
+  valor               Float
+  plazo_pagar         DateTime @db.Date
+  estado_pago         String
+  fotografia_id       String
+  tipo_pago           String
+  sentido             Boolean
+  visualizacion       String
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sistema_acviis/frontend/widgets/cards.dart';
 import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
 import 'package:sistema_acviis/frontend/styles/app_colors.dart';
-import 'package:sistema_acviis/frontend/widgets/vertical_side_bar.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -34,13 +34,13 @@ class _HomePageState extends State<HomePage> {
       {
         'title': 'Logística',
         'description': 'Funciones de logística: Herramientas, EPP, Vehículos, etc',
-        'icon': Icon(Icons.inventory_outlined, color: AppColors.primaryDarker)
+        'icon': Icon(Icons.inventory_outlined, color: AppColors.primaryDarker),
+        'screen': '/home_page/logistica_view'
       },
       {
         'title': 'Obras',
         'description': 'Funciones de obras: Crear, Charlas, Asistencia, etc',
         'icon': Icon(Icons.construction, color: AppColors.primaryDarker),
-            'screen': '/home_page/herramientas_view'
       },
       {
         'title': 'Opciones',
