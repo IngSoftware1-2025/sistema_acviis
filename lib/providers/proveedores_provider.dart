@@ -21,38 +21,39 @@ class ProveedoresProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      _todos = await fetchProveedoresFromApi();
+      final data = await fetchProveedoresFromApi();
+      _todos = data;
       filtrar();
-    } catch (e) {
-      print('Error al obtener proveedores: $e');
-      _todos = [];
-      _proveedores = [];
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  void actualizarFiltros({String? estado, String? textoBusqueda}) {
-    this.estado = estado ?? this.estado;
-    this.textoBusqueda = textoBusqueda ?? this.textoBusqueda;
+  void actualizarFiltros({
+    String? rut,
+    String? nombre,
+    String? productoServicio,
+    int? creditoMin,
+    int? creditoMax,
+    String? textoBusqueda,
+  }) {
+    // Guarda los filtros en variables
+    // ...
     filtrar();
+    notifyListeners();
   }
 
   void filtrar() {
-    _proveedores = _todos.where((p) {
-      if (estado != null && estado!.isNotEmpty && p.estado != estado) return false;
-      if (textoBusqueda != null && textoBusqueda!.isNotEmpty) {
-        final query = textoBusqueda!.toLowerCase();
-        if (!p.nombre.toLowerCase().contains(query) &&
-            !p.rut.toLowerCase().contains(query) &&
-            !p.correoElectronico.toLowerCase().contains(query)) {
-          return false;
-        }
-      }
-      return true;
-    }).toList();
+    // Filtra _todos según los filtros activos
+    // ...
     notifyListeners();
+  }
+
+  Future<bool> agregarProveedor(Proveedor proveedor) async {
+    final exito = await createProveedor(proveedor.toMap());
+    if (exito) await fetchProveedores();
+    return exito;
   }
 
   Future<bool> actualizarProveedor(String id, Map<String, dynamic> data) async {
@@ -62,18 +63,16 @@ class ProveedoresProvider extends ChangeNotifier {
   }
 
   Future<bool> eliminarProveedor(String id) async {
-    // Actualiza el estado a 'Inactivo'
-    final exito = await updateProveedor(id, {'estado': 'Inactivo'});
-    if (exito) {
-      await fetchProveedores();
-      actualizarFiltros(estado: 'Activo');
-    }
+    final exito = await deleteProveedor(id);
+    if (exito) await fetchProveedores();
     return exito;
   }
 
-  Future<bool> agregarProveedor(Proveedor proveedor) async {
-    final exito = await createProveedor(proveedor.toMap());
-    if (exito) await fetchProveedores();
-    return exito;
+// este método permite que se eliminen todos los proveedores que cumplan con el filtro actual
+  Future<void> eliminarPorFiltro() async {
+    for (final proveedor in _proveedores) {
+      await eliminarProveedor(proveedor.id);
+    }
+    await fetchProveedores();
   }
 }

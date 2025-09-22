@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sistema_acviis/models/proveedor.dart';
 import 'package:sistema_acviis/providers/proveedores_provider.dart';
-import 'package:provider/provider.dart';
 
 class ModificarProveedorView extends StatefulWidget {
   final Proveedor proveedor;
@@ -12,24 +12,36 @@ class ModificarProveedorView extends StatefulWidget {
 }
 
 class _ModificarProveedorViewState extends State<ModificarProveedorView> {
-  final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nombreController;
   late TextEditingController _rutController;
   late TextEditingController _direccionController;
-  late TextEditingController _correoController;
-  late TextEditingController _telefonoController;
-  String _estado = 'Activo';
-  bool _isLoading = false;
+  late TextEditingController _nombreVendedorController;
+  late TextEditingController _productoServicioController;
+  late TextEditingController _correoVendedorController;
+  late TextEditingController _telefonoVendedorController;
+  late TextEditingController _creditoDisponibleController;
 
   @override
   void initState() {
     super.initState();
-    _nombreController = TextEditingController(text: widget.proveedor.nombre);
     _rutController = TextEditingController(text: widget.proveedor.rut);
     _direccionController = TextEditingController(text: widget.proveedor.direccion);
-    _correoController = TextEditingController(text: widget.proveedor.correoElectronico);
-    _telefonoController = TextEditingController(text: widget.proveedor.telefono);
-    _estado = widget.proveedor.estado;
+    _nombreVendedorController = TextEditingController(text: widget.proveedor.nombreVendedor);
+    _productoServicioController = TextEditingController(text: widget.proveedor.productoServicio);
+    _correoVendedorController = TextEditingController(text: widget.proveedor.correoVendedor);
+    _telefonoVendedorController = TextEditingController(text: widget.proveedor.telefonoVendedor);
+    _creditoDisponibleController = TextEditingController(text: widget.proveedor.creditoDisponible.toString());
+  }
+
+  @override
+  void dispose() {
+    _rutController.dispose();
+    _direccionController.dispose();
+    _nombreVendedorController.dispose();
+    _productoServicioController.dispose();
+    _correoVendedorController.dispose();
+    _telefonoVendedorController.dispose();
+    _creditoDisponibleController.dispose();
+    super.dispose();
   }
 
   @override
@@ -39,74 +51,60 @@ class _ModificarProveedorViewState extends State<ModificarProveedorView> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
-          key: _formKey,
           child: ListView(
             children: [
               TextFormField(
-                controller: _nombreController,
-                decoration: const InputDecoration(labelText: 'Nombre'),
-                validator: (v) => v == null || v.isEmpty ? 'Campo requerido' : null,
-              ),
-              TextFormField(
                 controller: _rutController,
-                decoration: const InputDecoration(labelText: 'RUT'),
-                validator: (v) => v == null || v.isEmpty ? 'Campo requerido' : null,
+                decoration: const InputDecoration(labelText: 'RUT (XXXXXXXX-X)'),
               ),
               TextFormField(
                 controller: _direccionController,
                 decoration: const InputDecoration(labelText: 'Dirección'),
               ),
               TextFormField(
-                controller: _correoController,
-                decoration: const InputDecoration(labelText: 'Correo electrónico'),
-                validator: (v) => v == null || v.isEmpty ? 'Campo requerido' : null,
+                controller: _nombreVendedorController,
+                decoration: const InputDecoration(labelText: 'Nombre vendedor'),
               ),
               TextFormField(
-                controller: _telefonoController,
-                decoration: const InputDecoration(labelText: 'Teléfono'),
+                controller: _productoServicioController,
+                decoration: const InputDecoration(labelText: 'Producto o servicio'),
               ),
-              DropdownButtonFormField<String>(
-                value: _estado,
-                items: const [
-                  DropdownMenuItem(value: 'Activo', child: Text('Activo')),
-                  DropdownMenuItem(value: 'Inactivo', child: Text('Inactivo')),
-                ],
-                onChanged: (v) => setState(() => _estado = v ?? 'Activo'),
-                decoration: const InputDecoration(labelText: 'Estado'),
+              TextFormField(
+                controller: _correoVendedorController,
+                decoration: const InputDecoration(labelText: 'Correo vendedor'),
+              ),
+              TextFormField(
+                controller: _telefonoVendedorController,
+                decoration: const InputDecoration(labelText: 'Teléfono vendedor'),
+              ),
+              TextFormField(
+                controller: _creditoDisponibleController,
+                decoration: const InputDecoration(labelText: 'Crédito disponible'),
+                keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _isLoading
-                    ? null
-                    : () async {
-                        if (_formKey.currentState!.validate()) {
-                          setState(() => _isLoading = true);
-                          final data = {
-                            'nombre': _nombreController.text,
-                            'rut': _rutController.text,
-                            'direccion': _direccionController.text,
-                            'correo_electronico': _correoController.text,
-                            'telefono': _telefonoController.text,
-                            'estado': _estado,
-                          };
-                          final exito = await Provider.of<ProveedoresProvider>(context, listen: false)
-                              .actualizarProveedor(widget.proveedor.id, data);
-                          setState(() => _isLoading = false);
-                          if (exito && mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Proveedor modificado correctamente')),
-                            );
-                            Navigator.pop(context);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Error al modificar proveedor')),
-                            );
-                          }
-                        }
-                      },
-                child: _isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text('Guardar cambios'),
+                child: const Text('Guardar cambios'),
+                onPressed: () async {
+                  final data = {
+                    'rut': _rutController.text,
+                    'direccion': _direccionController.text,
+                    'nombre_vendedor': _nombreVendedorController.text,
+                    'producto_servicio': _productoServicioController.text,
+                    'correo_vendedor': _correoVendedorController.text,
+                    'telefono_vendedor': _telefonoVendedorController.text,
+                    'credito_disponible': int.tryParse(_creditoDisponibleController.text) ?? 0,
+                  };
+                  final exito = await Provider.of<ProveedoresProvider>(context, listen: false)
+                      .actualizarProveedor(widget.proveedor.id, data);
+                  if (exito) {
+                    Navigator.pop(context, true);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Error al modificar proveedor')),
+                    );
+                  }
+                },
               ),
             ],
           ),

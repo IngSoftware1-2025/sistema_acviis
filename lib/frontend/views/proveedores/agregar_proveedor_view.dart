@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sistema_acviis/backend/controllers/proveedores/create_proveedor.dart';
 import 'package:sistema_acviis/models/proveedor.dart';
 import 'package:sistema_acviis/providers/proveedores_provider.dart';
-import 'package:uuid/uuid.dart'; // Agrega esto arriba
+import 'package:uuid/uuid.dart';
 
 class AgregarProveedorView extends StatefulWidget {
   const AgregarProveedorView({super.key});
@@ -14,18 +13,30 @@ class AgregarProveedorView extends StatefulWidget {
 
 class _AgregarProveedorViewState extends State<AgregarProveedorView> {
   final _formKey = GlobalKey<FormState>();
-  final _nombreController = TextEditingController();
   final _rutController = TextEditingController();
   final _direccionController = TextEditingController();
-  final _correoController = TextEditingController();
-  final _telefonoController = TextEditingController();
+  final _nombreVendedorController = TextEditingController();
+  final _productoServicioController = TextEditingController();
+  final _correoVendedorController = TextEditingController();
+  final _telefonoVendedorController = TextEditingController();
+  final _creditoDisponibleController = TextEditingController();
 
-  bool _isLoading = false;
+  @override
+  void dispose() {
+    _rutController.dispose();
+    _direccionController.dispose();
+    _nombreVendedorController.dispose();
+    _productoServicioController.dispose();
+    _correoVendedorController.dispose();
+    _telefonoVendedorController.dispose();
+    _creditoDisponibleController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Registrar Proveedor')),
+      appBar: AppBar(title: const Text('Agregar Proveedor')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -33,54 +44,68 @@ class _AgregarProveedorViewState extends State<AgregarProveedorView> {
           child: ListView(
             children: [
               TextFormField(
-                controller: _nombreController,
-                decoration: const InputDecoration(labelText: 'Nombre'),
-                validator: (v) => v == null || v.isEmpty ? 'Campo requerido' : null,
-              ),
-              TextFormField(
                 controller: _rutController,
-                decoration: const InputDecoration(labelText: 'RUT'),
-                validator: (v) => v == null || v.isEmpty ? 'Campo requerido' : null,
+                decoration: const InputDecoration(labelText: 'RUT (XXXXXXXX-X)'),
+                validator: (v) => v == null || v.isEmpty ? 'Ingrese el RUT' : null,
               ),
               TextFormField(
                 controller: _direccionController,
-                decoration: const InputDecoration(labelText: 'Dirección'),
+                decoration: const InputDecoration(labelText: 'Dirección (región, ciudad, comuna, casa)'),
+                validator: (v) => v == null || v.isEmpty ? 'Ingrese la dirección' : null,
               ),
               TextFormField(
-                controller: _correoController,
-                decoration: const InputDecoration(labelText: 'Correo electrónico'),
-                validator: (v) => v == null || v.isEmpty ? 'Campo requerido' : null,
+                controller: _nombreVendedorController,
+                decoration: const InputDecoration(labelText: 'Nombre completo del vendedor'),
+                validator: (v) => v == null || v.isEmpty ? 'Ingrese el nombre del vendedor' : null,
               ),
               TextFormField(
-                controller: _telefonoController,
-                decoration: const InputDecoration(labelText: 'Teléfono'),
+                controller: _productoServicioController,
+                decoration: const InputDecoration(labelText: 'Producto o servicio'),
+                validator: (v) => v == null || v.isEmpty ? 'Ingrese el producto o servicio' : null,
+              ),
+              TextFormField(
+                controller: _correoVendedorController,
+                decoration: const InputDecoration(labelText: 'Correo del vendedor'),
+                validator: (v) => v == null || v.isEmpty ? 'Ingrese el correo' : null,
+              ),
+              TextFormField(
+                controller: _telefonoVendedorController,
+                decoration: const InputDecoration(labelText: 'Teléfono del vendedor'),
+                validator: (v) => v == null || v.isEmpty ? 'Ingrese el teléfono' : null,
+              ),
+              TextFormField(
+                controller: _creditoDisponibleController,
+                decoration: const InputDecoration(labelText: 'Crédito disponible (pesos chilenos)'),
+                keyboardType: TextInputType.number,
+                validator: (v) => v == null || v.isEmpty ? 'Ingrese el crédito disponible' : null,
               ),
               const SizedBox(height: 20),
               ElevatedButton(
+                child: const Text('Guardar'),
                 onPressed: () async {
-                  final nuevoProveedor = Proveedor(
-                    id: const Uuid().v4(), // Genera un UUID único
-                    nombre: _nombreController.text,
-                    rut: _rutController.text,
-                    direccion: _direccionController.text,
-                    correoElectronico: _correoController.text,
-                    telefono: _telefonoController.text,
-                    estado: 'Activo',
-                    fechaRegistro: DateTime.now(), // Usa DateTime, no String
-                  );
-                  final exito = await Provider.of<ProveedoresProvider>(context, listen: false)
-                      .agregarProveedor(nuevoProveedor);
-                  if (exito) {
-                    Navigator.pop(context, true);
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Error al registrar proveedor')),
+                  if (_formKey.currentState!.validate()) {
+                    final proveedor = Proveedor(
+                      id: const Uuid().v4(),
+                      rut: _rutController.text,
+                      direccion: _direccionController.text,
+                      nombreVendedor: _nombreVendedorController.text,
+                      productoServicio: _productoServicioController.text,
+                      correoVendedor: _correoVendedorController.text,
+                      telefonoVendedor: _telefonoVendedorController.text,
+                      creditoDisponible: int.tryParse(_creditoDisponibleController.text) ?? 0,
+                      fechaRegistro: DateTime.now(),
                     );
+                    final exito = await Provider.of<ProveedoresProvider>(context, listen: false)
+                        .agregarProveedor(proveedor);
+                    if (exito) {
+                      Navigator.pop(context, true);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Error al registrar proveedor')),
+                      );
+                    }
                   }
                 },
-                child: _isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text('Registrar'),
               ),
             ],
           ),

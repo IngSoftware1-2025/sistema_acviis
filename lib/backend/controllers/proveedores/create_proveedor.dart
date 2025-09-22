@@ -1,17 +1,8 @@
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:sistema_acviis/models/proveedor.dart';
 
-Future<bool> createProveedor(Map<String, dynamic> data) async {
-  final url = Uri.parse('http://localhost:3000/proveedores');
-  final response = await http.post(
-    url,
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode(data),
-  );
-  if (response.statusCode == 201) {
-    return true;
-  } else {
-    print('Error al registrar proveedor: ${response.body}');
-    return false;
-  }
+Future<bool> createProveedor(Map<String, dynamic> proveedor) async {
+  final supabase = Supabase.instance.client;
+  final response = await supabase.from('proveedores').insert([proveedor]);
+  return response.error == null;
 }
