@@ -70,13 +70,14 @@ model comentarios {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model proveedores {
   id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  nombre             String    @db.VarChar
   rut                String    @unique @db.VarChar
   direccion          String?   @db.VarChar
-  correo_electronico String?   @db.VarChar
-  telefono           String?   @db.VarChar
-  estado             String?   @default("\"Activo\" para proveedores disponibles, \"Inactivo\" para proveedores no disponibles.") @db.VarChar
+  correo_vendedor    String?   @db.VarChar
+  telefono_vendedor  String?   @db.VarChar
   fecha_registro     DateTime? @db.Date
+  nombre_vendedor    String?   @db.VarChar
+  producto_vervicio  String?   @db.VarChar
+  credito_disponible Int?
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
