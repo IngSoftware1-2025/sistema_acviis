@@ -21,6 +21,8 @@ class _ProveedoresViewState extends State<ProveedoresView> {
   final _creditoMinController = TextEditingController();
   final _creditoMaxController = TextEditingController();
 
+  final Set<String> _seleccionados = {};
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +51,56 @@ class _ProveedoresViewState extends State<ProveedoresView> {
     );
   }
 
+  void _mostrarMenuAcciones() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.add),
+              title: const Text('Crear proveedor'),
+              onTap: () async {
+                Navigator.pop(context);
+                final resultado = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AgregarProveedorView()),
+                );
+                if (resultado == true) {
+                  Provider.of<ProveedoresProvider>(context, listen: false)
+                      .fetchProveedores();
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete),
+              title: const Text('Eliminar seleccionados'),
+              onTap: () async {
+                Navigator.pop(context);
+                final provider = Provider.of<ProveedoresProvider>(context,
+                    listen: false);
+                for (final id in _seleccionados) {
+                  await provider.eliminarProveedor(id);
+                }
+                _seleccionados.clear();
+                provider.fetchProveedores();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf),
+              title: const Text('Generar ficha PDF de seleccionados'),
+              onTap: () async {
+                Navigator.pop(context);
+                // Aquí deberías llamar a tu función para generar PDF de todos los seleccionados
+                // await PdfUtils.generarFichaProveedoresSeleccionados(_seleccionados);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<ProveedoresProvider>(context);
@@ -56,24 +108,10 @@ class _ProveedoresViewState extends State<ProveedoresView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Proveedores'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_forever),
-            tooltip: 'Eliminar por filtro',
-            onPressed: () async {
-              // Elimina todos los proveedores filtrados
-              for (final p in provider.proveedores) {
-                await provider.eliminarProveedor(p.id);
-              }
-              // Recarga la lista
-              await provider.fetchProveedores();
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [
-          // Filtros
+          // Filtros arriba
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Wrap(
@@ -81,7 +119,7 @@ class _ProveedoresViewState extends State<ProveedoresView> {
               runSpacing: 8,
               children: [
                 SizedBox(
-                  width: 150,
+                  width: 120,
                   child: TextField(
                     controller: _rutController,
                     decoration: const InputDecoration(labelText: 'RUT'),
@@ -92,7 +130,7 @@ class _ProveedoresViewState extends State<ProveedoresView> {
                   width: 150,
                   child: TextField(
                     controller: _nombreController,
-                    decoration: const InputDecoration(labelText: 'Nombre'),
+                    decoration: const InputDecoration(labelText: 'Nombre vendedor'),
                     onChanged: (_) => _aplicarFiltros(),
                   ),
                 ),
@@ -147,9 +185,23 @@ class _ProveedoresViewState extends State<ProveedoresView> {
                     itemCount: provider.proveedores.length,
                     itemBuilder: (context, index) {
                       final p = provider.proveedores[index];
+                      final seleccionado = _seleccionados.contains(p.id);
                       return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         child: ListTile(
+                          leading: Checkbox(
+                            value: seleccionado,
+                            onChanged: (v) {
+                              setState(() {
+                                if (v == true) {
+                                  _seleccionados.add(p.id);
+                                } else {
+                                  _seleccionados.remove(p.id);
+                                }
+                              });
+                            },
+                          ),
                           title: Text('${p.nombreVendedor} (${p.rut})'),
                           subtitle: Text(
                             'Producto/Servicio: ${p.productoServicio}\n'
@@ -184,11 +236,30 @@ class _ProveedoresViewState extends State<ProveedoresView> {
                                 icon: const Icon(Icons.delete),
                                 tooltip: 'Eliminar',
                                 onPressed: () async {
-                                  final exito = await provider.eliminarProveedor(p.id);
-                                  if (!exito) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Error al eliminar proveedor')),
-                                    );
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Confirmar eliminación'),
+                                      content: const Text('¿Seguro quieres eliminar este proveedor?'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.of(context).pop(false),
+                                          child: const Text('Cancelar'),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () => Navigator.of(context).pop(true),
+                                          child: const Text('Eliminar'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirm == true) {
+                                    final exito = await provider.eliminarProveedor(p.id);
+                                    if (!exito) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Error al eliminar proveedor')),
+                                      );
+                                    }
                                   }
                                 },
                               ),
@@ -202,17 +273,9 @@ class _ProveedoresViewState extends State<ProveedoresView> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final resultado = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AgregarProveedorView()),
-          );
-          if (resultado == true) {
-            provider.fetchProveedores();
-          }
-        },
-        child: const Icon(Icons.add),
-        tooltip: 'Agregar proveedor',
+        onPressed: _mostrarMenuAcciones,
+        child: const Icon(Icons.menu),
+        tooltip: 'Acciones',
       ),
     );
   }

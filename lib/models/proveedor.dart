@@ -8,6 +8,7 @@ class Proveedor {
   final String telefonoVendedor;
   final int creditoDisponible; // en pesos chilenos
   final DateTime fechaRegistro;
+  final String? estado; // <-- Agregado
 
   Proveedor({
     required this.id,
@@ -19,6 +20,7 @@ class Proveedor {
     required this.telefonoVendedor,
     required this.creditoDisponible,
     required this.fechaRegistro,
+    this.estado,
   });
 
   factory Proveedor.fromMap(Map<String, dynamic> map) {
@@ -32,6 +34,7 @@ class Proveedor {
       telefonoVendedor: map['telefono_vendedor'],
       creditoDisponible: map['credito_disponible'],
       fechaRegistro: DateTime.parse(map['fecha_registro']),
+      estado: map['estado'], // <-- Agregado
     );
   }
 
@@ -46,6 +49,7 @@ class Proveedor {
       'telefono_vendedor': telefonoVendedor,
       'credito_disponible': creditoDisponible,
       'fecha_registro': fechaRegistro.toIso8601String(),
+      'estado': estado, // <-- Agregado
     };
   }
 }

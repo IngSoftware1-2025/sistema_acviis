@@ -4,6 +4,7 @@ import 'package:sistema_acviis/backend/controllers/proveedores/get_proveedores.d
 import 'package:sistema_acviis/backend/controllers/proveedores/update_proveedor.dart';
 import 'package:sistema_acviis/backend/controllers/proveedores/delete_proveedor.dart';
 import 'package:sistema_acviis/backend/controllers/proveedores/create_proveedor.dart';
+import 'package:sistema_acviis/backend/controllers/proveedores/actualizar_estado_proveedor.dart';
 
 class ProveedoresProvider extends ChangeNotifier {
   List<Proveedor> _todos = [];
@@ -11,8 +12,11 @@ class ProveedoresProvider extends ChangeNotifier {
   List<Proveedor> get proveedores => _proveedores;
 
   // Filtros
-  String? estado;
-  String? textoBusqueda;
+  String? rut;
+  String? nombreVendedor;
+  String? productoServicio;
+  int? creditoMin;
+  int? creditoMax;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -36,18 +40,26 @@ class ProveedoresProvider extends ChangeNotifier {
     String? productoServicio,
     int? creditoMin,
     int? creditoMax,
-    String? textoBusqueda,
   }) {
-    // Guarda los filtros en variables
-    // ...
+    this.rut = rut;
+    this.nombreVendedor = nombre;
+    this.productoServicio = productoServicio;
+    this.creditoMin = creditoMin;
+    this.creditoMax = creditoMax;
     filtrar();
     notifyListeners();
   }
 
   void filtrar() {
-    // Filtra _todos según los filtros activos
-    // ...
-    notifyListeners();
+    _proveedores = _todos.where((p) {
+      final estadoOk = p.estado == null || p.estado == 'activo';
+      final rutOk = rut == null || rut!.isEmpty || p.rut.contains(rut!);
+      final nombreOk = nombreVendedor == null || nombreVendedor!.isEmpty || p.nombreVendedor.toLowerCase().contains(nombreVendedor!.toLowerCase());
+      final productoOk = productoServicio == null || productoServicio!.isEmpty || p.productoServicio.toLowerCase().contains(productoServicio!.toLowerCase());
+      final creditoMinOk = creditoMin == null || p.creditoDisponible >= creditoMin!;
+      final creditoMaxOk = creditoMax == null || p.creditoDisponible <= creditoMax!;
+      return estadoOk && rutOk && nombreOk && productoOk && creditoMinOk && creditoMaxOk;
+    }).toList();
   }
 
   Future<bool> agregarProveedor(Proveedor proveedor) async {
@@ -63,12 +75,11 @@ class ProveedoresProvider extends ChangeNotifier {
   }
 
   Future<bool> eliminarProveedor(String id) async {
-    final exito = await deleteProveedor(id);
+    final exito = await actualizarEstadoProveedor(id, 'inactivo');
     if (exito) await fetchProveedores();
     return exito;
   }
 
-// este método permite que se eliminen todos los proveedores que cumplan con el filtro actual
   Future<void> eliminarPorFiltro() async {
     for (final proveedor in _proveedores) {
       await eliminarProveedor(proveedor.id);

@@ -76,8 +76,9 @@ model proveedores {
   telefono_vendedor  String?   @db.VarChar
   fecha_registro     DateTime? @db.Date
   nombre_vendedor    String?   @db.VarChar
-  producto_vervicio  String?   @db.VarChar
+  producto_servicio  String?   @db.VarChar
   credito_disponible Int?
+  estado             String?   @db.VarChar
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
