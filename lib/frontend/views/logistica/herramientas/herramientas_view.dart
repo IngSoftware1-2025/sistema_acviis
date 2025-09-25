@@ -20,7 +20,7 @@ class _HerramientasViewState extends State<HerramientasView> {
   @override
   Widget build(BuildContext context) {  
     return PrimaryScaffold(
-      title: 'Herrmamientas',
+      title: 'Herramientas',
       body: Column(
         children: [
           Row(

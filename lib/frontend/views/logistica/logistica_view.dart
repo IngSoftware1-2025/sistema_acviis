@@ -41,6 +41,12 @@ class _LogisticaViewState extends State<LogisticaView> {
                 'icon': Icon(Icons.directions_car, color: AppColors.primaryDarker),
                 'screen': '/home_page/logistica_view/vehiculos_view' 
               },
+              {
+                'title': 'Órdenes de Compra',
+                'description': 'Gestión de órdenes de compra: Crear, Consultar',
+                'icon': Icon(Icons.receipt_long, color: AppColors.primaryDarker),
+                'screen': '/home_page/logistica_view/ordenes_view' 
+              }
             ]
           ),
         ),
