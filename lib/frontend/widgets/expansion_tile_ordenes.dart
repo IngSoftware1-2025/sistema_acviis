@@ -11,7 +11,19 @@ class ExpansionTileOrdenes extends StatelessWidget {
   Widget build(BuildContext context) {
     return ExpansionTile(
       title: Text(orden.numeroOrden),
-      subtitle: Text('Proveedor ID: ${orden.proveedorId}'),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Proveedor: ${orden.proveedor.nombre_vendedor}'), // normal
+          Text(
+            'Estado: ${orden.estado}',
+            style: TextStyle(
+              color: orden.estado == 'De baja' ? Colors.red : Colors.green,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
       children: [
         ListTile(
           title: const Text('Fecha de emisión'),
@@ -30,10 +42,6 @@ class ExpansionTileOrdenes extends StatelessWidget {
           subtitle: Text(orden.numeroCotizacion),
         ),
         ListTile(
-          title: const Text('Número de contacto'),
-          subtitle: Text(orden.numeroContacto),
-        ),
-        ListTile(
           title: const Text('Nombre del servicio'),
           subtitle: Text(orden.nombreServicio),
         ),
@@ -43,7 +51,19 @@ class ExpansionTileOrdenes extends StatelessWidget {
         ),
         ListTile(
           title: const Text('Descuento'),
-          subtitle: Text('${orden.descuento}'),
+          subtitle: Text(orden.descuento ? 'Sí' : 'No'),
+        ),
+        ListTile(
+          title: const Text('Estado'),
+          subtitle: Text(orden.estado),
+        ),
+        ListTile(
+          title: const Text('Contacto proveedor'),
+          subtitle: Text(orden.proveedor.telefono_vendedor),
+        ),
+        ListTile(
+          title: const Text('Correo proveedor'),
+          subtitle: Text(orden.proveedor.correo_electronico),
         ),
         ListTile(
           title: const Text('Notas adicionales'),

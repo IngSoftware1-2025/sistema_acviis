@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:sistema_acviis/backend/controllers/ordenes/delete_ordenes.dart';
 import 'package:sistema_acviis/backend/controllers/ordenes/get_ordenes.dart';
 import 'package:sistema_acviis/models/ordenes.dart';
 
@@ -11,12 +11,14 @@ class OrdenesProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  // Filtros
   DateTime? fechaDesde;
   DateTime? fechaHasta;
   String? proveedorId;
   String? textoBusqueda;
 
-  Future<void> fetchOrdenes() async {
+
+Future<void> fetchOrdenes() async {
     if (_todos.isEmpty) {
       _isLoading = true;
       notifyListeners();
@@ -44,8 +46,15 @@ class OrdenesProvider extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
-  
 
+  // ──────────────── ELIMINAR ────────────────
+  Future<void> darDeBaja(List<String> ids) async {
+    await darDeBajaOrdenes(ids);
+    await fetchOrdenes();
+  }
+
+
+  // ──────────────── FILTROS ────────────────
   void actualizarFiltros({
     DateTime? fechaDesde,
     DateTime? fechaHasta,

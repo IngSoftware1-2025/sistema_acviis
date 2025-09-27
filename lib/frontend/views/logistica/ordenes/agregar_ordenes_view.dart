@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/backend/controllers/ordenes/create_ordenes.dart';
 import 'package:sistema_acviis/providers/ordenes_provider.dart';
+import 'package:sistema_acviis/providers/proveedores_provider.dart';
 import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
 
 class AgregarOrdenesView extends StatefulWidget {
@@ -29,6 +30,14 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
 
   bool _descuentoSwitch = false;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    final proveedorProvider = Provider.of<ProveedoresProvider>(context, listen: false);
+    proveedorProvider.precargarProveedores();
+  }
 
   void _submitFormOrden() async {
     if (_formKey.currentState!.validate()) {
@@ -108,11 +117,29 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
                   return null;
                 },
               ),
-              TextFormField(
-                controller: _proveedorIdController,
-                decoration: const InputDecoration(labelText: 'ID proveedor'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Campo requerido' : null,
+              // Dropdown de Proveedores
+              Consumer<ProveedoresProvider>(
+                builder: (context, proveedorProvider, child) {
+                  return DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(labelText: 'Proveedor'),
+                    value: _proveedorIdController.text.isNotEmpty
+                        ? _proveedorIdController.text
+                        : null,
+                    items: proveedorProvider.proveedores.map((p) {
+                      return DropdownMenuItem<String>(
+                        value: p.id,
+                        child: Text(p.nombre_vendedor),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _proveedorIdController.text = value ?? '';
+                      });
+                    },
+                    validator: (value) =>
+                        value == null || value.isEmpty ? 'Campo requerido' : null,
+                  );
+                },
               ),
               TextFormField(
                 controller: _centroCostoController,

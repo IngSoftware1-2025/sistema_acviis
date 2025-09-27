@@ -13,6 +13,7 @@ Future<String> createOrden({
   required int valor,
   required bool descuento,
   String? notasAdicionales,
+  String? estado,
 }) async {
   final url = Uri.parse('http://localhost:3000/ordenes_de_compra');
 
@@ -31,6 +32,7 @@ Future<String> createOrden({
       'valor': valor,
       'descuento': descuento,
       'notas_adicionales': notasAdicionales,
+      'estado': estado ?? 'Activo',
     }),
   );
 
