@@ -24,11 +24,11 @@ class _ModificarProveedorViewState extends State<ModificarProveedorView> {
   @override
   void initState() {
     super.initState();
-    _nombreController = TextEditingController(text: widget.proveedor.nombre);
+    _nombreController = TextEditingController(text: widget.proveedor.nombre_vendedor);
     _rutController = TextEditingController(text: widget.proveedor.rut);
     _direccionController = TextEditingController(text: widget.proveedor.direccion);
-    _correoController = TextEditingController(text: widget.proveedor.correoElectronico);
-    _telefonoController = TextEditingController(text: widget.proveedor.telefono);
+    _correoController = TextEditingController(text: widget.proveedor.correo_electronico);
+    _telefonoController = TextEditingController(text: widget.proveedor.telefono_vendedor);
     _estado = widget.proveedor.estado;
   }
 

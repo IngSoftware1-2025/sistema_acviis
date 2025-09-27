@@ -33,7 +33,7 @@ class _ProveedoresViewState extends State<ProveedoresView> {
                   itemBuilder: (context, i) {
                     final p = provider.proveedores[i];
                     return ListTile(
-                      title: Text(p.nombre),
+                      title: Text(p.nombre_vendedor),
                       subtitle: Text(p.rut),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,

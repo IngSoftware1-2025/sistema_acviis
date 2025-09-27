@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:sistema_acviis/frontend/widgets/cards.dart';
 import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
 import 'package:sistema_acviis/frontend/styles/app_colors.dart';
-import 'package:sistema_acviis/frontend/widgets/vertical_side_bar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
