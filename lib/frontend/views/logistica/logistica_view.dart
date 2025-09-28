@@ -18,7 +18,7 @@ class _LogisticaViewState extends State<LogisticaView> {
       body: Center(
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            maxWidth: 1000, // Limita el ancho máximo
+            maxWidth: 1500, // Limita el ancho máximo
             maxHeight: 1000, // Limita la altura máxima
           ),
           child: GridCards(
@@ -48,3 +48,4 @@ class _LogisticaViewState extends State<LogisticaView> {
     );
   }
 }
+
