@@ -109,20 +109,18 @@ model vehiculos {
   proxima_mantencion DateTime @db.Date
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model pagos {
-  id                  String   @id(map: "facturas_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                  String   @id @default(uuid())
   nombre_mandante     String
-  rut_mandante        String   @db.VarChar
+  rut_mandante        String
   direccion_comercial String
   codigo              String
   servicio_ofrecido   String
   valor               Float
-  plazo_pagar         DateTime @db.Date
+  plazo_pagar         DateTime
   estado_pago         String
   fotografia_id       String
   tipo_pago           String
   sentido             Boolean
-  visualizacion       String
+  visualizacion       String   @default("activo")
 }
