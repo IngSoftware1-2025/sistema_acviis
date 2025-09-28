@@ -103,18 +103,33 @@ model epp {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model vehiculos {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  patente           String   @unique @db.VarChar
-  permiso_circ      String   @db.VarChar
-  revision_tecnica  DateTime @db.Date
-  revision_gases    DateTime @db.Date
-  ultima_mantencion DateTime @db.Date
-  descripcion_mant  String?  @db.VarChar
-  capacidad_kg      Int
-  neumaticos        String   @db.VarChar
-  rueda_repuesto    Boolean
-  observaciones     String?  @db.VarChar
-  estado            String   @db.VarChar
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patente            String   @unique @db.VarChar
+  permiso_circ       String   @db.VarChar
+  revision_tecnica   DateTime @db.Date
+  revision_gases     DateTime @db.Date
+  ultima_mantencion  DateTime @db.Date
+  descripcion_mant   String?  @db.VarChar
+  capacidad_kg       Int
+  neumaticos         String   @db.VarChar
+  rueda_repuesto     Boolean
+  observaciones      String?  @db.VarChar
+  estado             String   @db.VarChar
+  proxima_mantencion DateTime @db.Date
 }
 
-
+model pagos {
+  id                  String   @id @default(uuid())
+  nombre_mandante     String
+  rut_mandante        String
+  direccion_comercial String
+  codigo              String
+  servicio_ofrecido   String
+  valor               Float
+  plazo_pagar         DateTime
+  estado_pago         String
+  fotografia_id       String
+  tipo_pago           String
+  sentido             Boolean
+  visualizacion       String   @default("activo")
+}

@@ -23,7 +23,7 @@ class TrabajadoresProvider extends ChangeNotifier {
   int? cantidadContratos;
 
   bool _isLoading = false;
-  Map<String, bool> _trabajadorIsLoading = {};
+  final Map<String, bool> _trabajadorIsLoading = {};
   bool get isLoading => _isLoading;
   bool trabajadorIsLoading(String id) => _trabajadorIsLoading[id] ?? false;
 
@@ -37,8 +37,8 @@ class TrabajadoresProvider extends ChangeNotifier {
      
     }
     else {
-      List<Trabajador> _nuevos = await fetchTrabajadoresFromApi();
-      for (var nuevo in _nuevos) {
+      List<Trabajador> nuevos = await fetchTrabajadoresFromApi();
+      for (var nuevo in nuevos) {
         final index = _todos.indexWhere((t) => t.id == nuevo.id);
         if (index != -1) {
           // Si el rut del existente NO es nulo
