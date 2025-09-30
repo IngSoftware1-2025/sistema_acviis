@@ -42,11 +42,11 @@ class _HomePageState extends State<HomePage> {
         'description': 'Funciones de obras: Crear, Charlas, Asistencia, etc',
         'icon': Icon(Icons.construction, color: AppColors.primaryDarker),
       },
-      {
+/*       {
         'title': 'Opciones',
         'description': 'Ajustes de la app',
         'icon': Icon(Icons.settings, color: AppColors.primaryDarker)
-      },
+      }, */
       {
         'title': 'Proveedores',
         'description': 'Funciones de proveedor: Modificar, Agregar, Eliminar, etc',

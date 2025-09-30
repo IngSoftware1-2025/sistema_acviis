@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/backend/controllers/PDF/generacionPDF.dart';
-import 'package:sistema_acviis/frontend/utils/constants/constants.dart';
 import 'package:sistema_acviis/frontend/widgets/checkbox.dart';
 import 'package:sistema_acviis/frontend/widgets/expansion_tile_ordenes.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
@@ -19,110 +18,186 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final ordenesProvider = Provider.of<OrdenesProvider>(context, listen: false);
+      final ordenesProvider = Provider.of<OrdenesProvider>(
+        context,
+        listen: false,
+      );
       ordenesProvider.fetchOrdenes().then((_) {
         if (!mounted) return;
-        Provider.of<CheckboxProvider>(context, listen: false)
-            .setCheckBoxes(ordenesProvider.ordenes.length);
+        Provider.of<CheckboxProvider>(
+          context,
+          listen: false,
+        ).setCheckBoxes(ordenesProvider.ordenes.length);
       });
     });
   }
 
+  bool get _tieneSeleccionadas {
+    final checkboxProvider = Provider.of<CheckboxProvider>(
+      context,
+      listen: false,
+    );
+    return checkboxProvider.checkBoxes.skip(1).any((cb) => cb.isSelected);
+  }
 
+  @override
   Widget build(BuildContext context) {
-    final provider = context.watch<OrdenesProvider>();
+    final ordenesProvider = context.watch<OrdenesProvider>();
     final checkboxProvider = context.watch<CheckboxProvider>();
 
+    // Lista solo con órdenes activas
+    final ordenesActivas =
+        ordenesProvider.ordenes.where((o) => o.estado != 'De baja').toList();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (checkboxProvider.checkBoxes.length != provider.ordenes.length + 1) {
-        checkboxProvider.setCheckBoxes(provider.ordenes.length);
+      if (checkboxProvider.checkBoxes.length !=
+          ordenesProvider.ordenes.length + 1) {
+        checkboxProvider.setCheckBoxes(ordenesProvider.ordenes.length);
       }
     });
 
-    if (provider.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (provider.ordenes.isEmpty) {
-      return const Center(child: Text('No hay órdenes de compra para mostrar.'));
-    }
-    if (checkboxProvider.checkBoxes.length != (provider.ordenes.length + 1)) {
+    if (ordenesProvider.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final double tableWidth = MediaQuery.of(context).size.width > 600
-        ? MediaQuery.of(context).size.width
-        : 600;
-
-    return Expanded(
-      child: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: SizedBox(
-          width: tableWidth - normalPadding * 2,
-          child: Column(
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+          child: Row(
             children: [
-              Row(
-                children: [
-                  Flexible(
-                    flex: 0,
-                    fit: FlexFit.tight,
-                    child: PrimaryCheckbox(customCheckbox: checkboxProvider.checkBoxes[0]),
+              PrimaryCheckbox(customCheckbox: checkboxProvider.checkBoxes[0]),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Center(
+                  child: Text(
+                    'Órdenes de Compra',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
-                  Expanded(
-                    flex: 2,
-                    child: Center(
-                      child: Text(
-                        'Lista de Órdenes de Compra',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                    ),
-                  ),
-                  Flexible(
-                    flex: 0,
-                    fit: FlexFit.tight,
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Text('Opciones', style: TextStyle(fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
+                ),
               ),
-              const Divider(),
-              ...List.generate(provider.ordenes.length, (i) {
-                final orden = provider.ordenes[i];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 1.0),
-                  child: Row(
-                    children: [
-                      PrimaryCheckbox(customCheckbox: checkboxProvider.checkBoxes[i + 1]),
-                      Expanded(
-                        child: ExpansionTileOrdenes(
-                          orden: orden,
-                        ),
-                      ),
-                      Flexible(
-                        flex: 0,
-                        fit: FlexFit.tight,
-                        child: IconButton(
-                          icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
-                          tooltip: "Descargar orden PDF",
-                          onPressed: () {
-                            descargarFichaPDFGenerico(
-                              context,
-                              "ordenes",
-                              orden.id,
-                              orden.numeroOrden,
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/home_page/logistica_view/ordenes_view/agregar_ordenes_view',
+                  );
+                },
+                child: const Text('Agregar OC'),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: _tieneSeleccionadas
+                    ? () async {
+                        final checkboxProvider =
+                            Provider.of<CheckboxProvider>(context, listen: false);
+                        final ordenesSeleccionadas = ordenesActivas.asMap().entries
+                            .where((entry) =>
+                                checkboxProvider.checkBoxes[entry.key + 1].isSelected)
+                            .map((entry) => entry.value)
+                            .toList();
+
+                        if (ordenesSeleccionadas.isEmpty) return;
+
+                        final confirmar = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Eliminar órdenes'),
+                            content: const Text(
+                              '¿Está seguro que desea eliminar las órdenes seleccionadas? Se marcarán como eliminadas.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancelar'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Eliminar'),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirmar != true) return;
+
+                        final idsSeleccionados =
+                            ordenesSeleccionadas.map((o) => o.id).toList();
+
+                        try {
+                          await ordenesProvider.darDeBaja(idsSeleccionados);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Las órdenes seleccionadas fueron eliminadas correctamente.',
+                              ),
+                            ),
+                          );
+                          checkboxProvider.setCheckBoxes(
+                            ordenesProvider.ordenes.length,
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Hubo un error al eliminar las órdenes.',
+                              ),
+                            ),
+                          );
+                          print("Error al eliminar las órdenes: $e");
+                        }
+                      }
+                    : null,
+                child: const Text('Eliminar órdenes'),
+              ),
+
             ],
           ),
         ),
-      ),
+        const Divider(),
+        Expanded(
+          child:
+              ordenesActivas.isEmpty
+                  ? const Center(
+                    child: Text('No hay órdenes activas para mostrar.'),
+                  )
+                  : ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: ordenesActivas.length,
+                    itemBuilder: (context, i) {
+                      final orden = ordenesActivas[i];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 1.0),
+                        child: Row(
+                          children: [
+                            PrimaryCheckbox(
+                              customCheckbox:
+                                  checkboxProvider.checkBoxes[i + 1],
+                            ),
+                            Expanded(child: ExpansionTileOrdenes(orden: orden)),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.picture_as_pdf,
+                                color: Colors.red,
+                              ),
+                              tooltip: "Descargar orden PDF",
+                              onPressed: () {
+                                descargarFichaPDFGenerico(
+                                  context,
+                                  "ordenes",
+                                  orden.id,
+                                  orden.numeroOrden,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+        ),
+      ],
     );
   }
 }

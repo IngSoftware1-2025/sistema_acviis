@@ -10,11 +10,11 @@ class ExpansionTileOrdenes extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ExpansionTile(
-      title: Text(orden.numeroOrden),
+      title: Text(orden.nombreServicio),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Proveedor: ${orden.proveedor.nombre_vendedor}'), // normal
+          Text('Proveedor: ${orden.proveedor.nombre_vendedor}'),
           Text(
             'Estado: ${orden.estado}',
             style: TextStyle(

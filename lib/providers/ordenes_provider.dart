@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sistema_acviis/backend/controllers/ordenes/delete_ordenes.dart';
 import 'package:sistema_acviis/backend/controllers/ordenes/get_ordenes.dart';
+import 'package:sistema_acviis/backend/controllers/ordenes/update_estado_ordenes.dart';
 import 'package:sistema_acviis/models/ordenes.dart';
 
 class OrdenesProvider extends ChangeNotifier {
@@ -17,6 +17,14 @@ class OrdenesProvider extends ChangeNotifier {
   String? proveedorId;
   String? textoBusqueda;
 
+  String? numeroOrden;
+  String? centroCosto;
+  String? seccionItemizado;
+  String? direccion;
+  String? servicioOfrecido;
+  int? valorDesde;
+  int? valorHasta;
+  bool? descuento;
 
 Future<void> fetchOrdenes() async {
     if (_todos.isEmpty) {
@@ -47,24 +55,40 @@ Future<void> fetchOrdenes() async {
     notifyListeners();
   }
 
-  // ──────────────── ELIMINAR ────────────────
+  // ──────────────── ELIMINAR (Dar de baja) ────────────────
   Future<void> darDeBaja(List<String> ids) async {
     await darDeBajaOrdenes(ids);
     await fetchOrdenes();
   }
-
-
   // ──────────────── FILTROS ────────────────
   void actualizarFiltros({
     DateTime? fechaDesde,
     DateTime? fechaHasta,
     String? proveedorId,
     String? textoBusqueda,
+    String? numeroOrden,
+    String? centroCosto,
+    String? seccionItemizado,
+    String? direccion,
+    String? servicioOfrecido,
+    int? valorDesde,
+    int? valorHasta,
+    bool? descuento,
   }) {
     this.fechaDesde = fechaDesde ?? this.fechaDesde;
     this.fechaHasta = fechaHasta ?? this.fechaHasta;
     this.proveedorId = proveedorId ?? this.proveedorId;
     this.textoBusqueda = textoBusqueda ?? this.textoBusqueda;
+
+    this.numeroOrden = numeroOrden ?? this.numeroOrden;
+    this.centroCosto = centroCosto ?? this.centroCosto;
+    this.seccionItemizado = seccionItemizado ?? this.seccionItemizado;
+    this.direccion = direccion ?? this.direccion;
+    this.servicioOfrecido = servicioOfrecido ?? this.servicioOfrecido;
+    this.valorDesde = valorDesde ?? this.valorDesde;
+    this.valorHasta = valorHasta ?? this.valorHasta;
+    this.descuento = descuento ?? this.descuento;
+
     filtrar();
   }
 
@@ -73,11 +97,25 @@ Future<void> fetchOrdenes() async {
       if (fechaDesde != null && o.fechaEmision.isBefore(fechaDesde!)) return false;
       if (fechaHasta != null && o.fechaEmision.isAfter(fechaHasta!)) return false;
       if (proveedorId != null && proveedorId!.isNotEmpty && o.proveedorId != proveedorId) return false;
+
+      if (numeroOrden != null && numeroOrden!.isNotEmpty && !o.numeroOrden.contains(numeroOrden!)) return false;
+      if (centroCosto != null && centroCosto!.isNotEmpty && !o.centroCosto.contains(centroCosto!)) return false;
+      if (seccionItemizado != null && seccionItemizado!.isNotEmpty &&
+          !(o.seccionItemizado ?? '').contains(seccionItemizado!)) return false;
+      if (direccion != null && direccion!.isNotEmpty &&
+          !o.proveedor.nombre_vendedor.contains(direccion!)) return false;
+      if (servicioOfrecido != null && servicioOfrecido!.isNotEmpty &&
+          !o.nombreServicio.contains(servicioOfrecido!)) return false;
+      if (valorDesde != null && o.valor < valorDesde!) return false;
+      if (valorHasta != null && o.valor > valorHasta!) return false;
+      if (descuento != null && o.descuento != descuento) return false;
+
       if (textoBusqueda != null && textoBusqueda!.isNotEmpty) {
         final t = textoBusqueda!.toLowerCase();
         if (!o.numeroOrden.toLowerCase().contains(t) &&
             !o.nombreServicio.toLowerCase().contains(t)) return false;
       }
+
       return true;
     }).toList();
     notifyListeners();
@@ -88,6 +126,16 @@ Future<void> fetchOrdenes() async {
     fechaHasta = null;
     proveedorId = null;
     textoBusqueda = null;
+
+    numeroOrden = null;
+    centroCosto = null;
+    seccionItemizado = null;
+    direccion = null;
+    servicioOfrecido = null;
+    valorDesde = null;
+    valorHasta = null;
+    descuento = null;
+
     filtrar();
   }
 }
