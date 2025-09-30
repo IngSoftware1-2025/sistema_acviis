@@ -92,6 +92,16 @@ model herramientas {
   asig_fin    DateTime? @db.Date
 }
 
+/// Prisma para model epp
+model epp {
+  id                  Int       @id @default(autoincrement())
+  tipo                String
+  obras_asignadas     String[]
+  cantidad            Int
+  certificado_id      String?
+  fecha_registro      DateTime  @default(now())
+}
+
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model vehiculos {
   id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
