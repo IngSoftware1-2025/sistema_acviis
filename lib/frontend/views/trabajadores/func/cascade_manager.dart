@@ -24,4 +24,10 @@ class CascadeManager {
       _opened.cerrarCascada();
     }
   }
+
+  void setInteractionEnabled(bool enable) {
+    if (_opened != null) {
+      _opened.setOverlayInteraction(enable);
+    }
+  }
 }

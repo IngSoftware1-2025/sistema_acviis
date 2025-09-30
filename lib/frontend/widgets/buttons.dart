@@ -182,6 +182,7 @@ class _CascadeButtonState extends State<CascadeButton> with WidgetsBindingObserv
   final LayerLink _layerLink = LayerLink();
   bool _abierto = false;
   bool _showChildren2 = false;
+  bool _overlayInteractionEnabled = true;
 
   @override
   void initState() {
@@ -244,61 +245,68 @@ class _CascadeButtonState extends State<CascadeButton> with WidgetsBindingObserv
                 : widget.offset - menuWidth + renderBox.size.width,
             renderBox.size.height,
           ),
-          child: Material(
-            elevation: 4,
-            child: Container(
-              width: menuWidth,
-              color: Colors.white,
-              constraints: BoxConstraints(
-                maxHeight: screenSize.height * 0.8,
-              ),
-              child: StatefulBuilder(
-                builder: (context, setStateOverlay) {
-                  List<Widget> currentChildren = widget.children2 != null && _showChildren2
-                      ? widget.children2!
-                      : widget.children;
-                  String currentTitle = widget.children2 != null && _showChildren2
-                      ? (widget.title2 ?? widget.title)
-                      : widget.title;
-                  return SingleChildScrollView(
-                    child: Padding(
-                      padding: EdgeInsets.all(normalPadding),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+          child: IgnorePointer(
+            ignoring: !_overlayInteractionEnabled,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 150),
+              opacity: _overlayInteractionEnabled ? 1 : 0,
+              child: Material(
+                elevation: 4,
+                color: Colors.white,
+                child: Container(
+                  width: menuWidth,
+                  color: Colors.white,
+                  constraints: BoxConstraints(
+                    maxHeight: screenSize.height * 0.8,
+                  ),
+                  child: StatefulBuilder(
+                    builder: (context, setStateOverlay) {
+                      List<Widget> currentChildren = widget.children2 != null && _showChildren2
+                          ? widget.children2!
+                          : widget.children;
+                      String currentTitle = widget.children2 != null && _showChildren2
+                          ? (widget.title2 ?? widget.title)
+                          : widget.title;
+                      return SingleChildScrollView(
+                        child: Padding(
+                          padding: EdgeInsets.all(normalPadding),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Center(child: Text(currentTitle)),
-                              if (widget.children2 != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8.0),
-                                  child: IconButton(
-                                    icon: Icon(_showChildren2 ? Icons.swap_horiz : Icons.swap_horiz_outlined),
-                                    tooltip: 'Cambiar vista',
-                                    onPressed: () {
-                                      setStateOverlay(() {
-                                        _showChildren2 = !_showChildren2;
-                                      });
-                                    },
-                                  ),
-                                ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Center(child: Text(currentTitle)),
+                                  if (widget.children2 != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 8.0),
+                                      child: IconButton(
+                                        icon: Icon(_showChildren2 ? Icons.swap_horiz : Icons.swap_horiz_outlined),
+                                        tooltip: 'Cambiar vista',
+                                        onPressed: () {
+                                          setStateOverlay(() {
+                                            _showChildren2 = !_showChildren2;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              Divider(thickness: 1, color: Colors.grey.shade300, height: 24),
+                              ...currentChildren,
                             ],
                           ),
-                          Divider(thickness: 1, color: Colors.grey.shade300, height: 24),
-                          ...currentChildren,
-                        ],
-                      ),
-                    ),
-                  );
-                },
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ),
         ),
       ),
     );
-
     Overlay.of(context).insert(_overlayEntry!);
   }
 
@@ -312,11 +320,19 @@ class _CascadeButtonState extends State<CascadeButton> with WidgetsBindingObserv
             setState(() {
               _abierto = false;
               _showChildren2 = false;
+              _overlayInteractionEnabled = true;
             });
           }
         });
       }
     }
+  }
+
+  void setOverlayInteraction(bool enable) {
+    if (!mounted || _overlayInteractionEnabled == enable) return;
+    setState(() {
+      _overlayInteractionEnabled = enable;
+    });
   }
 
   @override

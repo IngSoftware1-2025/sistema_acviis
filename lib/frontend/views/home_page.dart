@@ -20,12 +20,12 @@ class _HomePageState extends State<HomePage> {
         'icon': Icon(Icons.engineering, color: AppColors.primaryDarker),
         'screen': '/home_page/trabajadores_view'
       },
-      {
+      /*{
         'title': 'Contratos',
         'description': 'Funciones de contratos: Modificar, Agregar, Eliminar, etc',
         'icon': Icon(Icons.description, color: AppColors.primaryDarker),
         'screen': '/home_page/contratos_view'
-      },
+      },*/
       {
         'title': 'Finanzas',
         'description': 'Funciones de finanzas: Modificar, Agregar, Eliminar, etc',
