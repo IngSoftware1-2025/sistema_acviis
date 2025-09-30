@@ -16,19 +16,29 @@ class ProveedoresProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  // Carga proveedores desde API de forma segura
   Future<void> fetchProveedores() async {
-    _isLoading = true;
-    notifyListeners();
+    // Marcamos loading, pero post-frame para no romper build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _isLoading = true;
+      notifyListeners();
+    });
+
     try {
       _todos = await fetchProveedoresFromApi();
-      filtrar();
+      _filtrarPostFrame();
     } catch (e) {
       print('Error al obtener proveedores: $e');
       _todos = [];
       _proveedores = [];
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _isLoading = false;
+        notifyListeners();
+      });
     }
   }
 
@@ -39,15 +49,15 @@ class ProveedoresProvider extends ChangeNotifier {
     }
   }
 
-  // Actualizar filtros
+  // Actualizar filtros y filtrar proveedores de forma segura
   void actualizarFiltros({String? estado, String? textoBusqueda}) {
     this.estado = estado ?? this.estado;
     this.textoBusqueda = textoBusqueda ?? this.textoBusqueda;
-    filtrar();
+    _filtrarPostFrame();
   }
 
-  // Filtrar proveedores según estado y búsqueda de texto
-  void filtrar() {
+  // Filtrado seguro usando post-frame
+  void _filtrarPostFrame() {
     _proveedores = _todos.where((p) {
       if (estado != null && estado!.isNotEmpty && p.estado != estado) return false;
       if (textoBusqueda != null && textoBusqueda!.isNotEmpty) {
@@ -60,7 +70,10 @@ class ProveedoresProvider extends ChangeNotifier {
       }
       return true;
     }).toList();
-    notifyListeners();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
   }
 
   // Actualizar un proveedor
