@@ -18,7 +18,7 @@ class _LogisticaViewState extends State<LogisticaView> {
       body: Center(
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            maxWidth: 1000, // Limita el ancho máximo
+            maxWidth: 1500, // Limita el ancho máximo
             maxHeight: 1000, // Limita la altura máxima
           ),
           child: GridCards(
@@ -39,7 +39,7 @@ class _LogisticaViewState extends State<LogisticaView> {
                 'title': 'Vehículos',
                 'description': 'Gestión de vehículos: Mantenimiento, Asignación, Combustible',
                 'icon': Icon(Icons.directions_car, color: AppColors.primaryDarker),
-                // 'screen': '/home_page/logistica_view/vehiculos_view' // Para futuro incremento
+                'screen': '/home_page/logistica_view/vehiculos_view'
               },
             ]
           ),
@@ -48,3 +48,4 @@ class _LogisticaViewState extends State<LogisticaView> {
     );
   }
 }
+

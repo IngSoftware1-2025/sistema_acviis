@@ -28,25 +28,26 @@ class _HomePageState extends State<HomePage> {
       },
       {
         'title': 'Finanzas',
-        'description': 'Funciones de trabajador: Modificar, Agregar, Eliminar, etc',
-        'icon': Icon(Icons.attach_money, color: AppColors.primaryDarker)
+        'description': 'Funciones de finanzas: Modificar, Agregar, Eliminar, etc',
+        'icon': Icon(Icons.attach_money, color: AppColors.primaryDarker),
+        'screen': '/home_page/finanzas_main_view'
       },
       {
         'title': 'Logística',
         'description': 'Funciones de logística: Herramientas, EPP, Vehículos, etc',
-        'icon': Icon(Icons.inventory_outlined, color: AppColors.primaryDarker)
+        'icon': Icon(Icons.inventory_outlined, color: AppColors.primaryDarker),
+        'screen': '/home_page/logistica_view'
       },
       {
         'title': 'Obras',
         'description': 'Funciones de obras: Crear, Charlas, Asistencia, etc',
         'icon': Icon(Icons.construction, color: AppColors.primaryDarker),
-            'screen': '/home_page/herramientas_view'
       },
-      {
+/*       {
         'title': 'Opciones',
         'description': 'Ajustes de la app',
         'icon': Icon(Icons.settings, color: AppColors.primaryDarker)
-      },
+      }, */
       {
         'title': 'Proveedores',
         'description': 'Funciones de proveedor: Modificar, Agregar, Eliminar, etc',
