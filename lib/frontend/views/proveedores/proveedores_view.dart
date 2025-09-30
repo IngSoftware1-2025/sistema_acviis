@@ -51,24 +51,30 @@ class _ProveedoresViewState extends State<ProveedoresView> {
     );
   }
 
-  void _mostrarMenuAcciones() {
-    showModalBottomSheet(
+  void _mostrarMenuAcciones() async {
+    // Guardamos el contexto del Scaffold antes de mostrar el BottomSheet.
+    // Este contexto seguirá siendo válido después de que el BottomSheet se cierre.
+    final scaffoldContext = context;
+
+    await showModalBottomSheet<void>(
       context: context,
-      builder: (context) {
+      builder: (bottomSheetContext) {
         return Wrap(
           children: [
             ListTile(
               leading: const Icon(Icons.add),
               title: const Text('Crear proveedor'),
               onTap: () async {
-                Navigator.pop(context);
-                final resultado = await Navigator.push(
-                  context,
+                // 1. Cierra el BottomSheet usando su propio contexto.
+                Navigator.pop(bottomSheetContext);
+                // 2. Navega a la nueva pantalla usando el contexto del Scaffold.
+                final resultado = await Navigator.push<bool>(
+                  scaffoldContext,
                   MaterialPageRoute(builder: (_) => const AgregarProveedorView()),
                 );
-                if (resultado == true) {
-                  Provider.of<ProveedoresProvider>(context, listen: false)
-                      .fetchProveedores();
+                // 3. Si se guardó algo, refresca la lista usando el contexto del Scaffold.
+                if (resultado == true && mounted) {
+                  Provider.of<ProveedoresProvider>(scaffoldContext, listen: false).fetchProveedores();
                 }
               },
             ),
@@ -76,7 +82,7 @@ class _ProveedoresViewState extends State<ProveedoresView> {
               leading: const Icon(Icons.delete),
               title: const Text('Eliminar seleccionados'),
               onTap: () async {
-                Navigator.pop(context);
+                Navigator.pop(bottomSheetContext);
                 final provider = Provider.of<ProveedoresProvider>(context,
                     listen: false);
                 for (final id in _seleccionados) {
@@ -90,7 +96,7 @@ class _ProveedoresViewState extends State<ProveedoresView> {
               leading: const Icon(Icons.picture_as_pdf),
               title: const Text('Generar ficha PDF de seleccionados'),
               onTap: () async {
-                Navigator.pop(context);
+                Navigator.pop(bottomSheetContext);
                 // Aquí deberías llamar a tu función para generar PDF de todos los seleccionados
                 // await PdfUtils.generarFichaProveedoresSeleccionados(_seleccionados);
               },
