@@ -15,10 +15,33 @@
 
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/backend/controllers/anexos/create_anexo.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/anexos/reajuste_de_sueldo.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/func/descargar_anexo_pdf.dart';
+
+List<String> ANEXOS = [
+  'Anexo Reajuste de Sueldo',
+  'Anexo Maestro a cargo',
+  'Anexo Salida de la obra',
+  'Anexo Traslado',
+  'Formulario Pacto Horas extraordinarias',
+  'Documento de vacaciones'
+];
+
+// Nuevo: Mapa de controladores para campos dinámicos
+final Map<String, TextEditingController> _camposControllers = {};
+
+// Nuevo: Mapa de funciones que reciben trabajador y controladores
+final Map<String, List<Widget> Function(Trabajador, Map<String, TextEditingController>)> camposPorTipo = {
+  'Anexo Reajuste de Sueldo': (trabajador, controllers) => camposReajusteDeSueldo(trabajador, controllers),
+  'Anexo Maestro a cargo': (trabajador, controllers) => [],
+  'Anexo Salida de la obra': (trabajador, controllers) => [],
+  'Anexo Traslado': (trabajador, controllers) => [],
+  'Formulario Pacto Horas extraordinarias': (trabajador, controllers) => [],
+  'Documento de vacaciones': (trabajador, controllers) => [],
+};
 
 class AgregarAnexoContratoDialog extends StatefulWidget {
   final dynamic idContrato;
@@ -53,6 +76,7 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
     return '${format(_fechaInicio!)} – ${format(_fechaFin!)}';
   }
 
+  // Funcion que validara si las fechas de vacaciones son validas
   bool _validarDuracionVacaciones(String value) {
     // Formato: dd/mm/yyyy – dd/mm/yyyy 
     final regex = RegExp(r'^(\d{2})\/(\d{2})\/(\d{4}) – (\d{2})\/(\d{2})\/(\d{4})$');
@@ -95,6 +119,7 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
 
   @override
   Widget build(BuildContext context) {
+    // Aqui se define si se PUEDE o no realizar un anexo a un contrato
     if (widget.idContrato == null) {
       return AlertDialog( // ===================== Sin contrato activo
         title: Text('Sin contrato activo'),
@@ -107,6 +132,7 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
         ],
       );
     }
+    // Aqui comienza la creacion de anexo
     return AlertDialog(
       title: Center(
         child: Text(
@@ -124,6 +150,27 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                    DropdownButtonFormField<String>(
+                      value: _tipoAnexoController.text.isNotEmpty ? _tipoAnexoController.text : null,
+                      decoration: const InputDecoration(
+                        labelText: 'Tipo de Anexo',
+                      ),
+                      items: ANEXOS.map((tipo) => DropdownMenuItem(
+                            value: tipo,
+                            child: Text(tipo),
+                          )).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _tipoAnexoController.text = value ?? '';
+                        });
+                      },
+                    ),
+                    ...(_tipoAnexoController.text.isNotEmpty && camposPorTipo[_tipoAnexoController.text] != null
+                    ? camposPorTipo[_tipoAnexoController.text]!(widget.trabajador, _camposControllers)
+                    : []),
+                ]
+                /*[
+                  
                   // ID Contrato (solo visualización)
                   Center(child: Text('Anexo asociado a contrato activo')),
                   SizedBox(height: 8),
@@ -230,6 +277,7 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                     ),
                   ),
                 ],
+                */
               ),
             ),
       actions: _isLoading
@@ -246,17 +294,31 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                   setState(() {
                     _isLoading = true;
                   });
-                  Map<String, String> data = {
-                    'id_trabajador': widget.idTrabajador,
-                    'id_contrato': widget.idContrato,
+                  // Nuevo: Acceso a parámetros dinámicos
+                  Map<String, String> parametros = {
                     'tipo': _tipoAnexoController.text,
-                    'duracion': _duracionFormateada,
-                    'parametros': _parametrosController.text,
-                    'comentario': _comentarioControler.text,
                   };
+                  for (var entry in _camposControllers.entries) {
+                    if (entry.key != "comentario") {
+                      parametros[entry.key] = entry.value.text;
+                    }
+                  }
                   try {
-                    final idAnexo = await createAnexoSupabase(data);
+                    final idAnexo = await createAnexoSupabase(
+                      _tipoAnexoController.text,
+                      widget.idTrabajador,
+                      widget.idContrato,
+                      parametros,
+                      _camposControllers['comentario']?.text ?? ''
+                    );
+                    //final idAnexo = await createAnexoSupabaseTemporal(data);
                     if (idAnexo.isNotEmpty) {
+                      Map<String, dynamic> dataMongo = {
+                        'id_contrato': widget.idContrato, // Para el filename
+                        'id_anexo': idAnexo, // Para la metadata
+                        'parametros': parametros,
+                      };
+                      /*
                       Map<String, String> dataMongo = {
                         // Datos del trabajador
                         'id': widget.trabajador.id,
@@ -279,7 +341,9 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                         'parametros': _parametrosController.text,
                         'comentario': _comentarioControler.text,
                       };
+                      */
                       await createAnexoMongo(dataMongo);
+                      //await createAnexoMongoTemporal(dataMongo);
                       // Si es Documento de vacaciones, descargar y abrir PDF
                       if (idAnexo.isNotEmpty) {
                         await Future.delayed(const Duration(milliseconds: 500)); // IMPORTANTE PARA LA VISUALIZACIÓN DEL PDF: Espera para GridFS

@@ -29,15 +29,17 @@ class TrabajadoresProvider extends ChangeNotifier {
   bool trabajadorIsLoading(String id) => _trabajadorIsLoading[id] ?? false;
 
   Future<void> fetchTrabajadores() async {
-    if (_todos.isEmpty) {
-      _isLoading = true;
-      notifyListeners();
-    }
+
+    _isLoading = true;
+    notifyListeners();
+
     if (_todos.isEmpty) {
       _todos = await fetchTrabajadoresFromApi();
      
     }
     else {
+      _todos = await fetchTrabajadoresFromApi();
+      /*
       List<Trabajador> nuevos = await fetchTrabajadoresFromApi();
       for (var nuevo in nuevos) {
         final index = _todos.indexWhere((t) => t.id == nuevo.id);
@@ -51,6 +53,7 @@ class TrabajadoresProvider extends ChangeNotifier {
           _todos.add(nuevo);
         }
       }
+      */
     }
     
     _trabajadores = List.from(_todos);
@@ -137,7 +140,7 @@ class TrabajadoresProvider extends ChangeNotifier {
         retornando una lista filtrada 
     */
     _trabajadores = _todos.where((t) {
-    /*
+       // ================ DE MOMENTO, SE QUITA LA SEGURIDDAD POR PRISAS ===================
       // Obra asignada
       if (obraAsignada != null && obraAsignada!.isNotEmpty && t.obraEnLaQueTrabaja != obraAsignada) return false;
       // Cargo
@@ -206,7 +209,7 @@ class TrabajadoresProvider extends ChangeNotifier {
       if (cantidadContratos != null) {
         if (t.contratos.length != cantidadContratos) return false;
       }
-    */
+
       // Filtro por nombre
       if (textoBusqueda != null && textoBusqueda!.isNotEmpty) {
         if (!t.nombreCompleto.toLowerCase().contains(textoBusqueda!.toLowerCase())) return false;
