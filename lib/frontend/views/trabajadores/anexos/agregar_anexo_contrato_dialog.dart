@@ -19,6 +19,7 @@ import 'package:sistema_acviis/frontend/views/trabajadores/anexos/maestro_a_carg
 import 'package:sistema_acviis/frontend/views/trabajadores/anexos/reajuste_de_sueldo.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/anexos/pacto_horas_extraordinarias.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/anexos/salida_de_la_obra.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/anexos/traslado.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:provider/provider.dart';
@@ -41,7 +42,7 @@ final Map<String, List<Widget> Function(Trabajador, Map<String, TextEditingContr
   'Anexo Reajuste de Sueldo': (trabajador, controllers) => camposReajusteDeSueldo(trabajador, controllers),
   'Anexo Maestro a cargo': (trabajador, controllers) => camposMaestroACargo(trabajador, controllers),
   'Anexo Salida de la obra': (trabajador, controllers) => camposSalidaDeLaObra(trabajador, controllers),
-  'Anexo Traslado': (trabajador, controllers) => [],
+  'Anexo Traslado': (trabajador, controllers) => camposTraslado(trabajador, controllers),
   'Formulario Pacto Horas extraordinarias': (trabajador, controllers) => camposPactoHorasExtraordinarias(trabajador, controllers),
   'Documento de vacaciones': (trabajador, controllers) => [],
 };
