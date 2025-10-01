@@ -16,6 +16,7 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/backend/controllers/anexos/create_anexo.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/anexos/reajuste_de_sueldo.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/anexos/pacto_horas_extraordinarias.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:provider/provider.dart';
@@ -39,7 +40,7 @@ final Map<String, List<Widget> Function(Trabajador, Map<String, TextEditingContr
   'Anexo Maestro a cargo': (trabajador, controllers) => [],
   'Anexo Salida de la obra': (trabajador, controllers) => [],
   'Anexo Traslado': (trabajador, controllers) => [],
-  'Formulario Pacto Horas extraordinarias': (trabajador, controllers) => [],
+  'Formulario Pacto Horas extraordinarias': (trabajador, controllers) => camposPactoHorasExtraordinarias(trabajador, controllers),
   'Documento de vacaciones': (trabajador, controllers) => [],
 };
 
@@ -300,7 +301,7 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                   };
                   for (var entry in _camposControllers.entries) {
                     if (entry.key != "comentario") {
-                      parametros[entry.key] = entry.value.text;
+                      if (entry.value.text != '') parametros[entry.key] = entry.value.text;
                     }
                   }
                   try {
