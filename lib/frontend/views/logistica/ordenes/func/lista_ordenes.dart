@@ -82,6 +82,34 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
               const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: _tieneSeleccionadas
+                    ? () {
+                        final checkboxProvider =
+                            Provider.of<CheckboxProvider>(context, listen: false);
+                        final ordenesProvider =
+                            Provider.of<OrdenesProvider>(context, listen: false);
+
+                        final ordenesSeleccionadas = ordenesActivas
+                            .asMap()
+                            .entries
+                            .where((entry) =>
+                                checkboxProvider.checkBoxes[entry.key + 1].isSelected)
+                            .map((entry) => entry.value)
+                            .toList();
+
+                        if (ordenesSeleccionadas.isEmpty) return;
+
+                        Navigator.pushNamed(
+                          context,
+                          '/home_page/logistica_view/modificar_ordenes_view',
+                          arguments: ordenesSeleccionadas,
+                        );
+                      }
+                    : null,
+                child: const Text('Editar OC'),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: _tieneSeleccionadas
                     ? () async {
                         final checkboxProvider =
                             Provider.of<CheckboxProvider>(context, listen: false);

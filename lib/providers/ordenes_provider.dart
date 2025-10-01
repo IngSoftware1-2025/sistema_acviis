@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/backend/controllers/ordenes/get_ordenes.dart';
+import 'package:sistema_acviis/backend/controllers/ordenes/update_ordenes.dart';
 import 'package:sistema_acviis/backend/controllers/ordenes/update_estado_ordenes.dart';
 import 'package:sistema_acviis/models/ordenes.dart';
 
@@ -60,6 +61,14 @@ Future<void> fetchOrdenes() async {
     await darDeBajaOrdenes(ids);
     await fetchOrdenes();
   }
+
+  // ──────────────── ACTUALIZAR ────────────────
+  Future<bool> actualizarOrden(String id, Map<String, dynamic> data) async {
+    final exito = await updateOrden(id, data);
+    if (exito) await fetchOrdenes();
+    return exito;
+  }
+
   // ──────────────── FILTROS ────────────────
   void actualizarFiltros({
     DateTime? fechaDesde,
