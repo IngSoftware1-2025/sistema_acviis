@@ -15,6 +15,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/backend/controllers/anexos/create_anexo.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/anexos/maestro_a_cargo.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/anexos/reajuste_de_sueldo.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/anexos/pacto_horas_extraordinarias.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
@@ -37,7 +38,7 @@ final Map<String, TextEditingController> _camposControllers = {};
 // Nuevo: Mapa de funciones que reciben trabajador y controladores
 final Map<String, List<Widget> Function(Trabajador, Map<String, TextEditingController>)> camposPorTipo = {
   'Anexo Reajuste de Sueldo': (trabajador, controllers) => camposReajusteDeSueldo(trabajador, controllers),
-  'Anexo Maestro a cargo': (trabajador, controllers) => [],
+  'Anexo Maestro a cargo': (trabajador, controllers) => camposMaestroACargo(trabajador, controllers),
   'Anexo Salida de la obra': (trabajador, controllers) => [],
   'Anexo Traslado': (trabajador, controllers) => [],
   'Formulario Pacto Horas extraordinarias': (trabajador, controllers) => camposPactoHorasExtraordinarias(trabajador, controllers),
@@ -310,7 +311,7 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                       widget.idTrabajador,
                       widget.idContrato,
                       parametros,
-                      _camposControllers['comentario']?.text ?? ''
+                      _camposControllers['comentario']?.text ?? '' // Se deja por separado para su distincion en el backned
                     );
                     //final idAnexo = await createAnexoSupabaseTemporal(data);
                     if (idAnexo.isNotEmpty) {
@@ -377,6 +378,12 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                   if (mounted) {
                     setState(() {
                       _isLoading = false;
+                      // Dispose all controllers in the map before clearing
+                      for (var controller in _camposControllers.values) {
+                        controller.dispose();
+                      }
+                      _camposControllers.clear();
+                      _comentarioControler.clear();
                     });
                   }
                 },
