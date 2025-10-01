@@ -18,6 +18,7 @@ import 'package:sistema_acviis/backend/controllers/anexos/create_anexo.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/anexos/maestro_a_cargo.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/anexos/reajuste_de_sueldo.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/anexos/pacto_horas_extraordinarias.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/anexos/salida_de_la_obra.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:provider/provider.dart';
@@ -39,7 +40,7 @@ final Map<String, TextEditingController> _camposControllers = {};
 final Map<String, List<Widget> Function(Trabajador, Map<String, TextEditingController>)> camposPorTipo = {
   'Anexo Reajuste de Sueldo': (trabajador, controllers) => camposReajusteDeSueldo(trabajador, controllers),
   'Anexo Maestro a cargo': (trabajador, controllers) => camposMaestroACargo(trabajador, controllers),
-  'Anexo Salida de la obra': (trabajador, controllers) => [],
+  'Anexo Salida de la obra': (trabajador, controllers) => camposSalidaDeLaObra(trabajador, controllers),
   'Anexo Traslado': (trabajador, controllers) => [],
   'Formulario Pacto Horas extraordinarias': (trabajador, controllers) => camposPactoHorasExtraordinarias(trabajador, controllers),
   'Documento de vacaciones': (trabajador, controllers) => [],
@@ -296,15 +297,32 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                   setState(() {
                     _isLoading = true;
                   });
-                  // Nuevo: Acceso a parámetros dinámicos
-                  Map<String, String> parametros = {
+                    // Nuevo: Acceso a parámetros dinámicos
+                    Map<String, String> parametros = {
                     'tipo': _tipoAnexoController.text,
-                  };
-                  for (var entry in _camposControllers.entries) {
-                    if (entry.key != "comentario") {
+                    };
+                    // Si solo tiene 'tipo' y ningún campo extra, rellenar con valores del trabajador
+                    final camposExtras = _camposControllers.entries.where((e) => e.key != "comentario" && e.key != "tipo").toList();
+                    if (camposExtras.isEmpty) {
+                    parametros.addAll({
+                      'id': widget.trabajador.id,
+                      'nombre_completo': widget.trabajador.nombreCompleto,
+                      'estado_civil': widget.trabajador.estadoCivil,
+                      'rut': widget.trabajador.rut,
+                      'fecha_de_nacimiento': widget.trabajador.fechaDeNacimiento.toIso8601String(),
+                      'direccion': widget.trabajador.direccion,
+                      'correo_electronico': widget.trabajador.correoElectronico,
+                      'sistema_de_salud': widget.trabajador.sistemaDeSalud,
+                      'prevision_afp': widget.trabajador.previsionAfp,
+                      'obra_en_la_que_trabaja': widget.trabajador.obraEnLaQueTrabaja,
+                      'rol_que_asume_en_la_obra': widget.trabajador.rolQueAsumeEnLaObra,
+                      'estado': widget.trabajador.estado,
+                    });
+                    } else {
+                    for (var entry in camposExtras) {
                       if (entry.value.text != '') parametros[entry.key] = entry.value.text;
                     }
-                  }
+                    }
                   try {
                     final idAnexo = await createAnexoSupabase(
                       _tipoAnexoController.text,
