@@ -15,6 +15,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/backend/controllers/anexos/create_anexo.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/anexos/jornada_laboral.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/anexos/maestro_a_cargo.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/anexos/reajuste_de_sueldo.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/anexos/pacto_horas_extraordinarias.dart';
@@ -26,6 +27,7 @@ import 'package:provider/provider.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/func/descargar_anexo_pdf.dart';
 
 List<String> ANEXOS = [
+  'Anexo Jornada Laboral',
   'Anexo Reajuste de Sueldo',
   'Anexo Maestro a cargo',
   'Anexo Salida de la obra',
@@ -39,6 +41,7 @@ final Map<String, TextEditingController> _camposControllers = {};
 
 // Nuevo: Mapa de funciones que reciben trabajador y controladores
 final Map<String, List<Widget> Function(Trabajador, Map<String, TextEditingController>)> camposPorTipo = {
+  'Anexo Jornada Laboral': (trabajador, controllers) => camposJornadaLaboral(trabajador, controllers),
   'Anexo Reajuste de Sueldo': (trabajador, controllers) => camposReajusteDeSueldo(trabajador, controllers),
   'Anexo Maestro a cargo': (trabajador, controllers) => camposMaestroACargo(trabajador, controllers),
   'Anexo Salida de la obra': (trabajador, controllers) => camposSalidaDeLaObra(trabajador, controllers),
