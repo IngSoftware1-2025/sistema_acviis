@@ -42,8 +42,6 @@ model anexos {
   id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   id_contrato       String        @db.Uuid
   fecha_de_creacion DateTime      @db.Date
-  duracion          String        @db.VarChar
-  tipo              String        @db.VarChar
   parametros        String        @default("") @db.VarChar
   contratos         contratos     @relation(fields: [id_contrato], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_anexo_contrato")
   comentarios       comentarios[]
@@ -80,6 +78,20 @@ model proveedores {
   credito_disponible Int?
   estado             String?             @db.VarChar
   ordenes_de_compra  ordenes_de_compra[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model facturas {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre_mandante     String   @db.VarChar
+  rut_mandante        String   @db.VarChar
+  direccion_comercial String
+  giro                String   @db.VarChar
+  servicio_ofrecido   String   @db.VarChar
+  valor               Float
+  plazo_pagar         DateTime @db.Date
+  estado_pago         String   @db.VarChar
+  fotografia_id       String   @db.VarChar
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.

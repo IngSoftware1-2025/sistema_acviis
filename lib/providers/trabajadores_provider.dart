@@ -8,6 +8,8 @@ class TrabajadoresProvider extends ChangeNotifier {
   List<Trabajador> get trabajadores => _trabajadores;
 
   // Filtros Trabajador
+  String? textoBusqueda;
+
   String? obraAsignada;
   String? cargo;
   String? estadoCivil;
@@ -15,7 +17,6 @@ class TrabajadoresProvider extends ChangeNotifier {
   RangeValues? rangoEdad;
   String? sistemaSalud;
   String? estadoEmpresa;
-  String? textoBusqueda;
   
   // Filtros Contrato
   String? estadoContrato;
@@ -28,15 +29,17 @@ class TrabajadoresProvider extends ChangeNotifier {
   bool trabajadorIsLoading(String id) => _trabajadorIsLoading[id] ?? false;
 
   Future<void> fetchTrabajadores() async {
-    if (_todos.isEmpty) {
-      _isLoading = true;
-      notifyListeners();
-    }
+
+    _isLoading = true;
+    notifyListeners();
+
     if (_todos.isEmpty) {
       _todos = await fetchTrabajadoresFromApi();
      
     }
     else {
+      _todos = await fetchTrabajadoresFromApi();
+      /*
       List<Trabajador> nuevos = await fetchTrabajadoresFromApi();
       for (var nuevo in nuevos) {
         final index = _todos.indexWhere((t) => t.id == nuevo.id);
@@ -50,6 +53,7 @@ class TrabajadoresProvider extends ChangeNotifier {
           _todos.add(nuevo);
         }
       }
+      */
     }
     
     _trabajadores = List.from(_todos);
@@ -129,7 +133,14 @@ class TrabajadoresProvider extends ChangeNotifier {
   }
 
   void filtrar() {
+    /*
+    Estos filtros funcionan de la siguiente forma:
+      - La lista de trabajadores se maneja con la variable _trabajadores
+      - Se filtra por los trabajadores ya existentes en la lista _todos -> aplicandole los filtros
+        retornando una lista filtrada 
+    */
     _trabajadores = _todos.where((t) {
+       // ================ DE MOMENTO, SE QUITA LA SEGURIDDAD POR PRISAS ===================
       // Obra asignada
       if (obraAsignada != null && obraAsignada!.isNotEmpty && t.obraEnLaQueTrabaja != obraAsignada) return false;
       // Cargo
