@@ -32,41 +32,48 @@ List<Widget> camposTraslado(
 		TextFormField(
 			controller: controllers['obra_previa'],
 			decoration: InputDecoration(labelText: 'Obra previa'),
+			validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
 		),
 		SizedBox(height: 8),
 		TextFormField(
 			controller: controllers['direccion_obra_previa'],
 			decoration: InputDecoration(labelText: 'Dirección obra previa'),
+			validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
 		),
 		SizedBox(height: 8),
 		TextFormField(
 			controller: controllers['comuna_obra_previa'],
 			decoration: InputDecoration(labelText: 'Comuna obra previa'),
+			validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
 		),
 		SizedBox(height: 8),
 		TextFormField(
 			controller: controllers['obra_nueva'],
 			decoration: InputDecoration(labelText: 'Obra nueva'),
+			validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
 		),
 		SizedBox(height: 8),
 		TextFormField(
 			controller: controllers['direccion_obra_nueva'],
 			decoration: InputDecoration(labelText: 'Dirección obra nueva'),
+			validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
 		),
 		SizedBox(height: 8),
 		TextFormField(
 			controller: controllers['comuna_obra_nueva'],
 			decoration: InputDecoration(labelText: 'Comuna obra nueva'),
+			validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
 		),
 		SizedBox(height: 8),
 		TextFormField(
 			controller: controllers['region_obra_nueva'],
 			decoration: InputDecoration(labelText: 'Región obra nueva'),
+			validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
 		),
 		SizedBox(height: 8),
 		Padding(
 			padding: const EdgeInsets.symmetric(vertical: 12.0),
-			child: TextField(
+			child: TextFormField(
 				controller: controllers['comentario'],
 				decoration: InputDecoration(
 					labelText: 'Comentario del anexo',
@@ -74,6 +81,7 @@ List<Widget> camposTraslado(
 				),
 				maxLines: 5,
 				minLines: 3,
+				validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
 			),
 		),
 	];

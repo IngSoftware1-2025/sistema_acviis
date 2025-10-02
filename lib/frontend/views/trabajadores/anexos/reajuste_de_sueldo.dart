@@ -55,15 +55,17 @@ List<Widget> camposReajusteDeSueldo(
   Widget fechaDesdeRow = Row(
     children: [
       Expanded(
-        child: TextFormField(
-          controller: TextEditingController(text: fecha.day.toString().padLeft(2, '0')),
+        child: DropdownButtonFormField<int>(
+          value: fecha.day,
           decoration: InputDecoration(labelText: 'Día'),
-          keyboardType: TextInputType.number,
+          items: List.generate(31, (i) => DropdownMenuItem(
+            value: i + 1,
+            child: Text((i + 1).toString().padLeft(2, '0')),
+          )),
           onChanged: (value) {
-            int? dia = int.tryParse(value);
-            if (dia != null) {
-              DateTime nuevaFecha = DateTime(fecha.year, fecha.month, dia);
-                String nuevaFechaStr = '${nuevaFecha.day.toString().padLeft(2, '0')}-${_nombreMes(nuevaFecha.month)}-${nuevaFecha.year}';
+            if (value != null) {
+              DateTime nuevaFecha = DateTime(fecha.year, fecha.month, value);
+              String nuevaFechaStr = '${nuevaFecha.day.toString().padLeft(2, '0')}-${_nombreMes(nuevaFecha.month)}-${nuevaFecha.year}';
               controllers['fecha_desde']?.text = nuevaFechaStr;
               if (onFechaDesdeChanged != null) onFechaDesdeChanged(nuevaFecha);
             }
@@ -85,7 +87,7 @@ List<Widget> camposReajusteDeSueldo(
           onChanged: (value) {
             if (value != null) {
               DateTime nuevaFecha = DateTime(fecha.year, value, fecha.day);
-                String nuevaFechaStr = '${nuevaFecha.day.toString().padLeft(2, '0')}-${_nombreMes(nuevaFecha.month)}-${nuevaFecha.year}';
+              String nuevaFechaStr = '${nuevaFecha.day.toString().padLeft(2, '0')}-${_nombreMes(nuevaFecha.month)}-${nuevaFecha.year}';
               controllers['fecha_desde']?.text = nuevaFechaStr;
               if (onFechaDesdeChanged != null) onFechaDesdeChanged(nuevaFecha);
             }
@@ -94,15 +96,20 @@ List<Widget> camposReajusteDeSueldo(
       ),
       SizedBox(width: 8),
       Expanded(
-        child: TextFormField(
-          controller: TextEditingController(text: fecha.year.toString()),
+        child: DropdownButtonFormField<int>(
+          value: fecha.year,
           decoration: InputDecoration(labelText: 'Año'),
-          keyboardType: TextInputType.number,
+          items: List.generate(6, (i) {
+            int year = now.year + i;
+            return DropdownMenuItem(
+              value: year,
+              child: Text(year.toString()),
+            );
+          }),
           onChanged: (value) {
-            int? year = int.tryParse(value);
-            if (year != null) {
-              DateTime nuevaFecha = DateTime(year, fecha.month, fecha.day);
-                String nuevaFechaStr = '${nuevaFecha.day.toString().padLeft(2, '0')}-${_nombreMes(nuevaFecha.month)}-${nuevaFecha.year}';
+            if (value != null) {
+              DateTime nuevaFecha = DateTime(value, fecha.month, fecha.day);
+              String nuevaFechaStr = '${nuevaFecha.day.toString().padLeft(2, '0')}-${_nombreMes(nuevaFecha.month)}-${nuevaFecha.year}';
               controllers['fecha_desde']?.text = nuevaFechaStr;
               if (onFechaDesdeChanged != null) onFechaDesdeChanged(nuevaFecha);
             }
@@ -159,14 +166,15 @@ List<Widget> camposReajusteDeSueldo(
     // Comentario (sección más grande)
     Padding(
       padding: const EdgeInsets.symmetric(vertical: 12.0),
-      child: TextField(
-      controller: controllers['comentario'],
-      decoration: InputDecoration(
-        labelText: 'Comentario del anexo',
-        border: OutlineInputBorder(),
-      ),
-      maxLines: 5,
-      minLines: 3,
+      child: TextFormField(
+        controller: controllers['comentario'],
+        decoration: InputDecoration(
+          labelText: 'Comentario del anexo',
+          border: OutlineInputBorder(),
+        ),
+        maxLines: 5,
+        minLines: 3,
+        validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
       ),
     ),
 
@@ -205,21 +213,29 @@ class _ColacionMovilizacionFieldsState extends State<_ColacionMovilizacionFields
               onChanged: (value) {
                 setState(() {
                   mostrarColacion = value ?? false;
+                  if (!mostrarColacion) {
+                    widget.controllers['asignacion_colacion']?.clear();
+                  }
                 });
               },
             ),
             if (!mostrarColacion)
               Text('Agregar asignación colación'),
             if (mostrarColacion)
-                Expanded(
-                child: TextField(
+              Expanded(
+                child: TextFormField(
                   controller: widget.controllers['asignacion_colacion'],
                   decoration: InputDecoration(labelText: 'Monto'),
                   keyboardType: TextInputType.number,
                   inputFormatters: [
-                  // Solo permite números
                     FilteringTextInputFormatter.digitsOnly,
                   ],
+                  validator: (value) {
+                    if (mostrarColacion && (value == null || value.isEmpty)) {
+                      return 'Campo obligatorio';
+                    }
+                    return null;
+                  },
                 ),
               ),
           ],
@@ -231,6 +247,9 @@ class _ColacionMovilizacionFieldsState extends State<_ColacionMovilizacionFields
               onChanged: (value) {
                 setState(() {
                   mostrarMovilizacion = value ?? false;
+                  if (!mostrarMovilizacion) {
+                    widget.controllers['asignacion_movilizacion']?.clear();
+                  }
                 });
               },
             ),
@@ -238,14 +257,19 @@ class _ColacionMovilizacionFieldsState extends State<_ColacionMovilizacionFields
               Text('Agregar asignación movilización'),
             if (mostrarMovilizacion)
               Expanded(
-                child: TextField(
+                child: TextFormField(
                   controller: widget.controllers['asignacion_movilizacion'],
                   decoration: InputDecoration(labelText: 'Monto'),
                   keyboardType: TextInputType.number,
                   inputFormatters: [
-                  // Solo permite números
                     FilteringTextInputFormatter.digitsOnly,
                   ],
+                  validator: (value) {
+                    if (mostrarMovilizacion && (value == null || value.isEmpty)) {
+                      return 'Campo obligatorio';
+                    }
+                    return null;
+                  },
                 ),
               ),
           ],

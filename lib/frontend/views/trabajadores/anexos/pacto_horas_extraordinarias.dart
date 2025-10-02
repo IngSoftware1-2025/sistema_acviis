@@ -28,23 +28,25 @@ List<Widget> camposPactoHorasExtraordinarias(
 
   // Ahora construyes tu lista de widgets
   List<Widget> camposFechas = [
-
     // FECHA DESDE
     Row(
       children: [
         Expanded(
-          child: TextFormField(
+          child: DropdownButtonFormField<int>(
+            value: fechaDesde.day,
             decoration: InputDecoration(labelText: 'Día'),
-            keyboardType: TextInputType.number,
-            initialValue: fechaDesde.day.toString().padLeft(2, '0'),
+            items: List.generate(31, (i) => DropdownMenuItem(
+              value: i + 1,
+              child: Text((i + 1).toString().padLeft(2, '0')),
+            )),
             onChanged: (value) {
-              int? diaDesde = int.tryParse(value);
-              if (diaDesde != null) {
-                fechaDesde = DateTime(fechaDesde.year, fechaDesde.month, diaDesde);
+              if (value != null) {
+                fechaDesde = DateTime(fechaDesde.year, fechaDesde.month, value);
                 controllers['fecha_desde']?.text =
                   '${fechaDesde.day.toString().padLeft(2, '0')}-${_nombreMes(fechaDesde.month)}-${fechaDesde.year}';
               }
             },
+            validator: (value) => value == null ? 'Campo obligatorio' : null,
           ),
         ),
         SizedBox(width: 8),
@@ -52,13 +54,10 @@ List<Widget> camposPactoHorasExtraordinarias(
           child: DropdownButtonFormField<int>(
             value: fechaDesde.month,
             decoration: InputDecoration(labelText: 'Mes'),
-            items: List.generate(
-              12,
-              (iDesde) => DropdownMenuItem(
-                value: iDesde + 1,
-                child: Text(_nombreMes(iDesde + 1)),
-              ),
-            ),
+            items: List.generate(12, (i) => DropdownMenuItem(
+              value: i + 1,
+              child: Text(_nombreMes(i + 1)),
+            )),
             onChanged: (value) {
               if (value != null) {
                 fechaDesde = DateTime(fechaDesde.year, value, fechaDesde.day);
@@ -66,45 +65,53 @@ List<Widget> camposPactoHorasExtraordinarias(
                   '${fechaDesde.day.toString().padLeft(2, '0')}-${_nombreMes(fechaDesde.month)}-${fechaDesde.year}';
               }
             },
+            validator: (value) => value == null ? 'Campo obligatorio' : null,
           ),
         ),
         SizedBox(width: 8),
         Expanded(
-          child: TextFormField(
+          child: DropdownButtonFormField<int>(
+            value: fechaDesde.year,
             decoration: InputDecoration(labelText: 'Año'),
-            keyboardType: TextInputType.number,
-            initialValue: fechaDesde.year.toString(),
+            items: List.generate(6, (i) {
+              int year = now.year + i;
+              return DropdownMenuItem(
+                value: year,
+                child: Text(year.toString()),
+              );
+            }),
             onChanged: (value) {
-              int? year = int.tryParse(value);
-              if (year != null) {
-                fechaDesde = DateTime(year, fechaDesde.month, fechaDesde.day);
+              if (value != null) {
+                fechaDesde = DateTime(value, fechaDesde.month, fechaDesde.day);
                 controllers['fecha_desde']?.text =
                   '${fechaDesde.day.toString().padLeft(2, '0')}-${_nombreMes(fechaDesde.month)}-${fechaDesde.year}';
               }
             },
+            validator: (value) => value == null ? 'Campo obligatorio' : null,
           ),
         ),
       ],
     ),
-
     SizedBox(height: 16),
-
     // FECHA HASTA
     Row(
       children: [
         Expanded(
-          child: TextFormField(
+          child: DropdownButtonFormField<int>(
+            value: fechaHasta.day,
             decoration: InputDecoration(labelText: 'Día'),
-            keyboardType: TextInputType.number,
-            initialValue: fechaHasta.day.toString().padLeft(2, '0'),
+            items: List.generate(31, (i) => DropdownMenuItem(
+              value: i + 1,
+              child: Text((i + 1).toString().padLeft(2, '0')),
+            )),
             onChanged: (value) {
-              int? dia = int.tryParse(value);
-              if (dia != null) {
-                fechaHasta = DateTime(fechaHasta.year, fechaHasta.month, dia);
+              if (value != null) {
+                fechaHasta = DateTime(fechaHasta.year, fechaHasta.month, value);
                 controllers['fecha_hasta']?.text =
                   '${fechaHasta.day.toString().padLeft(2, '0')}-${_nombreMes(fechaHasta.month)}-${fechaHasta.year}';
               }
             },
+            validator: (value) => value == null ? 'Campo obligatorio' : null,
           ),
         ),
         SizedBox(width: 8),
@@ -112,13 +119,10 @@ List<Widget> camposPactoHorasExtraordinarias(
           child: DropdownButtonFormField<int>(
             value: fechaHasta.month,
             decoration: InputDecoration(labelText: 'Mes'),
-            items: List.generate(
-              12,
-              (i) => DropdownMenuItem(
-                value: i + 1,
-                child: Text(_nombreMes(i + 1)),
-              ),
-            ),
+            items: List.generate(12, (i) => DropdownMenuItem(
+              value: i + 1,
+              child: Text(_nombreMes(i + 1)),
+            )),
             onChanged: (value) {
               if (value != null) {
                 fechaHasta = DateTime(fechaHasta.year, value, fechaHasta.day);
@@ -126,22 +130,29 @@ List<Widget> camposPactoHorasExtraordinarias(
                   '${fechaHasta.day.toString().padLeft(2, '0')}-${_nombreMes(fechaHasta.month)}-${fechaHasta.year}';
               }
             },
+            validator: (value) => value == null ? 'Campo obligatorio' : null,
           ),
         ),
         SizedBox(width: 8),
         Expanded(
-          child: TextFormField(
+          child: DropdownButtonFormField<int>(
+            value: fechaHasta.year,
             decoration: InputDecoration(labelText: 'Año'),
-            keyboardType: TextInputType.number,
-            initialValue: fechaHasta.year.toString(),
+            items: List.generate(6, (i) {
+              int year = now.year + i;
+              return DropdownMenuItem(
+                value: year,
+                child: Text(year.toString()),
+              );
+            }),
             onChanged: (value) {
-              int? year = int.tryParse(value);
-              if (year != null) {
-                fechaHasta = DateTime(year, fechaHasta.month, fechaHasta.day);
+              if (value != null) {
+                fechaHasta = DateTime(value, fechaHasta.month, fechaHasta.day);
                 controllers['fecha_hasta']?.text =
                   '${fechaHasta.day.toString().padLeft(2, '0')}-${_nombreMes(fechaHasta.month)}-${fechaHasta.year}';
               }
             },
+            validator: (value) => value == null ? 'Campo obligatorio' : null,
           ),
         ),
       ],
@@ -195,18 +206,20 @@ List<Widget> camposPactoHorasExtraordinarias(
     TextFormField(
       controller: controllers['direccion'],
       decoration: InputDecoration(labelText: 'Dirección trabajador'),
+      validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
     ),
     TextFormField(
       controller: controllers['comuna'],
       decoration: InputDecoration(labelText: 'Comuna trabajador'),
+      validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
     ),
     SizedBox(height: 8),
-    Text('Fecha desde:', style: TextStyle(fontWeight: FontWeight.bold)),
+    Text('Intervalo Fechas (Inicio - Fin):', style: TextStyle(fontWeight: FontWeight.bold)),
     ...camposFechas,
     SizedBox(height: 8),
     Padding(
       padding: const EdgeInsets.symmetric(vertical: 12.0),
-      child: TextField(
+      child: TextFormField(
         controller: controllers['comentario'],
         decoration: InputDecoration(
           labelText: 'Comentario del anexo',
@@ -214,6 +227,7 @@ List<Widget> camposPactoHorasExtraordinarias(
         ),
         maxLines: 5,
         minLines: 3,
+        validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
       ),
     ),
   ];

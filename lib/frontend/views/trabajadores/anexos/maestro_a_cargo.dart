@@ -36,26 +36,30 @@ List<Widget> camposMaestroACargo(
     TextFormField(
       controller: controllers['obra'],
       decoration: InputDecoration(labelText: 'Obra'),
+      validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
     ),
     SizedBox(height: 8),
     TextFormField(
       controller: controllers['direccion_obra'],
       decoration: InputDecoration(labelText: 'Ubicación obra'),
+      validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
     ),
     SizedBox(height: 8),
     TextFormField(
       controller: controllers['comuna_obra'],
       decoration: InputDecoration(labelText: 'Comuna obra'),
+      validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
     ),
     SizedBox(height: 8),
     TextFormField(
       controller: controllers['region_obra'],
       decoration: InputDecoration(labelText: 'Región'),
+      validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
     ),
     SizedBox(height: 8),
     Padding(
       padding: const EdgeInsets.symmetric(vertical: 12.0),
-      child: TextField(
+      child: TextFormField(
         controller: controllers['comentario'],
         decoration: InputDecoration(
           labelText: 'Comentario del anexo',
@@ -63,6 +67,7 @@ List<Widget> camposMaestroACargo(
         ),
         maxLines: 5,
         minLines: 3,
+        validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
       ),
     ),
   ];
