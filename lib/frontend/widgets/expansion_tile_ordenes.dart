@@ -35,7 +35,7 @@ class ExpansionTileOrdenes extends StatelessWidget {
         ),
         ListTile(
           title: const Text('Sección itemizado'),
-          subtitle: Text(orden.seccionItemizado ?? 'Sin sección'),
+          subtitle: Text(orden.itemizado.nombre),
         ),
         ListTile(
           title: const Text('Número de cotización'),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sistema_acviis/models/ordenes.dart';
 import 'package:sistema_acviis/providers/ordenes_provider.dart';
 import 'package:sistema_acviis/providers/proveedores_provider.dart';
+import 'package:sistema_acviis/providers/itemizados_provider.dart';
 import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
 
 class ModificarOrdenesView extends StatefulWidget {
@@ -29,8 +30,8 @@ class _ModificarOrdenesViewState extends State<ModificarOrdenesView> {
         'fechaEmisionController': TextEditingController(text: orden.fechaEmision.toIso8601String().split('T')[0]),
         'proveedorIdController': TextEditingController(text: orden.proveedorId),
         'centroCostoController': TextEditingController(text: orden.centroCosto),
-        'seccionItemizadoController': TextEditingController(text: orden.seccionItemizado ?? ''),
-        'numeroCotizacionController': TextEditingController(text: orden.numeroCotizacion ?? ''),
+        'seccionItemizadoController': TextEditingController(text: orden.itemizado.id),
+        'numeroCotizacionController': TextEditingController(text: orden.numeroCotizacion),
         'numeroContactoController': TextEditingController(text: orden.numeroContacto ?? ''),
         'nombreServicioController': TextEditingController(text: orden.nombreServicio),
         'valorController': TextEditingController(text: orden.valor.toString()),
@@ -38,6 +39,7 @@ class _ModificarOrdenesViewState extends State<ModificarOrdenesView> {
         'descuentoSwitch': orden.descuento,
       };
     }).toList();
+
   }
 
   Future<void> _submitFormOrden(int index) async {
@@ -45,16 +47,20 @@ class _ModificarOrdenesViewState extends State<ModificarOrdenesView> {
     final ordenController = _controllers[index];
 
     try {
+      final fechaEmision = DateTime.parse(ordenController['fechaEmisionController'].text);
+
       final data = {
         'numero_orden': ordenController['numeroOrdenController'].text,
-        'fecha_emision': ordenController['fechaEmisionController'].text,
-        'proveedor_id': ordenController['proveedorIdController'].text,
+        'fecha_emision': fechaEmision.toIso8601String(),
+        'proveedorId': ordenController['proveedorIdController'].text,
         'centro_costo': ordenController['centroCostoController'].text,
-        'seccion_itemizado': ordenController['seccionItemizadoController'].text,
+        'itemizadoId': ordenController['seccionItemizadoController'].text.isNotEmpty
+            ? ordenController['seccionItemizadoController'].text
+            : null,
         'numero_cotizacion': ordenController['numeroCotizacionController'].text,
         'numero_contacto': ordenController['numeroContactoController'].text,
         'nombre_servicio': ordenController['nombreServicioController'].text,
-        'valor': int.parse(ordenController['valorController'].text),
+        'valor': int.tryParse(ordenController['valorController'].text) ?? 0,
         'descuento': ordenController['descuentoSwitch'],
         'notas_adicionales': ordenController['notasAdicionalesController'].text,
       };
@@ -66,15 +72,18 @@ class _ModificarOrdenesViewState extends State<ModificarOrdenesView> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Orden ${ordenController['numeroOrdenController'].text} actualizada')),
         );
+        Navigator.pushNamed(context, '/home_page/logistica_view/ordenes_view');
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error al actualizar la orden ${ordenController['numeroOrdenController'].text}')),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -82,10 +91,13 @@ class _ModificarOrdenesViewState extends State<ModificarOrdenesView> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return PrimaryScaffold(
       title: 'Modificar Órdenes de Compra',
+      
+
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
@@ -115,7 +127,29 @@ class _ModificarOrdenesViewState extends State<ModificarOrdenesView> {
                               ),
                             ),
                             TextFormField(controller: c['centroCostoController'], decoration: const InputDecoration(labelText: 'Centro de costo')),
-                            TextFormField(controller: c['seccionItemizadoController'], decoration: const InputDecoration(labelText: 'Sección itemizado')),
+                            Consumer<ItemizadosProvider>(
+                              builder: (context, itemProv, _) {
+                                final itemizados = itemProv.itemizados;
+                                return DropdownButtonFormField<String>(
+                                  decoration: const InputDecoration(labelText: 'Sección itemizado'),
+                                  value: c['seccionItemizadoController'].text.isNotEmpty
+                                      ? c['seccionItemizadoController'].text
+                                      : null,
+                                  items: itemizados.map((i) {
+                                    return DropdownMenuItem<String>(
+                                      value: i.id,      
+                                      child: Text(i.nombre),
+                                    );
+                                  }).toList(),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      c['seccionItemizadoController'].text = value ?? '';
+                                    });
+                                  },
+                                );
+                              },
+                            )
+                            ,
                             TextFormField(controller: c['nombreServicioController'], decoration: const InputDecoration(labelText: 'Nombre del servicio')),
                             TextFormField(controller: c['valorController'], decoration: const InputDecoration(labelText: 'Valor'), keyboardType: TextInputType.number),
                             SwitchListTile(

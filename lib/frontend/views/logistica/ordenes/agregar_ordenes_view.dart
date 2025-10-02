@@ -77,7 +77,6 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
               : null,
         );
 
-        // ✅ refrescar órdenes e itemizados después de crear
         await ordenesProvider.fetchOrdenes();
         await itemizadosProvider.fetchItemizados();
 
@@ -129,7 +128,6 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
                   return null;
                 },
               ),
-              // Dropdown de Proveedores
               Consumer<ProveedoresProvider>(
                 builder: (context, proveedorProvider, child) {
                   return DropdownButtonFormField<String>(

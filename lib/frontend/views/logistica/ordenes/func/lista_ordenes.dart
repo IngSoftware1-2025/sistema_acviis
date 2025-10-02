@@ -44,7 +44,6 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
     final ordenesProvider = context.watch<OrdenesProvider>();
     final checkboxProvider = context.watch<CheckboxProvider>();
 
-    // Lista solo con órdenes activas
     final ordenesActivas =
         ordenesProvider.ordenes.where((o) => o.estado != 'De baja').toList();
 
@@ -83,11 +82,6 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
               ElevatedButton(
                 onPressed: _tieneSeleccionadas
                     ? () {
-                        final checkboxProvider =
-                            Provider.of<CheckboxProvider>(context, listen: false);
-                        final ordenesProvider =
-                            Provider.of<OrdenesProvider>(context, listen: false);
-
                         final ordenesSeleccionadas = ordenesActivas
                             .asMap()
                             .entries
