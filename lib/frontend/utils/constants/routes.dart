@@ -3,7 +3,6 @@ import 'package:sistema_acviis/frontend/views/logistica/herramientas/modificar_h
 import 'package:sistema_acviis/frontend/views/contratos/contratos_view.dart';
 import 'package:sistema_acviis/frontend/views/home_page.dart';
 import 'package:sistema_acviis/frontend/views/logistica/herramientas/agregar_herramientas_view.dart';
-import 'package:sistema_acviis/frontend/views/logistica/logistica_view.dart';
 import 'package:sistema_acviis/frontend/views/logistica/vehiculos/agregar_vehiculos_view.dart';
 import 'package:sistema_acviis/frontend/views/logistica/vehiculos/modificar_vehiculos_view.dart';
 import 'package:sistema_acviis/frontend/views/logistica/vehiculos/vehiculos_view.dart';
@@ -33,7 +32,7 @@ import 'package:sistema_acviis/frontend/views/logistica/herramientas/herramienta
 import 'package:sistema_acviis/frontend/views/finanzas/finanzas_main_view.dart';
 import 'package:sistema_acviis/frontend/views/finanzas/facturas_view.dart';
 import 'package:sistema_acviis/frontend/views/finanzas/pagos_pendientes_view.dart';
-
+import 'package:sistema_acviis/frontend/views/finanzas/configurar_notificaciones_view.dart';
 /*
   Aqui se importaran todas las vistas presentes en el sistema.
 */
@@ -81,8 +80,6 @@ final Map<String, WidgetBuilder> routes = {
   '/home_page/proveedores_view': (BuildContext context) => ProveedoresView(),
   '/home_page/proveedores_view/agregar_proveedor_view': (BuildContext context) => AgregarProveedorView(),
   
-  '/home_page/logistica_view' : (BuildContext context) => LogisticaView(),
-
   '/home_page/logistica_view/herramientas_view' : (BuildContext context) => HerramientasView(),
   '/home_page/logistica_view/herramientas_view/agregar_herramientas_view' : (BuildContext context) => AgregarHerramientasView(),
   '/home_page/logistica_view/herramientas_view/modificar_herramientas_view': (BuildContext context) {
@@ -107,4 +104,5 @@ final Map<String, WidgetBuilder> routes = {
   '/home_page/finanzas_main_view': (BuildContext context) => FinanzasMainView(),
   '/home_page/finanzas_main_view/facturas_view': (BuildContext context) => FacturasView(),
   '/home_page/finanzas_main_view/pagos_pendientes_view': (BuildContext context) => PagosPendientesView(),
+  '/home_page/finanzas_main_view/configurar_notificaciones_view': (BuildContext context) => ConfigurarNotificacionesView(),
 };

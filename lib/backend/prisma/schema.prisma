@@ -177,4 +177,11 @@ model pagos {
   tipo_pago           String
   sentido             Boolean
   visualizacion       String
+  notificado        Boolean? @default(false)
+}
+
+model configuracion_notificaciones {
+  id          Int    @id
+  diasantes   Int
+  diasdespues Int
 }

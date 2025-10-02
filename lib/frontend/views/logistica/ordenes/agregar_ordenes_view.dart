@@ -13,7 +13,6 @@ class AgregarOrdenesView extends StatefulWidget {
   State<AgregarOrdenesView> createState() => _AgregarOrdenesViewState();
 }
 
-
 class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
   final _formKey = GlobalKey<FormState>();
 
@@ -36,14 +35,13 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
   @override
   void initState() {
     super.initState();
-
     final proveedorProvider = Provider.of<ProveedoresProvider>(context, listen: false);
     proveedorProvider.precargarProveedores();
-
-    final itemizadosProvider = Provider.of<ItemizadosProvider>(context, listen: false);
-    itemizadosProvider.precargarItemizados();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final itemizadosProvider = Provider.of<ItemizadosProvider>(context, listen: false);
+      itemizadosProvider.precargarItemizados();
+    });
   }
-
 
   void _submitFormOrden() async {
     if (_formKey.currentState!.validate()) {
@@ -56,7 +54,8 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
       setState(() => _isLoading = true);
 
       try {
-        final provider = Provider.of<OrdenesProvider>(context, listen: false);
+        final ordenesProvider = Provider.of<OrdenesProvider>(context, listen: false);
+        final itemizadosProvider = Provider.of<ItemizadosProvider>(context, listen: false);
 
         await createOrden(
           numeroOrden: _numeroOrdenController.text,
@@ -78,11 +77,14 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
               : null,
         );
 
+        // ✅ refrescar órdenes e itemizados después de crear
+        await ordenesProvider.fetchOrdenes();
+        await itemizadosProvider.fetchItemizados();
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Orden agregada exitosamente')),
           );
-          provider.fetchOrdenes();
           Navigator.of(context).pushNamedAndRemoveUntil(
             '/home_page/logistica_view/ordenes_view',
             (Route<dynamic> route) => false,
@@ -127,6 +129,7 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
                   return null;
                 },
               ),
+              // Dropdown de Proveedores
               Consumer<ProveedoresProvider>(
                 builder: (context, proveedorProvider, child) {
                   return DropdownButtonFormField<String>(
@@ -158,9 +161,6 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
               ),
               Consumer<ItemizadosProvider>(
                 builder: (context, itemizadosProvider, child) {
-                  if (itemizadosProvider.error != null) {
-                    return Text('Error: ${itemizadosProvider.error}');
-                  }
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -173,13 +173,16 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
                             child: Text(item.nombre),
                           );
                         }).toList(),
-                        onChanged: (value) => setState(() => _selectedItemizadoId = value),
-                        validator: (value) =>
-                            value == null || value.isEmpty ? 'Campo requerido' : null,
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedItemizadoId = value;
+                          });
+                        },
+                        validator: (value) => value == null || value.isEmpty ? 'Campo requerido' : null,
                       ),
                       if (_selectedItemizadoId != null)
                         Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
+                          padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
                           child: Builder(
                             builder: (context) {
                               final item = itemizadosProvider.itemizados.firstWhere(
