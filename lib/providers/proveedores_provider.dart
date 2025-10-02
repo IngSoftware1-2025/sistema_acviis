@@ -12,6 +12,7 @@ class ProveedoresProvider extends ChangeNotifier {
   List<Proveedor> get proveedores => _proveedores;
 
   // Filtros
+  String? busquedaGeneral;
   String? rut;
   String? nombreVendedor;
   String? productoServicio;
@@ -35,12 +36,14 @@ class ProveedoresProvider extends ChangeNotifier {
   }
 
   void actualizarFiltros({
+    String? busquedaGeneral,
     String? rut,
     String? nombre,
     String? productoServicio,
     int? creditoMin,
     int? creditoMax,
   }) {
+    this.busquedaGeneral = busquedaGeneral;
     this.rut = rut;
     this.nombreVendedor = nombre;
     this.productoServicio = productoServicio;
@@ -52,13 +55,21 @@ class ProveedoresProvider extends ChangeNotifier {
 
   void filtrar() {
     _proveedores = _todos.where((p) {
+      // Lógica de búsqueda principal (barra de búsqueda)
+      final busquedaGeneralOk = (busquedaGeneral == null || busquedaGeneral!.isEmpty) ||
+          (p.rut.toLowerCase().contains(busquedaGeneral!.toLowerCase()) ||
+              p.nombreVendedor.toLowerCase().contains(busquedaGeneral!.toLowerCase()));
+
+      // Lógica de filtros avanzados
       final estadoOk = p.estado == null || p.estado == 'activo';
-      final rutOk = rut == null || rut!.isEmpty || p.rut.contains(rut!);
+      final rutOk = rut == null || rut!.isEmpty || p.rut.toLowerCase().contains(rut!.toLowerCase());
       final nombreOk = nombreVendedor == null || nombreVendedor!.isEmpty || p.nombreVendedor.toLowerCase().contains(nombreVendedor!.toLowerCase());
       final productoOk = productoServicio == null || productoServicio!.isEmpty || p.productoServicio.toLowerCase().contains(productoServicio!.toLowerCase());
       final creditoMinOk = creditoMin == null || p.creditoDisponible >= creditoMin!;
       final creditoMaxOk = creditoMax == null || p.creditoDisponible <= creditoMax!;
-      return estadoOk && rutOk && nombreOk && productoOk && creditoMinOk && creditoMaxOk;
+
+      // Se deben cumplir todos los filtros
+      return busquedaGeneralOk && estadoOk && rutOk && nombreOk && productoOk && creditoMinOk && creditoMaxOk;
     }).toList();
   }
 

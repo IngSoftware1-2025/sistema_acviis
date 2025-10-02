@@ -8,8 +8,8 @@ import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
 import 'package:sistema_acviis/frontend/widgets/buttons.dart';
 import 'package:sistema_acviis/frontend/utils/constants/constants.dart';
 import 'package:sistema_acviis/frontend/utils/filtros/proveedores.dart';
-// Si tienes una utilidad para PDF, impórtala aquí
-// import 'package:sistema_acviis/frontend/utils/pdf_utils.dart';
+// Importamos la utilidad para PDF que acabamos de crear
+import 'package:sistema_acviis/frontend/utils/pdf_utils.dart';
 
 class ProveedoresView extends StatefulWidget {
   const ProveedoresView({super.key});
@@ -50,8 +50,10 @@ class _ProveedoresViewState extends State<ProveedoresView> {
   void _aplicarFiltros() {
     Provider.of<ProveedoresProvider>(context, listen: false).actualizarFiltros(
       // La búsqueda principal ahora usa el searchController para RUT y Nombre
-      rut: _searchController.text,
-      nombre: _searchController.text,
+      busquedaGeneral: _searchController.text,
+      // Los filtros avanzados usan sus propios controllers
+      rut: _rutController.text,
+      nombre: _nombreController.text,
       productoServicio: _productoController.text,
       creditoMin: int.tryParse(_creditoMinController.text),
       creditoMax: int.tryParse(_creditoMaxController.text),
@@ -209,8 +211,7 @@ class _ProveedoresViewState extends State<ProveedoresView> {
                                 icon: const Icon(Icons.picture_as_pdf),
                                 tooltip: 'Ver ficha PDF',
                                 onPressed: () async {
-                                  // Aquí deberías llamar a tu función para generar y mostrar el PDF
-                                  // await PdfUtils.generarFichaProveedor(p);
+                                  await PdfUtils.generarYMostrarFichaProveedor(context, p.id, p.rut);
                                 },
                               ),
                               IconButton(

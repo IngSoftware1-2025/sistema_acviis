@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/models/proveedor.dart';
 import 'package:sistema_acviis/providers/proveedores_provider.dart';
@@ -46,7 +47,17 @@ class _AgregarProveedorViewState extends State<AgregarProveedorView> {
               TextFormField(
                 controller: _rutController,
                 decoration: const InputDecoration(labelText: 'RUT (XXXXXXXX-X)'),
-                validator: (v) => v == null || v.isEmpty ? 'Ingrese el RUT' : null,
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return 'Ingrese el RUT';
+                  }
+                  // Expresión regular para validar el formato XXXXXXXX-X (o K)
+                  final rutRegExp = RegExp(r'^\d{8}-[0-9kK]$', caseSensitive: false);
+                  if (!rutRegExp.hasMatch(v)) {
+                    return 'Formato de RUT inválido (ej: 12345678-9)';
+                  }
+                  return null;
+                },
               ),
               TextFormField(
                 controller: _direccionController,
@@ -66,12 +77,38 @@ class _AgregarProveedorViewState extends State<AgregarProveedorView> {
               TextFormField(
                 controller: _correoVendedorController,
                 decoration: const InputDecoration(labelText: 'Correo del vendedor'),
-                validator: (v) => v == null || v.isEmpty ? 'Ingrese el correo' : null,
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return 'Ingrese el correo';
+                  }
+                  // Expresión regular para validar un formato de correo general.
+                  final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                  if (!emailRegExp.hasMatch(v)) {
+                    return 'Formato de correo inválido (ej: correo@dominio.com)';
+                  }
+                  return null;
+                },
               ),
               TextFormField(
                 controller: _telefonoVendedorController,
-                decoration: const InputDecoration(labelText: 'Teléfono del vendedor'),
-                validator: (v) => v == null || v.isEmpty ? 'Ingrese el teléfono' : null,
+                decoration: const InputDecoration(
+                  labelText: 'Teléfono del vendedor',
+                  prefixText: '+56 9 ',
+                ),
+                keyboardType: TextInputType.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(8),
+                ],
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return 'Ingrese el número';
+                  }
+                  if (v.length != 8) {
+                    return 'El número debe tener 8 dígitos';
+                  }
+                  return null;
+                },
               ),
               TextFormField(
                 controller: _creditoDisponibleController,
@@ -91,7 +128,7 @@ class _AgregarProveedorViewState extends State<AgregarProveedorView> {
                       nombreVendedor: _nombreVendedorController.text,
                       productoServicio: _productoServicioController.text,
                       correoVendedor: _correoVendedorController.text,
-                      telefonoVendedor: _telefonoVendedorController.text,
+                      telefonoVendedor: '+56 9 ${_telefonoVendedorController.text}',
                       creditoDisponible: int.tryParse(_creditoDisponibleController.text) ?? 0,
                       fechaRegistro: DateTime.now(),
                     );
