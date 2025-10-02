@@ -123,6 +123,7 @@ class _TrabajadorFiltrosDisplayState extends State<TrabajadorFiltrosDisplay> {
               dropdownMenuEntries: const [
                 DropdownMenuEntry(value: 'Soltero', label: 'Soltero'),
                 DropdownMenuEntry(value: 'Casado', label: 'Casado'),
+                DropdownMenuEntry(value: 'Viudo', label: 'Viudo'),
               ],
               enableSearch: false,
               onSelected: (String? newValue) {

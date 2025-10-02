@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sistema_acviis/frontend/widgets/cards.dart';
 import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
 import 'package:sistema_acviis/frontend/styles/app_colors.dart';
-
+import 'package:sistema_acviis/frontend/widgets/vertical_side_bar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,16 +20,17 @@ class _HomePageState extends State<HomePage> {
         'icon': Icon(Icons.engineering, color: AppColors.primaryDarker),
         'screen': '/home_page/trabajadores_view'
       },
-      {
+      /*{
         'title': 'Contratos',
         'description': 'Funciones de contratos: Modificar, Agregar, Eliminar, etc',
         'icon': Icon(Icons.description, color: AppColors.primaryDarker),
         'screen': '/home_page/contratos_view'
-      },
+      },*/
       {
         'title': 'Finanzas',
-        'description': 'Funciones de trabajador: Modificar, Agregar, Eliminar, etc',
-        'icon': Icon(Icons.attach_money, color: AppColors.primaryDarker)
+        'description': 'Funciones de finanzas: Modificar, Agregar, Eliminar, etc',
+        'icon': Icon(Icons.attach_money, color: AppColors.primaryDarker),
+        'screen': '/home_page/finanzas_main_view'
       },
       {
         'title': 'Logística',
@@ -42,11 +43,11 @@ class _HomePageState extends State<HomePage> {
         'description': 'Funciones de obras: Crear, Charlas, Asistencia, etc',
         'icon': Icon(Icons.construction, color: AppColors.primaryDarker),
       },
-      {
+/*       {
         'title': 'Opciones',
         'description': 'Ajustes de la app',
         'icon': Icon(Icons.settings, color: AppColors.primaryDarker)
-      },
+      }, */
       {
         'title': 'Proveedores',
         'description': 'Funciones de proveedor: Modificar, Agregar, Eliminar, etc',

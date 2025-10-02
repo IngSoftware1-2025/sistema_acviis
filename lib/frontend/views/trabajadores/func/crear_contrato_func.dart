@@ -17,6 +17,7 @@ Future<void> mostrarDialogoCrearContrato({
   final plazoController = TextEditingController();
   String estadoSeleccionado = 'Activo';
   bool camposInvalidos = false;
+  
 
   // Primer diálogo: solicitar datos del contrato
   final confirmar = await showDialog<bool>(
