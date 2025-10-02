@@ -288,6 +288,7 @@ class _HorizontalExpandableContractsState extends State<_HorizontalExpandableCon
                             ),
                           ),
                           const SizedBox(width: 8),
+                          /*
                           Expanded(
                             child: ElevatedButton.icon(
                             icon: const Icon(Icons.remove_red_eye_sharp),
@@ -301,6 +302,7 @@ class _HorizontalExpandableContractsState extends State<_HorizontalExpandableCon
                             },
                             ),
                           ),
+                          */
                           ],
                         ),
                         const SizedBox(height: 8),
