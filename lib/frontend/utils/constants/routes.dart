@@ -7,7 +7,7 @@ import 'package:sistema_acviis/frontend/views/logistica/vehiculos/agregar_vehicu
 import 'package:sistema_acviis/frontend/views/logistica/vehiculos/modificar_vehiculos_view.dart';
 import 'package:sistema_acviis/frontend/views/logistica/vehiculos/vehiculos_view.dart';
 import 'package:sistema_acviis/frontend/views/logistica/ordenes/agregar_ordenes_view.dart';
-//import 'package:sistema_acviis/frontend/views/logistica/ordenes/modificar_ordenes_view.dart';
+import 'package:sistema_acviis/frontend/views/logistica/ordenes/modificar_ordenes_view.dart';
 import 'package:sistema_acviis/frontend/views/logistica/ordenes/ordenes_view.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/agregar_trabajador_view.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/contratos_anexos.dart';
@@ -96,10 +96,10 @@ final Map<String, WidgetBuilder> routes = {
   
   '/home_page/logistica_view/ordenes_view' : (BuildContext context) => OrdenesView(),
   '/home_page/logistica_view/ordenes_view/agregar_ordenes_view' : (BuildContext context) => AgregarOrdenesView(),
-  //'/home_page/logistica_view/ordenes_view/modificar_ordenes_view': (BuildContext context) {
-  //final args = ModalRoute.of(context)!.settings.arguments as List<dynamic>; 
-  //return ModificarOrdenesView(ordenes: args);
-  //},
+  '/home_page/logistica_view/modificar_ordenes_view': (BuildContext context) {
+    final args = ModalRoute.of(context)!.settings.arguments as List<dynamic>;
+    return ModificarOrdenesView(ordenes: args.cast());
+  },
 
   '/home_page/finanzas_main_view': (BuildContext context) => FinanzasMainView(),
   '/home_page/finanzas_main_view/facturas_view': (BuildContext context) => FacturasView(),
