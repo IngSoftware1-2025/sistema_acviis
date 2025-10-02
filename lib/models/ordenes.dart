@@ -15,8 +15,6 @@ class OrdenCompra {
   final String estado;
   final String proveedorId;
   final Proveedor proveedor;
-  final DateTime createdAt;
-  final DateTime updatedAt;
 
   OrdenCompra({
     required this.id,
@@ -33,13 +31,11 @@ class OrdenCompra {
     required this.estado,
     required this.proveedorId,
     required this.proveedor,
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory OrdenCompra.fromJson(Map<String, dynamic> json) {
     return OrdenCompra(
-      id: json['id'],
+      id: json['id'] ?? '',
       numeroOrden: json['numero_orden'] ?? '',
       fechaEmision: DateTime.parse(json['fecha_emision']),
       centroCosto: json['centro_costo'] ?? '',
@@ -53,8 +49,6 @@ class OrdenCompra {
       estado: json['estado'] ?? 'Activo',
       proveedorId: json['proveedor']?['id'] ?? '',
       proveedor: Proveedor.fromMap(json['proveedor']),
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
     );
   }
 }

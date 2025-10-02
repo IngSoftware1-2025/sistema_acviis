@@ -29,7 +29,7 @@ class _OrdenesViewState extends State<OrdenesView> {
                 SizedBox(width: normalPadding),
 
                 CascadeButton(
-                  title: 'Filtros Órdenes',
+                  title: 'Filtros',
                   offset: 0.0,
                   icon: const Icon(Icons.filter_alt_sharp),
                   children: const [

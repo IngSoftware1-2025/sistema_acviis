@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sistema_acviis/providers/itemizados_provider.dart';
 import 'package:sistema_acviis/backend/controllers/ordenes/create_ordenes.dart';
 import 'package:sistema_acviis/providers/ordenes_provider.dart';
 import 'package:sistema_acviis/providers/proveedores_provider.dart';
@@ -12,6 +13,7 @@ class AgregarOrdenesView extends StatefulWidget {
   State<AgregarOrdenesView> createState() => _AgregarOrdenesViewState();
 }
 
+
 class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
   final _formKey = GlobalKey<FormState>();
 
@@ -21,26 +23,36 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
   );
   final TextEditingController _proveedorIdController = TextEditingController();
   final TextEditingController _centroCostoController = TextEditingController();
-  final TextEditingController _seccionItemizadoController = TextEditingController();
   final TextEditingController _numeroCotizacionController = TextEditingController();
   final TextEditingController _numeroContactoController = TextEditingController();
   final TextEditingController _nombreServicioController = TextEditingController();
   final TextEditingController _valorController = TextEditingController();
   final TextEditingController _notasAdicionalesController = TextEditingController();
 
+  String? _selectedItemizadoId;
   bool _descuentoSwitch = false;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    
+
     final proveedorProvider = Provider.of<ProveedoresProvider>(context, listen: false);
     proveedorProvider.precargarProveedores();
+
+    final itemizadosProvider = Provider.of<ItemizadosProvider>(context, listen: false);
+    itemizadosProvider.precargarItemizados();
   }
+
 
   void _submitFormOrden() async {
     if (_formKey.currentState!.validate()) {
+      if (_selectedItemizadoId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Debes seleccionar un itemizado')),
+        );
+        return;
+      }
       setState(() => _isLoading = true);
 
       try {
@@ -51,9 +63,7 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
           fechaEmision: DateTime.parse(_fechaEmisionController.text),
           proveedorId: _proveedorIdController.text,
           centroCosto: _centroCostoController.text,
-          seccionItemizado: _seccionItemizadoController.text.isNotEmpty
-              ? _seccionItemizadoController.text
-              : null,
+          itemizadoId: _selectedItemizadoId!,
           numeroCotizacion: _numeroCotizacionController.text.isNotEmpty
               ? _numeroCotizacionController.text
               : '',
@@ -117,7 +127,6 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
                   return null;
                 },
               ),
-              // Dropdown de Proveedores
               Consumer<ProveedoresProvider>(
                 builder: (context, proveedorProvider, child) {
                   return DropdownButtonFormField<String>(
@@ -147,9 +156,45 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Campo requerido' : null,
               ),
-              TextFormField(
-                controller: _seccionItemizadoController,
-                decoration: const InputDecoration(labelText: 'Sección itemizado (opcional)'),
+              Consumer<ItemizadosProvider>(
+                builder: (context, itemizadosProvider, child) {
+                  if (itemizadosProvider.error != null) {
+                    return Text('Error: ${itemizadosProvider.error}');
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DropdownButtonFormField<String>(
+                        decoration: const InputDecoration(labelText: 'Itemizado'),
+                        value: _selectedItemizadoId,
+                        items: itemizadosProvider.itemizados.map((item) {
+                          return DropdownMenuItem<String>(
+                            value: item.id,
+                            child: Text(item.nombre),
+                          );
+                        }).toList(),
+                        onChanged: (value) => setState(() => _selectedItemizadoId = value),
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Campo requerido' : null,
+                      ),
+                      if (_selectedItemizadoId != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Builder(
+                            builder: (context) {
+                              final item = itemizadosProvider.itemizados.firstWhere(
+                                (i) => i.id == _selectedItemizadoId,
+                              );
+                              return Text(
+                                'Monto disponible: ${item.montoDisponible}',
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              );
+                            },
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
               TextFormField(
                 controller: _numeroCotizacionController,

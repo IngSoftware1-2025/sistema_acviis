@@ -16,9 +16,7 @@ class ProveedoresProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  // Carga proveedores desde API de forma segura
   Future<void> fetchProveedores() async {
-    // Marcamos loading, pero post-frame para no romper build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _isLoading = true;
       notifyListeners();
@@ -42,21 +40,18 @@ class ProveedoresProvider extends ChangeNotifier {
     }
   }
 
-  // Precargar proveedores si aún no se han cargado
   Future<void> precargarProveedores() async {
     if (_todos.isEmpty) {
       await fetchProveedores();
     }
   }
 
-  // Actualizar filtros y filtrar proveedores de forma segura
   void actualizarFiltros({String? estado, String? textoBusqueda}) {
     this.estado = estado ?? this.estado;
     this.textoBusqueda = textoBusqueda ?? this.textoBusqueda;
     _filtrarPostFrame();
   }
 
-  // Filtrado seguro usando post-frame
   void _filtrarPostFrame() {
     _proveedores = _todos.where((p) {
       if (estado != null && estado!.isNotEmpty && p.estado != estado) return false;
@@ -75,15 +70,11 @@ class ProveedoresProvider extends ChangeNotifier {
       notifyListeners();
     });
   }
-
-  // Actualizar un proveedor
   Future<bool> actualizarProveedor(String id, Map<String, dynamic> data) async {
     final exito = await updateProveedor(id, data);
     if (exito) await fetchProveedores();
     return exito;
   }
-
-  // Eliminar un proveedor
   Future<bool> eliminarProveedor(String id) async {
     final exito = await deleteProveedor(id);
     if (exito) await fetchProveedores();
