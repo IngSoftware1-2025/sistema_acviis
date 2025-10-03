@@ -22,6 +22,7 @@ class _ModificarOrdenesViewState extends State<ModificarOrdenesView> {
   void initState() {
     super.initState();
     Provider.of<ProveedoresProvider>(context, listen: false).precargarProveedores();
+    Provider.of<ItemizadosProvider>(context, listen: false).precargarItemizados();
 
     _controllers = widget.ordenes.map((orden) {
       return {
