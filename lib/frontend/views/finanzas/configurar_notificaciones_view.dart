@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
+import 'package:provider/provider.dart';
+import 'package:sistema_acviis/models/notificacion.dart';
+import 'package:sistema_acviis/providers/notificaciones_provider.dart';
 import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
 import 'package:sistema_acviis/frontend/widgets/buttons.dart';
 
@@ -17,71 +17,51 @@ class _ConfigurarNotificacionesViewState extends State<ConfigurarNotificacionesV
   final TextEditingController _diasAntesController = TextEditingController();
   final TextEditingController _diasDespuesController = TextEditingController();
 
-  bool cargando = true;
-
   @override
   void initState() {
     super.initState();
-    _cargarConfiguracion();
-  }
-
-  Future<void> _cargarConfiguracion() async {
-    try {
-      final response = await http.get(
-        Uri.parse("http://localhost:3000/finanzas/configuracion-notificaciones"),
-      );
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          _diasAntesController.text = (data['diasantes'] ?? 3).toString();
-          _diasDespuesController.text = (data['diasdespues'] ?? 0).toString();
-          cargando = false;
-        });
-      } else {
-        setState(() => cargando = false);
-      }
-    } catch (e) {
-      setState(() => cargando = false);
-    }
+    Future.microtask(() =>
+        Provider.of<NotificacionesProvider>(context, listen: false).fetchConfiguracion()
+    );
   }
 
   Future<void> guardarConfiguracion() async {
-    final diasantes = int.tryParse(_diasAntesController.text) ?? 3;
-    final diasdespues = int.tryParse(_diasDespuesController.text) ?? 0;
+    final provider = Provider.of<NotificacionesProvider>(context, listen: false);
 
-    final body = {"diasantes": diasantes, "diasdespues": diasdespues};
+    final config = NotificacionConfig(
+      id: provider.configuracion?.id ?? 1, 
+      diasAntes: int.tryParse(_diasAntesController.text) ?? 3,
+      diasDespues: int.tryParse(_diasDespuesController.text) ?? 0,
+    );
 
-    try {
-      final response = await http.post(
-        Uri.parse("http://localhost:3000/finanzas/configurar-notificaciones"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(body),
-      );
+    final success = await provider.saveConfiguracion(config);
 
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Configuración guardada correctamente")),
-        );
-        Navigator.pop(context);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error al guardar: ${response.body}")),
-        );
-      }
-    } catch (e) {
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error de conexión con el servidor")),
+        const SnackBar(content: Text("Configuración guardada correctamente")),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: ${provider.error ?? "Desconocido"}")),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (cargando) {
-      return PrimaryScaffold(
+    final provider = Provider.of<NotificacionesProvider>(context);
+
+    if (provider.isLoading) {
+      return const PrimaryScaffold(
         title: 'Configurar Notificaciones',
         body: Center(child: CircularProgressIndicator()),
       );
+    }
+
+    if (provider.configuracion != null) {
+      _diasAntesController.text = provider.configuracion!.diasAntes.toString();
+      _diasDespuesController.text = provider.configuracion!.diasDespues.toString();
     }
 
     return PrimaryScaffold(
@@ -95,15 +75,15 @@ class _ConfigurarNotificacionesViewState extends State<ConfigurarNotificacionesV
               TextFormField(
                 controller: _diasAntesController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: "Días antes del vencimiento"),
+                decoration: const InputDecoration(labelText: "Días antes del vencimiento"),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _diasDespuesController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: "Días después del vencimiento"),
+                decoration: const InputDecoration(labelText: "Días después del vencimiento"),
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               PrimaryButton(
                 text: "Guardar",
                 onPressed: guardarConfiguracion,
