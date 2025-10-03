@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/func/cascade_manager.dart';
 import 'package:sistema_acviis/frontend/widgets/buttons.dart';
 import 'package:sistema_acviis/providers/vehiculos_provider.dart';
 
 class VehiculosFiltrosDisplay extends StatefulWidget {
-  const VehiculosFiltrosDisplay({super.key});
+  final BuildContext parentContext;
+
+  const VehiculosFiltrosDisplay({super.key, required this.parentContext});
 
   @override
   State<VehiculosFiltrosDisplay> createState() => _VehiculosFiltrosDisplayState();
@@ -79,7 +82,7 @@ class _VehiculosFiltrosDisplayState extends State<VehiculosFiltrosDisplay> {
         // ===================== Tipo de neumático =====================
         Row(
           children: [
-            const Text('Tipo de herramienta'),
+            const Text('Tipo de neumáticos'),
             const Spacer(),
             DropdownMenu<String>(
               initialSelection: _tipoNeumatico,
@@ -126,13 +129,25 @@ class _VehiculosFiltrosDisplayState extends State<VehiculosFiltrosDisplay> {
             // Botón para seleccionar fecha desde
             ElevatedButton(
               onPressed: () async {
-                DateTime? fecha = await showDatePicker(
-                  context: context,
-                  initialDate: _tecnicaDesde ?? DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
-                );
-                if (fecha != null) {
+                CascadeManager.instance.setInteractionEnabled(false);
+                try {
+                  final selected = await showDatePicker(
+                    context: widget.parentContext,
+                    initialDate: _tecnicaDesde ?? DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                    useRootNavigator: true,
+                  );
+                  if (selected != null && mounted) {
+                    setState(() {
+                      _tecnicaDesde = selected;
+                      if (_tecnicaHasta != null && _tecnicaHasta!.isBefore(selected)) {
+                        _tecnicaHasta = selected;
+                      }
+                    });
+                  }
+                } finally {
+                  CascadeManager.instance.setInteractionEnabled(true);
                 }
               },
               child: Text(
@@ -145,13 +160,25 @@ class _VehiculosFiltrosDisplayState extends State<VehiculosFiltrosDisplay> {
             // Botón para seleccionar fecha hasta
             ElevatedButton(
               onPressed: () async {
-                DateTime? fecha = await showDatePicker(
-                  context: context,
-                  initialDate: _tecnicaHasta ?? DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
-                );
-                if (fecha != null) {
+                CascadeManager.instance.setInteractionEnabled(false);
+                try {
+                  final selected = await showDatePicker(
+                    context: widget.parentContext,
+                    initialDate: _tecnicaHasta ?? (_tecnicaDesde ?? DateTime.now()),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                    useRootNavigator: true,
+                  );
+                  if (selected != null && mounted) {
+                    setState(() {
+                      if (_tecnicaDesde != null && selected.isBefore(_tecnicaDesde!)) {
+                        _tecnicaDesde = selected;
+                      }
+                      _tecnicaHasta = selected;
+                    });
+                  }
+                } finally {
+                  CascadeManager.instance.setInteractionEnabled(true);
                 }
               },
               child: Text(
@@ -170,13 +197,25 @@ class _VehiculosFiltrosDisplayState extends State<VehiculosFiltrosDisplay> {
             // Botón para seleccionar fecha desde
             ElevatedButton(
               onPressed: () async {
-                DateTime? fecha = await showDatePicker(
-                  context: context,
-                  initialDate: _gasesDesde ?? DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
-                );
-                if (fecha != null) {
+                CascadeManager.instance.setInteractionEnabled(false);
+                try {
+                  final selected = await showDatePicker(
+                    context: widget.parentContext,
+                    initialDate: _gasesDesde ?? DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                    useRootNavigator: true,
+                  );
+                  if (selected != null && mounted) {
+                    setState(() {
+                      _gasesDesde = selected;
+                      if (_gasesHasta != null && _gasesHasta!.isBefore(selected)) {
+                        _gasesHasta = selected;
+                      }
+                    });
+                  }
+                } finally {
+                  CascadeManager.instance.setInteractionEnabled(true);
                 }
               },
               child: Text(
@@ -189,13 +228,25 @@ class _VehiculosFiltrosDisplayState extends State<VehiculosFiltrosDisplay> {
             // Botón para seleccionar fecha hasta
             ElevatedButton(
               onPressed: () async {
-                DateTime? fecha = await showDatePicker(
-                  context: context,
-                  initialDate: _gasesHasta ?? DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
-                );
-                if (fecha != null) {
+                CascadeManager.instance.setInteractionEnabled(false);
+                try {
+                  final selected = await showDatePicker(
+                    context: widget.parentContext,
+                    initialDate: _gasesHasta ?? (_gasesDesde ?? DateTime.now()),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                    useRootNavigator: true,
+                  );
+                  if (selected != null && mounted) {
+                    setState(() {
+                      if (_gasesDesde != null && selected.isBefore(_gasesDesde!)) {
+                        _gasesDesde = selected;
+                      }
+                      _gasesHasta = selected;
+                    });
+                  }
+                } finally {
+                  CascadeManager.instance.setInteractionEnabled(true);
                 }
               },
               child: Text(
@@ -214,13 +265,25 @@ class _VehiculosFiltrosDisplayState extends State<VehiculosFiltrosDisplay> {
             // Botón para seleccionar fecha desde
             ElevatedButton(
               onPressed: () async {
-                DateTime? fecha = await showDatePicker(
-                  context: context,
-                  initialDate: _mantencionDesde ?? DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
-                );
-                if (fecha != null) {
+                CascadeManager.instance.setInteractionEnabled(false);
+                try {
+                  final selected = await showDatePicker(
+                    context: widget.parentContext,
+                    initialDate: _mantencionDesde ?? DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                    useRootNavigator: true,
+                  );
+                  if (selected != null && mounted) {
+                    setState(() {
+                      _mantencionDesde = selected;
+                      if (_mantencionHasta != null && _mantencionHasta!.isBefore(selected)) {
+                        _mantencionHasta = selected;
+                      }
+                    });
+                  }
+                } finally {
+                  CascadeManager.instance.setInteractionEnabled(true);
                 }
               },
               child: Text(
@@ -233,13 +296,25 @@ class _VehiculosFiltrosDisplayState extends State<VehiculosFiltrosDisplay> {
             // Botón para seleccionar fecha hasta
             ElevatedButton(
               onPressed: () async {
-                DateTime? fecha = await showDatePicker(
-                  context: context,
-                  initialDate: _mantencionHasta ?? DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
-                );
-                if (fecha != null) {
+                CascadeManager.instance.setInteractionEnabled(false);
+                try {
+                  final selected = await showDatePicker(
+                    context: widget.parentContext,
+                    initialDate: _mantencionHasta ?? (_mantencionDesde ?? DateTime.now()),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                    useRootNavigator: true,
+                  );
+                  if (selected != null && mounted) {
+                    setState(() {
+                      if (_mantencionDesde != null && selected.isBefore(_mantencionDesde!)) {
+                        _mantencionDesde = selected;
+                      }
+                      _mantencionHasta = selected;
+                    });
+                  }
+                } finally {
+                  CascadeManager.instance.setInteractionEnabled(true);
                 }
               },
               child: Text(
