@@ -154,7 +154,7 @@ class TrabajadoresProvider extends ChangeNotifier {
       // Edad
       if (rangoEdad != null) {
         final edad = _calcularEdad(t.fechaDeNacimiento);
-        if (edad < rangoEdad!.start || edad > rangoEdad!.end) return false;
+        if (edad < rangoEdad!.start.round() || edad > rangoEdad!.end.round()) return false;
       }
       // Sueldo (si tienes el campo sueldo en tu modelo, descomenta y ajusta)
       // if (rangoSueldo != null && t.sueldo != null) {
@@ -237,6 +237,12 @@ class TrabajadoresProvider extends ChangeNotifier {
 
   int _calcularEdad(DateTime fechaNacimiento) {
     final hoy = DateTime.now();
+    
+    // Validar que la fecha sea válida
+    if (fechaNacimiento.year < 1900 || fechaNacimiento.isAfter(hoy)) {
+      return 0; // Edad por defecto si la fecha no es válida
+    }
+    
     int edad = hoy.year - fechaNacimiento.year;
     if (hoy.month < fechaNacimiento.month ||
         (hoy.month == fechaNacimiento.month && hoy.day < fechaNacimiento.day)) {
