@@ -138,7 +138,7 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
                     items: proveedorProvider.proveedores.map((p) {
                       return DropdownMenuItem<String>(
                         value: p.id,
-                        child: Text(p.nombre_vendedor),
+                        child: Text(p.nombreVendedor),
                       );
                     }).toList(),
                     onChanged: (value) {

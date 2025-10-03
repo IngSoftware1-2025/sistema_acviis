@@ -111,7 +111,7 @@ class _ModificarOrdenesViewState extends State<ModificarOrdenesView> {
                   margin: const EdgeInsets.all(16),
                   child: ExpansionTile(
                     title: Text('Orden: ${orden.numeroOrden}'),
-                    subtitle: Text('Proveedor: ${orden.proveedor.nombre_vendedor}'),
+                    subtitle: Text('Proveedor: ${orden.proveedor.nombreVendedor}'),
                     children: [
                       Padding(
                         padding: const EdgeInsets.all(16.0),
@@ -120,13 +120,28 @@ class _ModificarOrdenesViewState extends State<ModificarOrdenesView> {
                             TextFormField(controller: c['numeroOrdenController'], decoration: const InputDecoration(labelText: 'Número de orden')),
                             TextFormField(controller: c['fechaEmisionController'], decoration: const InputDecoration(labelText: 'Fecha de emisión (YYYY-MM-DD)')),
                             Consumer<ProveedoresProvider>(
-                              builder: (context, prov, _) => DropdownButtonFormField<String>(
-                                decoration: const InputDecoration(labelText: 'Proveedor'),
-                                value: c['proveedorIdController'].text,
-                                items: prov.proveedores.map((p) => DropdownMenuItem<String>(value: p.id, child: Text(p.nombre_vendedor))).toList(),
-                                onChanged: (value) => setState(() => c['proveedorIdController'].text = value ?? ''),
-                              ),
+                              builder: (context, prov, _) {
+                                final proveedores = prov.proveedores;
+                                return DropdownButtonFormField<String>(
+                                  decoration: const InputDecoration(labelText: 'Proveedor'),
+                                  value: proveedores.any((p) => p.id == c['proveedorIdController'].text)
+                                      ? c['proveedorIdController'].text
+                                      : null,
+                                  items: proveedores.map((p) {
+                                    return DropdownMenuItem<String>(
+                                      value: p.id,
+                                      child: Text(p.nombreVendedor),
+                                    );
+                                  }).toList(),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      c['proveedorIdController'].text = value ?? '';
+                                    });
+                                  },
+                                );
+                              },
                             ),
+
                             TextFormField(controller: c['centroCostoController'], decoration: const InputDecoration(labelText: 'Centro de costo')),
                             Consumer<ItemizadosProvider>(
                               builder: (context, itemProv, _) {

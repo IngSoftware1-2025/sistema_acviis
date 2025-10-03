@@ -42,8 +42,6 @@ model anexos {
   id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   id_contrato       String        @db.Uuid
   fecha_de_creacion DateTime      @db.Date
-  duracion          String        @db.VarChar
-  tipo              String        @db.VarChar
   parametros        String        @default("") @db.VarChar
   contratos         contratos     @relation(fields: [id_contrato], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_anexo_contrato")
   comentarios       comentarios[]
@@ -65,6 +63,16 @@ model comentarios {
   @@index([id_anexo], map: "idx_comentarios_id_anexo")
   @@index([id_contrato], map: "idx_comentarios_id_contrato")
   @@index([id_trabajadores], map: "idx_comentarios_id_trabajadores")
+}
+
+/// Prisma para model epp
+model epp {
+  id                  Int       @id @default(autoincrement())
+  tipo                String
+  obras_asignadas     String[]
+  cantidad            Int
+  certificado_id      String?
+  fecha_registro      DateTime  @default(now())
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -92,16 +100,6 @@ model herramientas {
   obra_asig   String?   @db.VarChar
   asig_inicio DateTime? @db.Date
   asig_fin    DateTime? @db.Date
-}
-
-/// Prisma para model epp
-model epp {
-  id                  Int       @id @default(autoincrement())
-  tipo                String
-  obras_asignadas     String[]
-  cantidad            Int
-  certificado_id      String?
-  fecha_registro      DateTime  @default(now())
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -177,11 +175,11 @@ model pagos {
   tipo_pago           String
   sentido             Boolean
   visualizacion       String
-  notificado        Boolean? @default(false)
+  notificado          Boolean? @default(false)
 }
 
 model configuracion_notificaciones {
-  id          Int    @id
+  id          Int @id(map: "configuracionnotificaciones_pkey") @default(autoincrement())
   diasantes   Int
   diasdespues Int
 }

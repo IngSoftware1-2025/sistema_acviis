@@ -109,7 +109,7 @@ class _ListaHerramientasState extends State<ListaHerramientas> {
                               context,
                               "herramientas",
                               herramienta.id,
-                              herramienta.tipo, // puedes usar tipo, estado o lo que quieras
+                              herramienta.tipo, 
                             );
                           },
                         ),

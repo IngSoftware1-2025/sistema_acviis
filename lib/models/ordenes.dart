@@ -34,22 +34,53 @@ class OrdenCompra {
     required this.itemizado, 
   });
 
-  factory OrdenCompra.fromJson(Map<String, dynamic> json) {
-    return OrdenCompra(
-      id: json['id'] ?? '',
-      numeroOrden: json['numero_orden'] ?? '',
-      fechaEmision: DateTime.parse(json['fecha_emision']),
-      centroCosto: json['centro_costo'] ?? '',
-      numeroCotizacion: json['numero_cotizacion'] ?? '',
-      numeroContacto: json['numero_contacto'] ?? '', 
-      nombreServicio: json['nombre_servicio'] ?? '',
-      valor: json['valor'] ?? 0,
-      descuento: json['descuento'] ?? false,
-      notasAdicionales: json['notas_adicionales'],
-      estado: json['estado'] ?? 'Activo',
-      proveedorId: json['proveedor']?['id'] ?? '',
-      proveedor: Proveedor.fromMap(json['proveedor']),
-      itemizado: Itemizado.fromJson(json['itemizado']), 
-    );
-  }
+factory OrdenCompra.fromJson(Map<String, dynamic> json) {
+  final proveedorJson = json['proveedor'];
+  final itemizadoJson = json['itemizado'];
+
+  return OrdenCompra(
+    id: json['id'] ?? '',
+    numeroOrden: json['numero_orden'] ?? '',
+    fechaEmision: DateTime.tryParse(json['fecha_emision'] ?? '') ?? DateTime.now(),
+    centroCosto: json['centro_costo'] ?? '',
+    numeroCotizacion: json['numero_cotizacion'] ?? '',
+    numeroContacto: json['numero_contacto'],
+    nombreServicio: json['nombre_servicio'] ?? '',
+    valor: json['valor'] ?? 0,
+    descuento: json['descuento'] ?? false,
+    notasAdicionales: json['notas_adicionales'],
+    estado: json['estado'] ?? 'Activo',
+    proveedorId: proveedorJson?['id'] ?? '',
+    proveedor: proveedorJson != null
+        ? Proveedor(
+            id: proveedorJson['id'] ?? '',
+            rut: proveedorJson['rut'] ?? '',
+            direccion: proveedorJson['direccion'] ?? '',
+            nombreVendedor: proveedorJson['nombre_vendedor'] ?? '',
+            productoServicio: proveedorJson['producto_servicio'] ?? '',
+            correoVendedor: proveedorJson['correo_vendedor'] ?? '',
+            telefonoVendedor: proveedorJson['telefono_vendedor'] ?? '',
+            creditoDisponible: proveedorJson['credito_disponible'] ?? 0,
+            fechaRegistro: proveedorJson['fecha_registro'] != null
+                ? DateTime.parse(proveedorJson['fecha_registro'])
+                : DateTime.now(),
+            estado: proveedorJson['estado'],
+          )
+        : Proveedor(
+            id: '',
+            rut: '',
+            direccion: '',
+            nombreVendedor: '',
+            productoServicio: '',
+            correoVendedor: '',
+            telefonoVendedor: '',
+            creditoDisponible: 0,
+            fechaRegistro: DateTime.now(),
+          ),
+    itemizado: itemizadoJson != null
+        ? Itemizado.fromJson(itemizadoJson)
+        : Itemizado(id: '', nombre: '', montoDisponible: 0),
+  );
+}
+
 }

@@ -112,7 +112,7 @@ Future<void> fetchOrdenes() async {
       if (seccionItemizado != null && seccionItemizado!.isNotEmpty &&
       !o.itemizado.nombre.contains(seccionItemizado!)) return false;
       if (direccion != null && direccion!.isNotEmpty &&
-          !o.proveedor.nombre_vendedor.contains(direccion!)) return false;
+          !o.proveedor.nombreVendedor.contains(direccion!)) return false;
       if (servicioOfrecido != null && servicioOfrecido!.isNotEmpty &&
           !o.nombreServicio.contains(servicioOfrecido!)) return false;
       if (valorDesde != null && o.valor < valorDesde!) return false;

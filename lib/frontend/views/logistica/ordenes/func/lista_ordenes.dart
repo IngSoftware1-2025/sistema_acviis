@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sistema_acviis/backend/controllers/PDF/generacionPDF.dart';
 import 'package:sistema_acviis/frontend/widgets/checkbox.dart';
 import 'package:sistema_acviis/frontend/widgets/expansion_tile_ordenes.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
@@ -190,21 +189,6 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
                                   checkboxProvider.checkBoxes[i + 1],
                             ),
                           Expanded(child: ExpansionTileOrdenes(orden: orden)),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.picture_as_pdf,
-                              color: Colors.red,
-                            ),
-                            tooltip: "Descargar orden PDF",
-                            onPressed: () {
-                              descargarFichaPDFGenerico(
-                                context,
-                                "ordenes",
-                                orden.id,
-                                orden.numeroOrden,
-                              );
-                            },
-                          ),
                         ],
                       ),
                     );

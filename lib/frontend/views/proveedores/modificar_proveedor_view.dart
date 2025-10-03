@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:sistema_acviis/models/proveedor.dart';
 import 'package:sistema_acviis/providers/proveedores_provider.dart';
-import 'package:provider/provider.dart';
 
 class ModificarProveedorView extends StatefulWidget {
   final Proveedor proveedor;
@@ -13,23 +14,38 @@ class ModificarProveedorView extends StatefulWidget {
 
 class _ModificarProveedorViewState extends State<ModificarProveedorView> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nombreController;
   late TextEditingController _rutController;
   late TextEditingController _direccionController;
-  late TextEditingController _correoController;
-  late TextEditingController _telefonoController;
-  String _estado = 'Activo';
-  bool _isLoading = false;
+  late TextEditingController _nombreVendedorController;
+  late TextEditingController _productoServicioController;
+  late TextEditingController _correoVendedorController;
+  late TextEditingController _telefonoVendedorController;
+  late TextEditingController _creditoDisponibleController;
 
   @override
   void initState() {
     super.initState();
-    _nombreController = TextEditingController(text: widget.proveedor.nombre_vendedor);
     _rutController = TextEditingController(text: widget.proveedor.rut);
     _direccionController = TextEditingController(text: widget.proveedor.direccion);
-    _correoController = TextEditingController(text: widget.proveedor.correo_electronico);
-    _telefonoController = TextEditingController(text: widget.proveedor.telefono_vendedor);
-    _estado = widget.proveedor.estado;
+    _nombreVendedorController = TextEditingController(text: widget.proveedor.nombreVendedor);
+    _productoServicioController = TextEditingController(text: widget.proveedor.productoServicio);
+    _correoVendedorController = TextEditingController(text: widget.proveedor.correoVendedor);
+    // Extraemos solo los 8 dígitos del número de teléfono
+    final telefono = widget.proveedor.telefonoVendedor.replaceAll('+56 9 ', '');
+    _telefonoVendedorController = TextEditingController(text: telefono);
+    _creditoDisponibleController = TextEditingController(text: widget.proveedor.creditoDisponible.toString());
+  }
+
+  @override
+  void dispose() {
+    _rutController.dispose();
+    _direccionController.dispose();
+    _nombreVendedorController.dispose();
+    _productoServicioController.dispose();
+    _correoVendedorController.dispose();
+    _telefonoVendedorController.dispose();
+    _creditoDisponibleController.dispose();
+    super.dispose();
   }
 
   @override
@@ -43,70 +59,103 @@ class _ModificarProveedorViewState extends State<ModificarProveedorView> {
           child: ListView(
             children: [
               TextFormField(
-                controller: _nombreController,
-                decoration: const InputDecoration(labelText: 'Nombre'),
-                validator: (v) => v == null || v.isEmpty ? 'Campo requerido' : null,
-              ),
-              TextFormField(
                 controller: _rutController,
-                decoration: const InputDecoration(labelText: 'RUT'),
-                validator: (v) => v == null || v.isEmpty ? 'Campo requerido' : null,
+                decoration: const InputDecoration(labelText: 'RUT (XXXXXXXX-X)'),
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return 'Ingrese el RUT';
+                  }
+                  final rutRegExp = RegExp(r'^\d{8}-[0-9kK]$', caseSensitive: false);
+                  if (!rutRegExp.hasMatch(v)) {
+                    return 'Formato de RUT inválido (ej: 12345678-9)';
+                  }
+                  return null;
+                },
               ),
               TextFormField(
                 controller: _direccionController,
                 decoration: const InputDecoration(labelText: 'Dirección'),
+                validator: (v) => v == null || v.isEmpty ? 'Ingrese la dirección' : null,
               ),
               TextFormField(
-                controller: _correoController,
-                decoration: const InputDecoration(labelText: 'Correo electrónico'),
-                validator: (v) => v == null || v.isEmpty ? 'Campo requerido' : null,
+                controller: _nombreVendedorController,
+                decoration: const InputDecoration(labelText: 'Nombre vendedor'),
+                validator: (v) => v == null || v.isEmpty ? 'Ingrese el nombre del vendedor' : null,
               ),
               TextFormField(
-                controller: _telefonoController,
-                decoration: const InputDecoration(labelText: 'Teléfono'),
+                controller: _productoServicioController,
+                decoration: const InputDecoration(labelText: 'Producto o servicio'),
+                validator: (v) => v == null || v.isEmpty ? 'Ingrese el producto o servicio' : null,
               ),
-              DropdownButtonFormField<String>(
-                value: _estado,
-                items: const [
-                  DropdownMenuItem(value: 'Activo', child: Text('Activo')),
-                  DropdownMenuItem(value: 'Inactivo', child: Text('Inactivo')),
+              TextFormField(
+                controller: _correoVendedorController,
+                decoration: const InputDecoration(labelText: 'Correo vendedor'),
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return 'Ingrese el correo';
+                  }
+                  final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                  if (!emailRegExp.hasMatch(v)) {
+                    return 'Formato de correo inválido (ej: correo@dominio.com)';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _telefonoVendedorController,
+                decoration: const InputDecoration(
+                  labelText: 'Teléfono del vendedor',
+                  prefixText: '+56 9 ',
+                ),
+                keyboardType: TextInputType.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(8),
                 ],
-                onChanged: (v) => setState(() => _estado = v ?? 'Activo'),
-                decoration: const InputDecoration(labelText: 'Estado'),
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return 'Ingrese el número';
+                  }
+                  if (v.length != 8) {
+                    return 'El número debe tener 8 dígitos';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _creditoDisponibleController,
+                decoration: const InputDecoration(labelText: 'Crédito disponible'),
+                keyboardType: TextInputType.number,
+                validator: (v) => v == null || v.isEmpty ? 'Ingrese el crédito disponible' : null,
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _isLoading
-                    ? null
-                    : () async {
-                        if (_formKey.currentState!.validate()) {
-                          setState(() => _isLoading = true);
-                          final data = {
-                            'nombre': _nombreController.text,
-                            'rut': _rutController.text,
-                            'direccion': _direccionController.text,
-                            'correo_electronico': _correoController.text,
-                            'telefono': _telefonoController.text,
-                            'estado': _estado,
-                          };
-                          final exito = await Provider.of<ProveedoresProvider>(context, listen: false)
-                              .actualizarProveedor(widget.proveedor.id, data);
-                          setState(() => _isLoading = false);
-                          if (exito && mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Proveedor modificado correctamente')),
-                            );
-                            Navigator.pop(context);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Error al modificar proveedor')),
-                            );
-                          }
-                        }
-                      },
-                child: _isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text('Guardar cambios'),
+                child: const Text('Guardar cambios'),
+                onPressed: () async {
+                  if (_formKey.currentState!.validate()) {
+                    final data = {
+                      'rut': _rutController.text,
+                      'direccion': _direccionController.text,
+                      'nombre_vendedor': _nombreVendedorController.text,
+                      'producto_servicio': _productoServicioController.text,
+                      'correo_vendedor': _correoVendedorController.text,
+                      'telefono_vendedor': '+56 9 ${_telefonoVendedorController.text}',
+                      'credito_disponible': int.tryParse(_creditoDisponibleController.text) ?? 0,
+                    };
+                    final exito = await Provider.of<ProveedoresProvider>(context, listen: false)
+                        .actualizarProveedor(widget.proveedor.id, data);
+
+                    //if (!context.mounted) return; // <-- SOLUCIÓN: Verificar si el widget sigue montado
+
+                    if (exito) {
+                      Navigator.pop(context, true);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Error al modificar proveedor')),
+                      );
+                    }
+                  }
+                },
               ),
             ],
           ),

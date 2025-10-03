@@ -3,6 +3,8 @@ import 'package:sistema_acviis/models/proveedor.dart';
 import 'package:sistema_acviis/backend/controllers/proveedores/get_proveedores.dart';
 import 'package:sistema_acviis/backend/controllers/proveedores/update_proveedor.dart';
 import 'package:sistema_acviis/backend/controllers/proveedores/delete_proveedor.dart';
+import 'package:sistema_acviis/backend/controllers/proveedores/create_proveedor.dart';
+import 'package:sistema_acviis/backend/controllers/proveedores/actualizar_estado_proveedor.dart';
 
 class ProveedoresProvider extends ChangeNotifier {
   List<Proveedor> _todos = [];
@@ -10,8 +12,12 @@ class ProveedoresProvider extends ChangeNotifier {
   List<Proveedor> get proveedores => _proveedores;
 
   // Filtros
-  String? estado;
-  String? textoBusqueda;
+  String? busquedaGeneral;
+  String? rut;
+  String? nombreVendedor;
+  String? productoServicio;
+  int? creditoMin;
+  int? creditoMax;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -23,15 +29,9 @@ class ProveedoresProvider extends ChangeNotifier {
     });
 
     try {
-      _todos = await fetchProveedoresFromApi();
-      _filtrarPostFrame();
-    } catch (e) {
-      print('Error al obtener proveedores: $e');
-      _todos = [];
-      _proveedores = [];
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        notifyListeners();
-      });
+      final data = await fetchProveedoresFromApi();
+      _todos = data;
+      filtrar();
     } finally {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _isLoading = false;
@@ -40,44 +40,73 @@ class ProveedoresProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> precargarProveedores() async {
-    if (_todos.isEmpty) {
-      await fetchProveedores();
-    }
+
+  void actualizarFiltros({
+    String? busquedaGeneral,
+    String? rut,
+    String? nombre,
+    String? productoServicio,
+    int? creditoMin,
+    int? creditoMax,
+  }) {
+    this.busquedaGeneral = busquedaGeneral;
+    this.rut = rut;
+    this.nombreVendedor = nombre;
+    this.productoServicio = productoServicio;
+    this.creditoMin = creditoMin;
+    this.creditoMax = creditoMax;
+    filtrar();
+    notifyListeners();
   }
 
-  void actualizarFiltros({String? estado, String? textoBusqueda}) {
-    this.estado = estado ?? this.estado;
-    this.textoBusqueda = textoBusqueda ?? this.textoBusqueda;
-    _filtrarPostFrame();
-  }
-
-  void _filtrarPostFrame() {
+  void filtrar() {
     _proveedores = _todos.where((p) {
-      if (estado != null && estado!.isNotEmpty && p.estado != estado) return false;
-      if (textoBusqueda != null && textoBusqueda!.isNotEmpty) {
-        final query = textoBusqueda!.toLowerCase();
-        if (!p.nombre_vendedor.toLowerCase().contains(query) &&
-            !p.rut.toLowerCase().contains(query) &&
-            !p.correo_electronico.toLowerCase().contains(query)) {
-          return false;
-        }
-      }
-      return true;
-    }).toList();
+      // Lógica de búsqueda principal (barra de búsqueda)
+      final busquedaGeneralOk = (busquedaGeneral == null || busquedaGeneral!.isEmpty) ||
+          (p.rut.toLowerCase().contains(busquedaGeneral!.toLowerCase()) ||
+              p.nombreVendedor.toLowerCase().contains(busquedaGeneral!.toLowerCase()));
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      notifyListeners();
-    });
+      // Lógica de filtros avanzados
+      final estadoOk = p.estado == null || p.estado == 'activo';
+      final rutOk = rut == null || rut!.isEmpty || p.rut.toLowerCase().contains(rut!.toLowerCase());
+      final nombreOk = nombreVendedor == null || nombreVendedor!.isEmpty || p.nombreVendedor.toLowerCase().contains(nombreVendedor!.toLowerCase());
+      final productoOk = productoServicio == null || productoServicio!.isEmpty || p.productoServicio.toLowerCase().contains(productoServicio!.toLowerCase());
+      final creditoMinOk = creditoMin == null || p.creditoDisponible >= creditoMin!;
+      final creditoMaxOk = creditoMax == null || p.creditoDisponible <= creditoMax!;
+
+      // Se deben cumplir todos los filtros
+      return busquedaGeneralOk && estadoOk && rutOk && nombreOk && productoOk && creditoMinOk && creditoMaxOk;
+    }).toList();
   }
+
+  Future<bool> agregarProveedor(Proveedor proveedor) async {
+    final exito = await createProveedor(proveedor.toMap());
+    if (exito) await fetchProveedores();
+    return exito;
+  }
+
   Future<bool> actualizarProveedor(String id, Map<String, dynamic> data) async {
     final exito = await updateProveedor(id, data);
     if (exito) await fetchProveedores();
     return exito;
   }
+
   Future<bool> eliminarProveedor(String id) async {
-    final exito = await deleteProveedor(id);
+    final exito = await actualizarEstadoProveedor(id, 'inactivo');
     if (exito) await fetchProveedores();
     return exito;
   }
+
+  Future<void> eliminarPorFiltro() async {
+    for (final proveedor in _proveedores) {
+      await eliminarProveedor(proveedor.id);
+    }
+    await fetchProveedores();
+  }
+
+  Future<void> precargarProveedores() async {
+    if (_proveedores.isEmpty) {
+      await fetchProveedores();
+  }
+}
 }

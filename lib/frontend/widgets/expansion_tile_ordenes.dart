@@ -14,7 +14,7 @@ class ExpansionTileOrdenes extends StatelessWidget {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Proveedor: ${orden.proveedor.nombre_vendedor}'),
+          Text('Proveedor: ${orden.proveedor.nombreVendedor}'),
           Text(
             'Estado: ${orden.estado}',
             style: TextStyle(
@@ -59,11 +59,11 @@ class ExpansionTileOrdenes extends StatelessWidget {
         ),
         ListTile(
           title: const Text('Contacto proveedor'),
-          subtitle: Text(orden.proveedor.telefono_vendedor),
+          subtitle: Text(orden.proveedor.telefonoVendedor),
         ),
         ListTile(
           title: const Text('Correo proveedor'),
-          subtitle: Text(orden.proveedor.correo_electronico),
+          subtitle: Text(orden.proveedor.correoVendedor),
         ),
         ListTile(
           title: const Text('Notas adicionales'),
