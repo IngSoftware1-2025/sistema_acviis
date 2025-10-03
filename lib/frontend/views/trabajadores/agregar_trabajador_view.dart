@@ -151,8 +151,15 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
           );
         }
       } catch (e) {
+        String errorMessage = 'Error al crear trabajador o contrato: $e';
+        
+        // Detectar si es un error de RUT duplicado (status 409)
+        if (e.toString().contains('409') || e.toString().toLowerCase().contains('correo electrónico ya registrado') || e.toString().toLowerCase().contains('rut ya registrado')) {
+          errorMessage = 'El RUT ya está registrado en el sistema';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al crear trabajador o contrato: $e')),
+          SnackBar(content: Text(errorMessage)),
         );
       } finally {
         setState(() => _isLoading = false);

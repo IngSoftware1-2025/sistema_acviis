@@ -58,7 +58,7 @@ class _PersonalizedExpansionTileState extends State<PersonalizedExpansionTile> {
                       Text('Nombre: ${t.nombreCompleto}'),
                       Text('Estado Civil: ${t.estadoCivil}'),
                       Text('RUT: ${t.rut}'),
-                      Text('Fecha de Nacimiento: ${t.fechaDeNacimiento.toLocal().toString().split(' ')[0]}'),
+                      Text('Fecha de Nacimiento: ${t.fechaDeNacimiento.toIso8601String().split('T')[0]}'),
                       Text('Dirección: ${t.direccion}'),
                       Text('Correo Electrónico: ${t.correoElectronico}'),
                       Text('Sistema de Salud: ${t.sistemaDeSalud}'),
