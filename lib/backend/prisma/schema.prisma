@@ -124,7 +124,7 @@ model vehiculos {
 }
 
 model pagos {
-  id                  String   @id(map: "facturas_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                  String   @id(map: "pagos_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   nombre_mandante     String
   rut_mandante        String   @db.VarChar
   direccion_comercial String
