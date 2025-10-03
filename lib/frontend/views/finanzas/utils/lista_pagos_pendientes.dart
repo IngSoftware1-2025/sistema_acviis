@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/providers/pagos_provider.dart';
 import 'package:sistema_acviis/models/pagos.dart';
-import 'package:http/http.dart' as http;
-import 'dart:io';
-import 'package:open_file/open_file.dart';
 
 class ListaPagosPendientes extends StatefulWidget {
   final Function(List<Pago>)? onSeleccionadasChanged;
@@ -21,62 +18,6 @@ class _ListaPagosPendientesState extends State<ListaPagosPendientes> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<PagosProvider>(context, listen: false).fetchOtrosPagos();
     });
-  }
-
-  Future<void> descargarYAbrirPdf(String fotografiaId) async {
-  final url = 'http://localhost:3000/finanzas/download-pdf/$fotografiaId';
-  try {
-    final response = await http.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      final downloadsDir = Directory('${Platform.environment['USERPROFILE']}\\Downloads');
-      if (!await downloadsDir.exists()) {
-        await downloadsDir.create(recursive: true);
-      }
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final filePath = '${downloadsDir.path}/factura_${fotografiaId}_$timestamp.pdf';
-      final file = File(filePath);
-      await file.writeAsBytes(response.bodyBytes);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('PDF guardado en Descargas. Abriendo...')),
-      );
-      await OpenFile.open(filePath);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo descargar el PDF')),
-      );
-    }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al descargar el PDF: $e')),
-      );
-    }
-  }
-
-  Future<void> descargarFacturaPDF(BuildContext context, String pagoId, String codigo) async {
-    try {
-      final url = Uri.parse('http://localhost:3000/pagos/$pagoId/pdf');
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        final downloadsDir = Directory('${Platform.environment['USERPROFILE']}\\Downloads');
-        if (!await downloadsDir.exists()) {
-          await downloadsDir.create(recursive: true);
-        }
-        final file = File('${downloadsDir.path}/pago_$codigo.pdf');
-        await file.writeAsBytes(response.bodyBytes);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('PDF de pago guardado en Descargas. Abriendo...')),
-        );
-        await OpenFile.open(file.path);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo generar el PDF del pago')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    }
   }
 
   bool get _allSelected {
@@ -170,7 +111,8 @@ class _ListaPagosPendientesState extends State<ListaPagosPendientes> {
             onChanged: _toggleSelectAll,
           ),
         ),
-        Expanded(
+        SizedBox(
+          height: 350,
           child: ListView.builder(
             shrinkWrap: true,
             itemCount: pagosPendientes.length,
@@ -196,16 +138,12 @@ class _ListaPagosPendientesState extends State<ListaPagosPendientes> {
                       ElevatedButton.icon(
                         icon: Icon(Icons.download),
                         label: Text('Descargar PDF Mongo'),
-                        onPressed: () => descargarYAbrirPdf(pagoPendiente.fotografiaId),
+                        onPressed: () => pagosProvider.descargarArchivoPDF(context, pagoPendiente.fotografiaId),
                       ),
                     const SizedBox(width: 8),
                     ElevatedButton(
                       onPressed: () {
-                        descargarFacturaPDF(
-                          context,
-                          pagoPendiente.id.toString(),
-                          pagoPendiente.codigo,
-                        );
+                        pagosProvider.descargarFicha(context, pagoPendiente.id.toString(), pagoPendiente.codigo);
                       },
                       child: const Text('Descargar PDF'),
                     ),
