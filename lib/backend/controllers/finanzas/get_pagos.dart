@@ -33,7 +33,7 @@ Future<List<Pago>> fetchFacturasFromAPI() async {
     return [];
 }
 
-// Función específica solo para facturas normales (por si la necesitas)
+// Función específica solo para facturas normales
 Future<List<Pago>> fetchFacturasNormalesFromAPI() async {
   final response = await http.get(Uri.parse('http://localhost:3000/pagos'));
   if (response.statusCode == 200) {
@@ -46,7 +46,7 @@ Future<List<Pago>> fetchFacturasNormalesFromAPI() async {
     return [];
 }
 
-// Función específica solo para facturas de caja chica (por si la necesitas)
+// Función específica solo para facturas de caja chica
 Future<List<Pago>> fetchFacturasCajaChicaFromAPI() async {
   final response = await http.get(Uri.parse('http://localhost:3000/pagos'));
   if (response.statusCode == 200) {

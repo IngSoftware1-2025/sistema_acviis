@@ -46,12 +46,12 @@ Future<void> descargarFichaPDF(BuildContext context, String facturaId, String co
       final file = File('${downloadsDir.path}/factura_$codigo.pdf');
       await file.writeAsBytes(response.bodyBytes);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('PDF de factura guardado en Descargas. Abriendo...')),
+        SnackBar(content: Text('Ficha PDF guardado en Descargas. Abriendo...')),
       );
       await OpenFile.open(file.path);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo generar el PDF de la factura')),
+        const SnackBar(content: Text('No se pudo generar la ficha PDF')),
       );
     }
   } catch (e) {

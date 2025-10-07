@@ -36,11 +36,19 @@ class _FinanzasMainViewState extends State<FinanzasMainView> {
             },
             text: 'Facturas',
           ),
+          const SizedBox(height: 8),
           PrimaryButton(
             onPressed: () {
               Navigator.pushNamed(context, '/home_page/finanzas_main_view/pagos_pendientes_view');
             },
             text: 'Pagos Pendientes',
+          ),
+          const SizedBox(height: 8),
+          PrimaryButton(
+            onPressed: () {
+              Navigator.pushNamed(context, '/home_page/finanzas_main_view/configurar_notificaciones_view');
+            },
+            text: 'Configurar Notificaciones',
           ),
         ],
       ),

@@ -36,6 +36,8 @@ Future<String> createTrabajador({
   if (response.statusCode == 201) {
     final data = jsonDecode(response.body);
     return data['id']; 
+  } else if (response.statusCode == 409) {
+    throw Exception('RUT_DUPLICADO');
   } else {
     throw Exception('Error al crear trabajador: ${response.body}');
   }

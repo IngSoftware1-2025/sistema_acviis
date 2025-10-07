@@ -23,17 +23,23 @@ class ProveedoresProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   Future<void> fetchProveedores() async {
-    _isLoading = true;
-    notifyListeners();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _isLoading = true;
+      notifyListeners();
+    });
+
     try {
       final data = await fetchProveedoresFromApi();
       _todos = data;
       filtrar();
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _isLoading = false;
+        notifyListeners();
+      });
     }
   }
+
 
   void actualizarFiltros({
     String? busquedaGeneral,
@@ -97,4 +103,10 @@ class ProveedoresProvider extends ChangeNotifier {
     }
     await fetchProveedores();
   }
+
+  Future<void> precargarProveedores() async {
+    if (_proveedores.isEmpty) {
+      await fetchProveedores();
+  }
+}
 }
