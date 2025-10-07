@@ -78,14 +78,38 @@ class _ProveedoresViewState extends State<ProveedoresView> {
       );
       return;
     }
-    final provider = Provider.of<ProveedoresProvider>(context, listen: false);
-    for (final id in _seleccionados) {
-      await provider.eliminarProveedor(id);
+
+    // 1. Mostrar diálogo de confirmación
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar Eliminación Múltiple'),
+        content: Text('¿Estás seguro de que deseas eliminar ${_seleccionados.length} proveedor(es)? Esta acción cambiará su estado a "inactivo".'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    // 2. Si el usuario confirma, proceder con la eliminación (soft delete)
+    if (confirmar == true) {
+      final provider = Provider.of<ProveedoresProvider>(context, listen: false);
+      for (final id in _seleccionados) {
+        await provider.eliminarProveedor(id); // Esto ya hace el soft delete
+      }
+      setState(() {
+        _seleccionados.clear();
+      });
+      // No es necesario llamar a fetchProveedores() aquí, porque eliminarProveedor ya lo hace.
     }
-    setState(() {
-      _seleccionados.clear();
-    });
-    provider.fetchProveedores();
   }
 
   void _generarPdfSeleccionados() {
