@@ -10,7 +10,10 @@ import 'package:sistema_acviis/providers/comentarios_provider.dart';
 import 'package:sistema_acviis/providers/epp_provider.dart';
 import 'package:sistema_acviis/providers/proveedores_provider.dart';
 import 'package:sistema_acviis/providers/vehiculos_provider.dart';
+import 'package:sistema_acviis/providers/ordenes_provider.dart';
+import 'package:sistema_acviis/providers/itemizados_provider.dart';
 import 'package:sistema_acviis/providers/pagos_provider.dart';
+import 'package:sistema_acviis/providers/notificaciones_provider.dart';
 
 // No es necesario inicializar supabase porque las peticiones se haran al servidor de JS, y este conecta con la base de datos
 void main() {
@@ -25,7 +28,10 @@ void main() {
         ChangeNotifierProvider(create: (_) => EppProvider()),
         ChangeNotifierProvider(create: (_) => HerramientasProvider()),
         ChangeNotifierProvider(create:  (_) => VehiculosProvider()),
+        ChangeNotifierProvider(create: (_) => OrdenesProvider()),
+        ChangeNotifierProvider(create: (_) => ItemizadosProvider()),
         ChangeNotifierProvider(create: (_) => PagosProvider()),
+        ChangeNotifierProvider(create: (_) => NotificacionesProvider()),
       ],
       child: MainApp(),
     ),

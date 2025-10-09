@@ -2,6 +2,7 @@ import 'package:sistema_acviis/models/proveedor.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+// Obtiene todos los proveedores desde el backend
 Future<List<Proveedor>> fetchProveedoresFromApi() async {
   final response = await http.get(Uri.parse('http://localhost:3000/proveedores'));
   if (response.statusCode == 200) {
@@ -9,5 +10,16 @@ Future<List<Proveedor>> fetchProveedoresFromApi() async {
     return data.map((e) => Proveedor.fromMap(e)).toList();
   } else {
     throw Exception('Error al obtener proveedores');
+  }
+}
+
+// Obtiene un proveedor por ID
+Future<Proveedor> fetchProveedorFromApi(String id) async {
+  final response = await http.get(Uri.parse('http://localhost:3000/proveedores/$id'));
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> proveedor = jsonDecode(response.body);
+    return Proveedor.fromMap(proveedor);
+  } else {
+    throw Exception('Error al obtener proveedor');
   }
 }

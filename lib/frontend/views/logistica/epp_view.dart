@@ -210,81 +210,85 @@ PrimaryButton(
   }
 
   Future<void> _mostrarDialogoEliminarMultiples(
-  BuildContext context, 
-  List<EPP> eppsSeleccionados, 
-  EppProvider eppProvider
-) async {
-  return showDialog<void>(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Confirmar Eliminación Múltiple'),
-        content: SingleChildScrollView(
-          child: ListBody(
-            children: <Widget>[
-              Text('¿Estás seguro de que deseas eliminar ${eppsSeleccionados.length} EPP(s)?'),
-              SizedBox(height: 16),
-              Text(
-                'EPPs a eliminar:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 8),
-              ...eppsSeleccionados.map((epp) => Padding(
-                padding: EdgeInsets.symmetric(vertical: 2),
-                child: Text('• ${epp.tipo} (${epp.cantidad} unidades)'),
-              )).toList(),
-              SizedBox(height: 16),
-              Text(
-                'Esta acción no se puede deshacer.',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
+    BuildContext context, 
+    List<EPP> eppsSeleccionados, 
+    EppProvider eppProvider
+  ) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirmar Eliminación Múltiple'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('¿Estás seguro de que deseas eliminar ${eppsSeleccionados.length} EPP(s)?'),
+                SizedBox(height: 16),
+                Text(
+                  'EPPs a eliminar:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-              ),
-            ],
-          ),
-        ),
-        actions: <Widget>[
-          TextButton(
-            child: Text('Cancelar'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('Eliminar Todos', style: TextStyle(color: Colors.white)),
-            onPressed: () async {
-              Navigator.of(context).pop();
-              
-              final ids = eppsSeleccionados.map((epp) => epp.id!).toList();
-              final success = await eppProvider.eliminarEppsMultiples(ids);
-              
-              if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${eppsSeleccionados.length} EPP(s) eliminados exitosamente'),
-                    backgroundColor: Colors.green,
+                SizedBox(height: 8),
+                ...eppsSeleccionados.map((epp) => Padding(
+                  padding: EdgeInsets.symmetric(vertical: 2),
+                  child: Text('• ${epp.tipo} (${epp.cantidad} unidades)'),
+                )).toList(),
+                SizedBox(height: 16),
+                Text(
+                  'Esta acción no se puede deshacer.',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
                   ),
-                );
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: Text('Eliminar Todos', style: TextStyle(color: Colors.white)),
+              onPressed: () async {
+                // ⚡ GUARDAR REFERENCIA
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
                 
-                // Limpiar selección
-                final checkboxProvider = Provider.of<CheckboxProvider>(context, listen: false);
-                checkboxProvider.setCheckBoxes(eppProvider.epps.length);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error al eliminar EPPs: ${eppProvider.error}'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
+                Navigator.of(context).pop();
+                
+                final ids = eppsSeleccionados.map((epp) => epp.id!).toList();
+                final success = await eppProvider.eliminarEppsMultiples(ids);
+                
+                // ⚡ USAR REFERENCIA GUARDADA
+                if (success) {
+                  scaffoldMessenger.showSnackBar(
+                    SnackBar(
+                      content: Text('${eppsSeleccionados.length} EPP(s) eliminados exitosamente'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                  
+                  // Limpiar selección
+                  final checkboxProvider = Provider.of<CheckboxProvider>(context, listen: false);
+                  checkboxProvider.setCheckBoxes(eppProvider.epps.length);
+                } else {
+                  scaffoldMessenger.showSnackBar(
+                    SnackBar(
+                      content: Text('Error al eliminar EPPs: ${eppProvider.error}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 }

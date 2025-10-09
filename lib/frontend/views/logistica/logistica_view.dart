@@ -13,36 +13,44 @@ class LogisticaView extends StatefulWidget {
 class _LogisticaViewState extends State<LogisticaView> {
   @override
   Widget build(BuildContext context) {
-    final opciones = [
-      {
-        'title': 'EPP',
-        'description': 'Equipos de Protección Personal: Registrar, Consultar, Asignar',
-        'icon': Icon(Icons.security, color: AppColors.primaryDarker),
-        'screen': '/home_page/logistica_view/epp_view'
-      },
-      {
-        'title': 'Herramientas',
-        'description': 'Gestión de herramientas: Inventario, Asignación, Mantenimiento',
-        'icon': Icon(Icons.build, color: AppColors.primaryDarker),
-        'screen': '/home_page/logistica_view/herramientas_view'
-      },
-      {
-        'title': 'Vehículos',
-        'description': 'Gestión de vehículos: Mantenimiento, Asignación, Combustible',
-        'icon': Icon(Icons.directions_car, color: AppColors.primaryDarker),
-        'screen': '/home_page/logistica_view/vehiculos_view' 
-      },
-    ];
-
     return PrimaryScaffold(
       title: 'Logística',
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: GridCards(opciones: opciones)),
-        ],
-      )
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: 1500, // Limita el ancho máximo
+            maxHeight: 1000, // Limita la altura máxima
+          ),
+          child: GridCards(
+            opciones: [
+              {
+                'title': 'EPP',
+                'description': 'Equipos de Protección Personal: Registrar, Consultar, Asignar',
+                'icon': Icon(Icons.security, color: AppColors.primaryDarker),
+                'screen': '/home_page/logistica_view/epp_view'
+              },
+              {
+                'title': 'Herramientas',
+                'description': 'Gestión de herramientas: Inventario, Asignación, Mantenimiento',
+                'icon': Icon(Icons.build, color: AppColors.primaryDarker),
+                'screen': '/home_page/logistica_view/herramientas_view'
+              },
+              {
+                'title': 'Vehículos',
+                'description': 'Gestión de vehículos: Mantenimiento, Asignación, Combustible',
+                'icon': Icon(Icons.directions_car, color: AppColors.primaryDarker),
+                'screen': '/home_page/logistica_view/vehiculos_view'
+              },
+              {
+                'title': 'Órdenes de Compra',
+                'description': 'Gestión de órdenes de compra: Crear, Consultar',
+                'icon': Icon(Icons.receipt_long, color: AppColors.primaryDarker),
+                'screen': '/home_page/logistica_view/ordenes_view' 
+              }
+            ]
+          ),
+        ),
+      ),
     );
   }
 }

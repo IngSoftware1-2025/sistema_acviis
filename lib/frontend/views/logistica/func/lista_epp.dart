@@ -309,7 +309,7 @@ class _ListaEppState extends State<ListaEpp> {
     }
   }
 
-  // Función para eliminar EPP individual
+  // Función para eliminar EPP individual - CORREGIDA
   Future<void> _mostrarDialogoEliminarEpp(BuildContext context, dynamic epp) async {
     return showDialog<void>(
       context: context,
@@ -350,17 +350,25 @@ class _ListaEppState extends State<ListaEpp> {
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               child: Text('Eliminar', style: TextStyle(color: Colors.white)),
               onPressed: () async {
+                // ⚡ GUARDAR REFERENCIA AL SCAFFOLD MESSENGER ANTES DE CERRAR
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                
+                // Cerrar el diálogo
                 Navigator.of(context).pop();
                 
+                // Obtener provider
                 final eppProvider = Provider.of<EppProvider>(context, listen: false);
+                
+                // Ejecutar eliminación
                 final success = await eppProvider.eliminarEpp(epp.id!);
                 
+                // ⚡ USAR LA REFERENCIA GUARDADA EN LUGAR DE CONTEXT
                 if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(content: Text('EPP eliminado exitosamente')),
                   );
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  scaffoldMessenger.showSnackBar(
                     SnackBar(
                       content: Text('Error al eliminar EPP: ${eppProvider.error}'),
                       backgroundColor: Colors.red,
