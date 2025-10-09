@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/models/charla.dart';
 import 'package:sistema_acviis/providers/obras_provider.dart';
+import 'package:sistema_acviis/frontend/views/obras/programar_charla_dialog.dart';
 
 class ObrasView extends StatefulWidget {
   const ObrasView({super.key});
@@ -67,8 +68,15 @@ class _ObrasViewState extends State<ObrasView> {
                           leading: const Icon(Icons.add, color: Colors.green),
                           title: const Text('Programar nueva charla'),
                           onTap: () {
-                            // TODO: Implementar CU074 - Programación de charlas
-                            print('Programar charla para la obra: ${obra.nombre}');
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return ProgramarCharlaDialog(
+                                  obraId: obra.id,
+                                  obraNombre: obra.nombre,
+                                );
+                              },
+                            );
                           },
                         )
                       ],
@@ -109,4 +117,3 @@ class _ObrasViewState extends State<ObrasView> {
     );
   }
 }
-

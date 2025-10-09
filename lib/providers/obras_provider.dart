@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_acviis/models/obra.dart';
 import 'package:sistema_acviis/backend/controllers/obras/get_obras.dart';
+import 'package:sistema_acviis/backend/controllers/obras/create_charla.dart';
 
 class ObrasProvider extends ChangeNotifier {
   List<Obra> _todasLasObras = []; // Almacena todas las obras sin filtrar
@@ -30,6 +31,27 @@ class ObrasProvider extends ChangeNotifier {
         _isLoading = false;
         notifyListeners();
       });
+    }
+  }
+
+  Future<bool> programarCharla({
+    required String obraId,
+    required DateTime fechaProgramada,
+    String? tipoProgramacion,
+    int? intervaloDias,
+  }) async {
+    try {
+      final success = await createCharla(
+        obraId: obraId,
+        fechaProgramada: fechaProgramada,
+        tipoProgramacion: tipoProgramacion,
+        intervaloDias: intervaloDias,
+      );
+      if (success) await fetchObras(); // Recargar la lista si fue exitoso
+      return success;
+    } catch (e) {
+      print('Error en ObrasProvider al programar charla: $e');
+      return false;
     }
   }
 }
