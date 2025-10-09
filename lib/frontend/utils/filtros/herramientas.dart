@@ -228,12 +228,12 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
             Spacer(),
             Expanded(
               child: RangeSlider(
-                values: _rangoCantidad ?? const RangeValues(1, 10000),
-                min: 1,
+                values: _rangoCantidad ?? const RangeValues(0, 10000),
+                min: 0,
                 max: 10000,
                 divisions: 1000,
                 labels: RangeLabels(
-                  (_rangoCantidad?.start.round() ?? 1).toString(),
+                  (_rangoCantidad?.start.round() ?? 0).toString(),
                   (_rangoCantidad?.end.round() ?? 10000).toString(),
                 ),
                 onChanged: (RangeValues values) {
@@ -244,7 +244,7 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
               ),
             ),
             Text(
-              '${(_rangoCantidad?.start.round() ?? 1)} - ${(_rangoCantidad?.end.round() ?? 10000)} unidades',
+              '${(_rangoCantidad?.start.round() ?? 0)} - ${(_rangoCantidad?.end.round() ?? 10000)} unidades',
             ),
           ],
         ),

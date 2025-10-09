@@ -227,10 +227,6 @@ class _ModificarVehiculosViewState extends State<ModificarVehiculosView> {
                             const SnackBar(content: Text('Vehículo actualizado exitosamente')),
                           );
                           setState(() {});
-                          Navigator.of(context).pushNamedAndRemoveUntil(
-                            '/home_page/logistica_view/vehiculos_view',
-                            (Route<dynamic> route) => false,
-                          );
                         },
                         child: const Text('Guardar Cambios'),
                       ),
