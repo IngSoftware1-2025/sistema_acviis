@@ -185,5 +185,34 @@ model obras {
   estado      String?      @default("Activo") @db.VarChar
   createdat   DateTime?    @default(now()) @db.Timestamp(6)
   updatedat   DateTime?    @default(now()) @db.Timestamp(6)
+  responsable_email String? @db.VarChar
   itemizados  itemizados[]
+  charlas     charlas[]
+}
+
+model charlas {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  obra_id              String    @db.Uuid
+  fecha_programada     DateTime
+  estado               String    @default("Programada")
+  tipo_programacion    String?
+  intervalo_dias       Int?
+  recordatorio_enviado Boolean   @default(false)
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @default(now()) @updatedAt
+  obra                 obras     @relation(fields: [obra_id], references: [id], onDelete: Cascade)
+  asistencias_charlas  asistencias_charlas[]
+
+  @@map("charlas")
+}
+
+model asistencias_charlas {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  charla_id      String   @db.Uuid
+  nombre_archivo String
+  url_archivo    String
+  uploaded_at    DateTime @default(now())
+  charla         charlas  @relation(fields: [charla_id], references: [id], onDelete: Cascade)
+
+  @@map("asistencias_charlas")
 }
