@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'dart:convert';
 import 'package:provider/provider.dart';
+import 'package:sistema_acviis/frontend/widgets/buttons.dart';
 import 'package:sistema_acviis/models/charla.dart';
 import 'package:sistema_acviis/providers/obras_provider.dart';
 import 'package:sistema_acviis/frontend/views/obras/programar_charla_dialog.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:sistema_acviis/models/asistencia_charla.dart';
-import 'package:http/http.dart' as http;
+import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
+import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
+import 'package:sistema_acviis/frontend/widgets/checkbox.dart';
+
 
 class ObrasView extends StatefulWidget {
   const ObrasView({super.key});
@@ -23,72 +25,241 @@ class _ObrasViewState extends State<ObrasView> {
     super.initState();
     // Cargar los datos cuando la vista se inicializa
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ObrasProvider>(context, listen: false).fetchObras();
+      final obrasProvider = Provider.of<ObrasProvider>(context, listen: false);
+      obrasProvider.fetchObras().then((_) {
+        if (!mounted) return;
+        // Configurar los checkboxes con la cantidad de obras
+        Provider.of<CheckboxProvider>(context, listen: false)
+            .setCheckBoxes(obrasProvider.obras.length);
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final obrasProvider = Provider.of<ObrasProvider>(context);
+    final checkboxProvider = Provider.of<CheckboxProvider>(context);
+    
+    // Sincronizar los checkboxes con la cantidad de obras
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (checkboxProvider.checkBoxes.length != obrasProvider.obras.length + 1) {
+        checkboxProvider.setCheckBoxes(obrasProvider.obras.length);
+      }
+    });
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gestión de Charlas por Obra'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline),
-            tooltip: 'Crear Nueva Obra',
-            onPressed: () {
-              // TODO: Navegar a la pantalla de creación de obra
-            },
-          ),
-        ],
-      ),
-      body: obrasProvider.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: () => obrasProvider.fetchObras(),
-              child: ListView.builder(
-                itemCount: obrasProvider.obras.length,
-                itemBuilder: (context, index) {
-                  final obra = obrasProvider.obras[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    elevation: 4,
-                    child: ExpansionTile(
-                      leading: const Icon(Icons.construction),
-                      title: Text(
-                        obra.nombre,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+    return PrimaryScaffold(
+      title: 'Obras',
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Título a la izquierda
+                Row(
+                  children: [
+                    // Checkbox para seleccionar todas las obras
+                    if (checkboxProvider.checkBoxes.isNotEmpty)
+                      PrimaryCheckbox(customCheckbox: checkboxProvider.checkBoxes[0]),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Lista de obras registradas',
+                      style: TextStyle(
+                        fontFamily: 'Satoshi',
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
                       ),
-                      subtitle: Text('Estado: ${obra.estado ?? 'No definido'}'),
-                      children: [
-                        if (obra.charlas.isEmpty)
-                          const ListTile(
-                            title: Text('No hay charlas programadas.'),
-                          ),
-                        ...obra.charlas.map((charla) => _buildCharlaTile(context, charla, obra.id)),
-                        // Botón para agregar nueva charla
-                        ListTile(
-                          leading: const Icon(Icons.add, color: Colors.green),
-                          title: const Text('Programar nueva charla'),
-                          onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return ProgramarCharlaDialog(
-                                  obraId: obra.id,
-                                  obraNombre: obra.nombre,
-                                );
-                              },
-                            );
-                          },
-                        )
-                      ],
                     ),
-                  );
-                },
-              ),
+                    const SizedBox(width: 8),
+                    // Contador de seleccionados
+                    Builder(
+                      builder: (context) {
+                        int seleccionadas = 0;
+                        for (int i = 1; i < checkboxProvider.checkBoxes.length; i++) {
+                          if (checkboxProvider.checkBoxes[i].isSelected) {
+                            seleccionadas++;
+                          }
+                        }
+                        return seleccionadas > 0 
+                          ? Text(
+                              '($seleccionadas seleccionadas)',
+                              style: TextStyle(
+                                fontFamily: 'Satoshi',
+                                fontSize: 12,
+                                color: Colors.grey[700],
+                              ),
+                            )
+                          : const SizedBox.shrink();
+                      }
+                    ),
+                  ],
+                ),
+                // Botones a la derecha
+                Row(
+                  children: [
+                    PrimaryButton(
+                      text: 'Crear Nueva Obra',
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/home_page/obras_view/agregar_obras_view');
+                      },
+                      size: Size(175, 40),
+                    ),
+                    const SizedBox(width: 10), 
+                    PrimaryButton(
+                      text: 'Modificar Obra(s)',
+                      onPressed: () {
+                        // Verificar cuáles obras están seleccionadas
+                        final List<int> seleccionados = [];
+                        for (int i = 1; i < checkboxProvider.checkBoxes.length; i++) {
+                          if (checkboxProvider.checkBoxes[i].isSelected) {
+                            seleccionados.add(i - 1); // Restamos 1 porque el checkbox 0 es "Seleccionar todos"
+                          }
+                        }
+                        
+                        // Obtener las obras seleccionadas
+                        final obrasSeleccionadas = seleccionados
+                          .map((i) => obrasProvider.obras[i])
+                          .toList();
+                        
+                        if (obrasSeleccionadas.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Debes seleccionar al menos una obra.')),
+                          );
+                          return;
+                        }
+                        
+                        // Aquí iría la navegación a la vista de modificación
+                        // Navigator.pushNamed(context, '/home_page/obras_view/modificar_obras_view', 
+                        //   arguments: obrasSeleccionadas);
+                        
+                        // Por ahora mostraremos un SnackBar
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Seleccionaste ${obrasSeleccionadas.length} obras para modificar')),
+                        );
+                      },
+                      size: Size(175, 40), 
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: obrasProvider.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                    onRefresh: () async {
+                      await obrasProvider.fetchObras();
+                      return Future<void>.value();
+                    },
+                    child: ListView.builder(
+                      itemCount: obrasProvider.obras.length,
+                      itemBuilder: (context, index) {
+                        final obra = obrasProvider.obras[index];
+                        return Card(
+                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          elevation: 4,
+                          child: ExpansionTile(
+                            leading: PrimaryCheckbox(
+                              customCheckbox: checkboxProvider.checkBoxes[index + 1],
+                            ),
+                            title: Row(
+                              children: [
+                                Text(
+                                  obra.nombre,
+                                  style: const TextStyle(
+                                    fontFamily: 'Satoshi',
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return SimpleDialog(
+                                          title: const Text('Detalles de la obra'),
+                                          children: [
+                                            Padding(
+                                              padding: const EdgeInsets.all(16.0),
+                                              child: Text('Responsable: ${obra.responsableEmail ?? "N/A"}'),
+                                            ),
+                                            Padding(
+                                              padding: const EdgeInsets.all(16.0),
+                                              child: Text('Descripción: ${obra.descripcion ?? "N/A"}'),
+                                            ),
+                                          ],
+                                        );
+                                      }
+                                    );
+                                  },
+                                  icon: Icon(
+                                    Icons.comment_outlined,
+                                    size: 18,
+                                  ),
+                                  tooltip: 'Ver detalles',
+                                )
+                              ],
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Dirección: ${obra.direccion}',
+                                  style: const TextStyle(
+                                    fontFamily: 'Satoshi',
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                                ),
+                                if (obra.obraInicio != null && obra.obraFin != null)
+                                  Text(
+                                    'Duración: ${DateFormat('dd/MM/yyyy').format(obra.obraInicio!)} - ${DateFormat('dd/MM/yyyy').format(obra.obraFin!)}',
+                                    style: const TextStyle(
+                                      fontFamily: 'Satoshi',
+                                      fontWeight: FontWeight.w300,
+                                    ),
+                                  ),
+                                if (obra.jornada != null && obra.jornada!.isNotEmpty)
+                                  Text(
+                                    'Jornada: ${obra.jornada}',
+                                    style: const TextStyle(
+                                      fontFamily: 'Satoshi',
+                                      fontWeight: FontWeight.w300,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            children: [
+                              if (obra.charlas.isEmpty)
+                                const ListTile(
+                                  title: Text('No hay charlas programadas.'),
+                                ),
+                              ...obra.charlas.map((charla) => _buildCharlaTile(context, charla, obra.id)),
+                              // Botón para agregar nueva charla
+                              ListTile(
+                                leading: const Icon(Icons.add, color: Colors.green),
+                                title: const Text('Programar nueva charla'),
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return ProgramarCharlaDialog(
+                                        obraId: obra.id,
+                                        obraNombre: obra.nombre,
+                                      );
+                                    },
+                                  );
+                                },
+                              )
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
             ),
     );
   }

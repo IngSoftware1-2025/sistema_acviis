@@ -28,7 +28,6 @@ class _TrabajadoresViewState extends State<TrabajadoresView> {
       title: 'Trabajadores',
       body: Column(
         children: [
-        
         // Parte superior Lista de trabajadores
         Row(
           children: [
