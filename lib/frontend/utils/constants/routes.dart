@@ -33,6 +33,7 @@ import 'package:sistema_acviis/frontend/views/finanzas/finanzas_main_view.dart';
 import 'package:sistema_acviis/frontend/views/finanzas/facturas_view.dart';
 import 'package:sistema_acviis/frontend/views/finanzas/pagos_pendientes_view.dart';
 import 'package:sistema_acviis/frontend/views/finanzas/configurar_notificaciones_view.dart';
+import 'package:sistema_acviis/frontend/views/obras/obras_view.dart';
 /*
   Aqui se importaran todas las vistas presentes en el sistema.
 */
@@ -105,4 +106,5 @@ final Map<String, WidgetBuilder> routes = {
   '/home_page/finanzas_main_view/facturas_view': (BuildContext context) => FacturasView(),
   '/home_page/finanzas_main_view/pagos_pendientes_view': (BuildContext context) => PagosPendientesView(),
   '/home_page/finanzas_main_view/configurar_notificaciones_view': (BuildContext context) => ConfigurarNotificacionesView(),
+  '/home_page/obras_view': (BuildContext context) => const ObrasView(),
 };

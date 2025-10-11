@@ -14,6 +14,10 @@ import 'package:sistema_acviis/providers/ordenes_provider.dart';
 import 'package:sistema_acviis/providers/itemizados_provider.dart';
 import 'package:sistema_acviis/providers/pagos_provider.dart';
 import 'package:sistema_acviis/providers/notificaciones_provider.dart';
+import 'package:sistema_acviis/providers/obras_provider.dart';
+
+// Clave global para acceder al ScaffoldMessenger sin un BuildContext
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
 // No es necesario inicializar supabase porque las peticiones se haran al servidor de JS, y este conecta con la base de datos
 void main() {
@@ -32,6 +36,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => ItemizadosProvider()),
         ChangeNotifierProvider(create: (_) => PagosProvider()),
         ChangeNotifierProvider(create: (_) => NotificacionesProvider()),
+        ChangeNotifierProvider(create: (_) => ObrasProvider()),
       ],
       child: MainApp(),
     ),
@@ -44,6 +49,8 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: scaffoldMessengerKey, // Asignamos la clave global
       home: Scaffold(
         body: HomePage(),
       ),
