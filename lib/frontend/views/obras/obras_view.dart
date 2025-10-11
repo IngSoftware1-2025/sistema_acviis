@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:sistema_acviis/frontend/styles/app_colors.dart';
 import 'package:sistema_acviis/frontend/widgets/buttons.dart';
 import 'package:sistema_acviis/models/charla.dart';
 import 'package:sistema_acviis/providers/obras_provider.dart';
@@ -238,7 +239,7 @@ class _ObrasViewState extends State<ObrasView> {
                               ...obra.charlas.map((charla) => _buildCharlaTile(context, charla, obra.id)),
                               // Botón para agregar nueva charla
                               ListTile(
-                                leading: const Icon(Icons.add, color: Colors.green),
+                                leading: const Icon(Icons.add, color: AppColors.success),
                                 title: const Text('Programar nueva charla'),
                                 onTap: () {
                                   showDialog(
@@ -251,7 +252,30 @@ class _ObrasViewState extends State<ObrasView> {
                                     },
                                   );
                                 },
-                              )
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.engineering, color: AppColors.primaryDarker),
+                                title: const Text('Gestionar personal de obra'),
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context, 
+                                    '/home_page/obras_view/gestionar_trabajadores_view',
+                                    arguments: {
+                                      'obraId': obra.id,
+                                      'obraNombre': obra.nombre
+                                    }
+                                  );
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.business_center, color: AppColors.primaryDarker),
+                                title: const Text('Gestionar recursos logísticos de obra'),
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Funcionalidad de gestionar recursos logísticos no implementada.')),
+                                  );
+                                },
+                              ),
                             ],
                           ),
                         );
