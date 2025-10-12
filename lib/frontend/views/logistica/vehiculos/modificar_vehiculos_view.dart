@@ -36,6 +36,7 @@ class _ModificarVehiculosViewState extends State<ModificarVehiculosView> {
           'rueda_repuesto': TextEditingController(text: h.ruedaRepuesto.toString()),
           'observaciones': TextEditingController(text: h.observaciones ?? ''),
           'proxima_mantencion': TextEditingController(text: h.proximaMantencion.toIso8601String().split('T').first),
+          'tipo': TextEditingController(text: h.tipo),
         };
       },
     );
@@ -138,6 +139,13 @@ class _ModificarVehiculosViewState extends State<ModificarVehiculosView> {
                           decoration: const InputDecoration(labelText: 'Próxima Mantención (AAAA-MM-DD)'),
                         ),
                       ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: TextField(
+                          controller: c['tipo'],
+                          decoration: const InputDecoration(labelText: 'Tipo de Vehículo'),
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       ElevatedButton(
                         onPressed: () async {
@@ -152,6 +160,7 @@ class _ModificarVehiculosViewState extends State<ModificarVehiculosView> {
                             c['neumaticos']!,
                             c['rueda_repuesto']!,
                             c['proxima_mantencion']!,
+                            c['tipo']!,
                           ];
                           final algunoVacio = camposObligatorios.any((ctrl) => ctrl.text.isEmpty);
                           if (algunoVacio) {
@@ -220,6 +229,7 @@ class _ModificarVehiculosViewState extends State<ModificarVehiculosView> {
                             'rueda_repuesto': c['rueda_repuesto']!.text.toLowerCase() == 'true',
                             'observaciones': c['observaciones']!.text,
                             'proxima_mantencion': c['proxima_mantencion']!.text,
+                            'tipo': c['tipo']!.text,
                           };
 
                           await updateVehiculo(vehiculoData); 

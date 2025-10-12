@@ -271,8 +271,13 @@ class _ObrasViewState extends State<ObrasView> {
                                 leading: const Icon(Icons.business_center, color: AppColors.primaryDarker),
                                 title: const Text('Gestionar recursos logísticos de obra'),
                                 onTap: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Funcionalidad de gestionar recursos logísticos no implementada.')),
+                                  Navigator.pushNamed(
+                                    context, 
+                                    '/home_page/obras_view/gestionar_recursos_view',
+                                    arguments: {
+                                      'obraId': obra.id,
+                                      'obraNombre': obra.nombre
+                                    }
                                   );
                                 },
                               ),

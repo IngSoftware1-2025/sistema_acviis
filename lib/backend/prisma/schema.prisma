@@ -68,12 +68,13 @@ model comentarios {
 
 /// Prisma para model epp
 model epp {
-  id              Int      @id @default(autoincrement())
+  id              Int            @id @default(autoincrement())
   tipo            String
   obras_asignadas String[]
   cantidad        Int
   certificado_id  String?
-  fecha_registro  DateTime @default(now())
+  fecha_registro  DateTime       @default(now())
+  obra_recursos   obra_recurso[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -92,31 +93,34 @@ model proveedores {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model herramientas {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tipo        String    @db.VarChar
-  estado      String    @db.VarChar
-  garantia    DateTime? @db.Date
-  cantidad    Int       @db.SmallInt
-  obra_asig   String?   @db.VarChar
-  asig_inicio DateTime? @db.Date
-  asig_fin    DateTime? @db.Date
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tipo          String         @db.VarChar
+  estado        String         @db.VarChar
+  garantia      DateTime?      @db.Date
+  cantidad      Int            @db.SmallInt
+  obra_asig     String?        @db.VarChar
+  asig_inicio   DateTime?      @db.Date
+  asig_fin      DateTime?      @db.Date
+  obra_recursos obra_recurso[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model vehiculos {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  patente            String   @unique @db.VarChar
-  permiso_circ       String   @db.VarChar
-  revision_tecnica   DateTime @db.Date
-  revision_gases     DateTime @db.Date
-  ultima_mantencion  DateTime @db.Date
-  descripcion_mant   String?  @db.VarChar
+  id                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patente            String         @unique @db.VarChar
+  permiso_circ       String         @db.VarChar
+  revision_tecnica   DateTime       @db.Date
+  revision_gases     DateTime       @db.Date
+  ultima_mantencion  DateTime       @db.Date
+  descripcion_mant   String?        @db.VarChar
   capacidad_kg       Int
-  neumaticos         String   @db.VarChar
+  neumaticos         String         @db.VarChar
   rueda_repuesto     Boolean
-  observaciones      String?  @db.VarChar
-  estado             String   @db.VarChar
-  proxima_mantencion DateTime @db.Date
+  observaciones      String?        @db.VarChar
+  estado             String         @db.VarChar
+  proxima_mantencion DateTime       @db.Date
+  tipo               String         @db.VarChar
+  obra_recursos      obra_recurso[]
 }
 
 model ordenes_de_compra {
@@ -187,6 +191,7 @@ model obras {
   jornada           String?
   charlas           charlas[]
   itemizados        itemizados[]
+  obra_recursos     obra_recurso[]
   trabajador_obra   trabajador_obra[]
 }
 
@@ -230,4 +235,28 @@ model trabajador_obra {
   estado              String?
   obras               obras?        @relation(fields: [obra_id], references: [id], onDelete: Cascade)
   trabajadores        trabajadores? @relation(fields: [trabajador_id], references: [id], onDelete: Cascade)
+}
+
+/// Modelo para la asignación de recursos logísticos a obras
+model obra_recurso {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  obra_id          String        @db.Uuid
+  recurso_tipo     String        @db.VarChar
+  vehiculo_id      String?       @db.Uuid
+  herramienta_id   String?       @db.Uuid
+  epp_id           Int?
+  fecha_asignacion DateTime      @default(now()) @db.Timestamp(6)
+  fecha_retiro     DateTime?     @db.Timestamp(6)
+  cantidad         Int           @default(1)
+  observaciones    String?
+  estado           String        @default("activo") @db.VarChar
+  epp              epp?          @relation(fields: [epp_id], references: [id])
+  herramienta      herramientas? @relation(fields: [herramienta_id], references: [id])
+  obra             obras         @relation(fields: [obra_id], references: [id], onDelete: Cascade)
+  vehiculo         vehiculos?    @relation(fields: [vehiculo_id], references: [id])
+
+  @@index([obra_id], map: "idx_obra_recurso_obra")
+  @@index([vehiculo_id], map: "idx_obra_recurso_vehiculo")
+  @@index([herramienta_id], map: "idx_obra_recurso_herramienta")
+  @@index([epp_id], map: "idx_obra_recurso_epp")
 }
