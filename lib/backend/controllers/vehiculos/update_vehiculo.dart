@@ -20,6 +20,7 @@ Future<void> updateVehiculo(Map<String, dynamic> vehiculoData) async {
       'rueda_repuesto': vehiculoData['rueda_repuesto'],
       'observaciones': vehiculoData['observaciones'],
       'proxima_mantencion': DateTime.parse(vehiculoData['proxima_mantencion']).toUtc().toIso8601String(),
+      'tipo': vehiculoData['tipo'],
     }),
   );
 

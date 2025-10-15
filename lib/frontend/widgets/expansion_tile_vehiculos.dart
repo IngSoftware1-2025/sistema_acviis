@@ -11,7 +11,7 @@ class ExpansionTileVehiculos extends StatelessWidget {
   Widget build(BuildContext context) {
     return ExpansionTile(
       title: Text(vehiculo.patente),
-      subtitle: Text('Estado: ${vehiculo.estado}'),
+      subtitle: Text('Tipo: ${vehiculo.tipo} | Estado: ${vehiculo.estado}'),
       children: [
         ListTile(
           title: const Text('Permiso de circulación'),

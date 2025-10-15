@@ -13,6 +13,7 @@ Future<String> createVehiculo({
   required String tipoNeumaticos,
   String? observaciones,
   required bool tieneRuedaRepuesto,
+  required String tipo,
 }) async {
   final url = Uri.parse('http://localhost:3000/vehiculos');
 
@@ -31,6 +32,7 @@ Future<String> createVehiculo({
       'neumaticos': tipoNeumaticos,
       'observaciones': observaciones,
       'rueda_repuesto': tieneRuedaRepuesto,
+      'tipo': tipo,
     }),
   );
 
