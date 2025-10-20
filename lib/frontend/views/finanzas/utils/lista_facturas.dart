@@ -327,6 +327,15 @@ class _ListaFacturasState extends State<ListaFacturas> {
                                     .actualizarVisualizacion(factura.id, 'eliminado');
                                 await Provider.of<PagosProvider>(context, listen: false)
                                     .fetchFacturas();
+
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Factura eliminada correctamente'),
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
                               }
                             },
                           ),

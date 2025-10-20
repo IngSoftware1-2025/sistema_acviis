@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/func/cascade_manager.dart';
 import 'package:sistema_acviis/frontend/widgets/buttons.dart';
 import 'package:sistema_acviis/providers/herramientas_provider.dart';
 
 class HerramientasFiltrosDisplay extends StatefulWidget {
-  const HerramientasFiltrosDisplay({super.key});
+  final BuildContext parentContext;
+
+  const HerramientasFiltrosDisplay({super.key, required this.parentContext});
 
   @override
   State<HerramientasFiltrosDisplay> createState() => _HerramientasFiltrosDisplayState();
@@ -136,13 +139,25 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
             // Botón para seleccionar fecha desde
             ElevatedButton(
               onPressed: () async {
-                DateTime? fecha = await showDatePicker(
-                  context: context,
-                  initialDate: _garantiaDesde ?? DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
-                );
-                if (fecha != null) {
+                CascadeManager.instance.setInteractionEnabled(false);
+                try {
+                  final selected = await showDatePicker(
+                    context: widget.parentContext,
+                    initialDate: _garantiaDesde ?? DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                    useRootNavigator: true,
+                  );
+                  if (selected != null && mounted) {
+                    setState(() {
+                      _garantiaDesde = selected;
+                      if (_garantiaHasta != null && _garantiaHasta!.isBefore(selected)) {
+                        _garantiaHasta = selected;
+                      }
+                    });
+                  }
+                } finally {
+                  CascadeManager.instance.setInteractionEnabled(true);
                 }
               },
               child: Text(
@@ -155,13 +170,25 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
             // Botón para seleccionar fecha hasta
             ElevatedButton(
               onPressed: () async {
-                DateTime? fecha = await showDatePicker(
-                  context: context,
-                  initialDate: _garantiaHasta ?? DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
-                );
-                if (fecha != null) {
+                CascadeManager.instance.setInteractionEnabled(false);
+                try {
+                  final selected = await showDatePicker(
+                    context: widget.parentContext,
+                    initialDate: _garantiaHasta ?? (_garantiaDesde ?? DateTime.now()),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                    useRootNavigator: true,
+                  );
+                  if (selected != null && mounted) {
+                    setState(() {
+                      if (_garantiaDesde != null && selected.isBefore(_garantiaDesde!)) {
+                        _garantiaDesde = selected;
+                      }
+                      _garantiaHasta = selected;
+                    });
+                  }
+                } finally {
+                  CascadeManager.instance.setInteractionEnabled(true);
                 }
               },
               child: Text(
@@ -201,12 +228,12 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
             Spacer(),
             Expanded(
               child: RangeSlider(
-                values: _rangoCantidad ?? const RangeValues(1, 10000),
-                min: 1,
+                values: _rangoCantidad ?? const RangeValues(0, 10000),
+                min: 0,
                 max: 10000,
                 divisions: 1000,
                 labels: RangeLabels(
-                  (_rangoCantidad?.start.round() ?? 1).toString(),
+                  (_rangoCantidad?.start.round() ?? 0).toString(),
                   (_rangoCantidad?.end.round() ?? 10000).toString(),
                 ),
                 onChanged: (RangeValues values) {
@@ -217,7 +244,7 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
               ),
             ),
             Text(
-              '${(_rangoCantidad?.start.round() ?? 1)} - ${(_rangoCantidad?.end.round() ?? 10000)} unidades',
+              '${(_rangoCantidad?.start.round() ?? 0)} - ${(_rangoCantidad?.end.round() ?? 10000)} unidades',
             ),
           ],
         ),

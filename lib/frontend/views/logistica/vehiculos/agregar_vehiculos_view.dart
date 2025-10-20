@@ -80,6 +80,17 @@ class _AgregarVehiculosViewState extends State<AgregarVehiculosView> {
     ][DateTime.now().millisecondsSinceEpoch % 5],
   );
 
+  // ===================== Tipo de vehículo
+  final TextEditingController _tipoController = TextEditingController(
+    text: [
+      'Camioneta',
+      'Camión',
+      'Furgón',
+      'Automóvil',
+      'Maquinaria Pesada'
+    ][DateTime.now().millisecondsSinceEpoch % 5],
+  );
+
   // ===================== Observaciones generales (opcional)
   static final List<String> observacionesPrueba = [
     'Vehículo en buen estado, con mantenimiento al día y sin incidencias recientes.',
@@ -137,6 +148,7 @@ class _AgregarVehiculosViewState extends State<AgregarVehiculosView> {
               ? _observacionesController.text
               : null,
           tieneRuedaRepuesto: _tieneRuedaRepuesto,
+          tipo: _tipoController.text,
         );
 
         if (mounted) {
@@ -279,6 +291,14 @@ class _AgregarVehiculosViewState extends State<AgregarVehiculosView> {
               TextFormField(
                 controller: _tipoNeumaticoController,
                 decoration: const InputDecoration(labelText: 'Tipo de neumáticos'),
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Campo requerido' : null,
+              ),
+
+              // Tipo de vehículo
+              TextFormField(
+                controller: _tipoController,
+                decoration: const InputDecoration(labelText: 'Tipo de vehículo'),
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Campo requerido' : null,
               ),

@@ -9,20 +9,21 @@ datasource db {
 }
 
 model trabajadores {
-  id                       String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  nombre_completo          String        @unique @db.VarChar
-  estado_civil             String        @db.VarChar
-  rut                      String        @unique @db.VarChar
-  fecha_de_nacimiento      DateTime      @db.Date
-  direccion                String        @db.VarChar
-  correo_electronico       String        @unique @db.VarChar
-  sistema_de_salud         String        @db.VarChar
-  prevision_afp            String        @db.VarChar
-  obra_en_la_que_trabaja   String        @db.VarChar
-  rol_que_asume_en_la_obra String        @db.VarChar
-  estado                   String        @db.VarChar
+  id                       String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre_completo          String            @unique @db.VarChar
+  estado_civil             String            @db.VarChar
+  rut                      String            @unique @db.VarChar
+  fecha_de_nacimiento      DateTime          @db.Date
+  direccion                String            @db.VarChar
+  correo_electronico       String            @unique @db.VarChar
+  sistema_de_salud         String            @db.VarChar
+  prevision_afp            String            @db.VarChar
+  obra_en_la_que_trabaja   String            @db.VarChar
+  rol_que_asume_en_la_obra String            @db.VarChar
+  estado                   String            @db.VarChar
   comentarios              comentarios[]
   contratos                contratos[]
+  trabajador_obra          trabajador_obra[]
 }
 
 model contratos {
@@ -42,8 +43,6 @@ model anexos {
   id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   id_contrato       String        @db.Uuid
   fecha_de_creacion DateTime      @db.Date
-  duracion          String        @db.VarChar
-  tipo              String        @db.VarChar
   parametros        String        @default("") @db.VarChar
   contratos         contratos     @relation(fields: [id_contrato], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_anexo_contrato")
   comentarios       comentarios[]
@@ -67,69 +66,197 @@ model comentarios {
   @@index([id_trabajadores], map: "idx_comentarios_id_trabajadores")
 }
 
+/// Prisma para model epp
+model epp {
+  id              Int            @id @default(autoincrement())
+  tipo            String
+  obras_asignadas String[]
+  cantidad        Int
+  certificado_id  String?
+  fecha_registro  DateTime       @default(now())
+  obra_recursos   obra_recurso[]
+}
+
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model proveedores {
   id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  nombre             String    @db.VarChar
   rut                String    @unique @db.VarChar
   direccion          String?   @db.VarChar
-  correo_electronico String?   @db.VarChar
-  telefono           String?   @db.VarChar
-  estado             String?   @default("\"Activo\" para proveedores disponibles, \"Inactivo\" para proveedores no disponibles.") @db.VarChar
+  correo_vendedor    String?   @db.VarChar
+  telefono_vendedor  String?   @db.VarChar
   fecha_registro     DateTime? @db.Date
+  nombre_vendedor    String?   @db.VarChar
+  producto_servicio  String?   @db.VarChar
+  credito_disponible Int?
+  estado             String?   @db.VarChar
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model herramientas {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tipo        String    @db.VarChar
-  estado      String    @db.VarChar
-  garantia    DateTime? @db.Date
-  cantidad    Int       @db.SmallInt
-  obra_asig   String?   @db.VarChar
-  asig_inicio DateTime? @db.Date
-  asig_fin    DateTime? @db.Date
-}
-
-/// Prisma para model epp
-model epp {
-  id                  Int       @id @default(autoincrement())
-  tipo                String
-  obras_asignadas     String[]
-  cantidad            Int
-  certificado_id      String?
-  fecha_registro      DateTime  @default(now())
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tipo          String         @db.VarChar
+  estado        String         @db.VarChar
+  garantia      DateTime?      @db.Date
+  cantidad      Int            @db.SmallInt
+  obra_asig     String?        @db.VarChar
+  asig_inicio   DateTime?      @db.Date
+  asig_fin      DateTime?      @db.Date
+  obra_recursos obra_recurso[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model vehiculos {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  patente            String   @unique @db.VarChar
-  permiso_circ       String   @db.VarChar
-  revision_tecnica   DateTime @db.Date
-  revision_gases     DateTime @db.Date
-  ultima_mantencion  DateTime @db.Date
-  descripcion_mant   String?  @db.VarChar
+  id                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patente            String         @unique @db.VarChar
+  permiso_circ       String         @db.VarChar
+  revision_tecnica   DateTime       @db.Date
+  revision_gases     DateTime       @db.Date
+  ultima_mantencion  DateTime       @db.Date
+  descripcion_mant   String?        @db.VarChar
   capacidad_kg       Int
-  neumaticos         String   @db.VarChar
+  neumaticos         String         @db.VarChar
   rueda_repuesto     Boolean
-  observaciones      String?  @db.VarChar
-  estado             String   @db.VarChar
-  proxima_mantencion DateTime @db.Date
+  observaciones      String?        @db.VarChar
+  estado             String         @db.VarChar
+  proxima_mantencion DateTime       @db.Date
+  tipo               String         @db.VarChar
+  obra_recursos      obra_recurso[]
+}
+
+model ordenes_de_compra {
+  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  numero_orden      String?     @unique @db.VarChar
+  fecha_emision     DateTime?   @db.Date
+  centro_costo      String?     @db.VarChar
+  numero_cotizacion String?     @db.VarChar
+  nombre_servicio   String?     @db.VarChar
+  valor             Int?
+  descuento         Boolean?
+  notas_adicionales String?     @db.VarChar
+  estado            String?     @default("Activo") @db.VarChar
+  numero_contacto   String?     @db.VarChar
+  proveedorId       String?     @db.Uuid
+  itemizadoId       String?     @db.Uuid
+  createdAt         DateTime?   @default(now()) @db.Timestamp(6)
+  updatedAt         DateTime?   @default(now()) @updatedAt @db.Timestamp(6)
+  itemizado         itemizados? @relation(fields: [itemizadoId], references: [id], onUpdate: NoAction, map: "fk_ordenes_itemizados")
 }
 
 model pagos {
-  id                  String   @id @default(uuid())
+  id                  String   @id(map: "facturas_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   nombre_mandante     String
-  rut_mandante        String
+  rut_mandante        String   @db.VarChar
   direccion_comercial String
   codigo              String
   servicio_ofrecido   String
   valor               Float
-  plazo_pagar         DateTime
+  plazo_pagar         DateTime @db.Date
   estado_pago         String
   fotografia_id       String
   tipo_pago           String
   sentido             Boolean
-  visualizacion       String   @default("activo")
+  visualizacion       String
+  notificado          Boolean? @default(false)
+}
+
+model configuracion_notificaciones {
+  id          Int @id(map: "configuracionnotificaciones_pkey") @default(autoincrement())
+  diasantes   Int
+  diasdespues Int
+}
+
+model itemizados {
+  id               String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre           String              @db.VarChar
+  descripcion      String?             @db.VarChar
+  monto_total      Int
+  monto_disponible Int
+  obraId           String              @map("obraid") @db.Uuid
+  createdAt        DateTime?           @default(now()) @map("createdat") @db.Timestamp(6)
+  updatedAt        DateTime?           @default(now()) @map("updatedat") @db.Timestamp(6)
+  obra             obras               @relation(fields: [obraId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_itemizados_obra")
+  ordenes          ordenes_de_compra[]
+}
+
+model obras {
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre            String            @db.VarChar
+  descripcion       String?           @db.VarChar
+  createdat         DateTime?         @default(now()) @db.Timestamp(6)
+  updatedat         DateTime?         @default(now()) @db.Timestamp(6)
+  responsable_email String?           @db.VarChar
+  direccion         String
+  obraInicio        DateTime?         @db.Date
+  obraFin           DateTime?         @db.Date
+  jornada           String?
+  charlas           charlas[]
+  itemizados        itemizados[]
+  obra_recursos     obra_recurso[]
+  trabajador_obra   trabajador_obra[]
+}
+
+model charlas {
+  id                   String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  obra_id              String                @db.Uuid
+  fecha_programada     DateTime              @db.Timestamp(6)
+  estado               String                @default("Programada") @db.VarChar
+  tipo_programacion    String?               @db.VarChar
+  intervalo_dias       Int?
+  recordatorio_enviado Boolean               @default(false)
+  created_at           DateTime              @default(now()) @db.Timestamp(6)
+  updated_at           DateTime              @default(now()) @updatedAt @db.Timestamp(6)
+  asistencias_charlas  asistencias_charlas[]
+  obra                 obras                 @relation(fields: [obra_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("charlas")
+}
+
+model asistencias_charlas {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  charla_id      String   @db.Uuid
+  nombre_archivo String   @db.VarChar
+  url_archivo    String   @db.VarChar
+  uploaded_at    DateTime @default(now()) @db.Timestamp(6)
+  charla         charlas  @relation(fields: [charla_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("asistencias_charlas")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model trabajador_obra {
+  id                  String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at          DateTime      @default(now()) @db.Timestamptz(6)
+  trabajador_id       String?       @db.Uuid
+  obra_id             String?       @db.Uuid
+  fecha_asignacion    DateTime?     @db.Date
+  fecha_desasignacion DateTime?     @db.Date
+  rol_en_obra         String?       @db.VarChar
+  estado              String?
+  obras               obras?        @relation(fields: [obra_id], references: [id], onDelete: Cascade)
+  trabajadores        trabajadores? @relation(fields: [trabajador_id], references: [id], onDelete: Cascade)
+}
+
+/// Modelo para la asignación de recursos logísticos a obras
+model obra_recurso {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  obra_id          String        @db.Uuid
+  recurso_tipo     String        @db.VarChar
+  vehiculo_id      String?       @db.Uuid
+  herramienta_id   String?       @db.Uuid
+  epp_id           Int?
+  fecha_asignacion DateTime      @default(now()) @db.Timestamp(6)
+  fecha_retiro     DateTime?     @db.Timestamp(6)
+  cantidad         Int           @default(1)
+  observaciones    String?
+  estado           String        @default("activo") @db.VarChar
+  epp              epp?          @relation(fields: [epp_id], references: [id])
+  herramienta      herramientas? @relation(fields: [herramienta_id], references: [id])
+  obra             obras         @relation(fields: [obra_id], references: [id], onDelete: Cascade)
+  vehiculo         vehiculos?    @relation(fields: [vehiculo_id], references: [id])
+
+  @@index([obra_id], map: "idx_obra_recurso_obra")
+  @@index([vehiculo_id], map: "idx_obra_recurso_vehiculo")
+  @@index([herramienta_id], map: "idx_obra_recurso_herramienta")
+  @@index([epp_id], map: "idx_obra_recurso_epp")
 }

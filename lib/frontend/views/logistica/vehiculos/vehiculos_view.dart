@@ -77,6 +77,7 @@ class _VehiculosViewState extends State<VehiculosView> {
                   onPressed: () async {
                   final checkboxProvider = Provider.of<CheckboxProvider>(context, listen: false);
                   final vehiculosProvider = Provider.of<VehiculosProvider>(context, listen: false);
+                  final scaffoldMessenger = ScaffoldMessenger.of(context);
 
                   final seleccionados = <int>[];
                   for (int i = 1; i < checkboxProvider.checkBoxes.length; i++) {
@@ -86,7 +87,7 @@ class _VehiculosViewState extends State<VehiculosView> {
                   }
 
                   if (seleccionados.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    scaffoldMessenger.showSnackBar(
                       const SnackBar(content: Text('Debes seleccionar al menos un vehículo.')),
                     );
                     return;
@@ -100,16 +101,17 @@ class _VehiculosViewState extends State<VehiculosView> {
 
                   try {
                     await vehiculosProvider.darDeBaja(idsSeleccionados);
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    if (!mounted) return;
+                    scaffoldMessenger.showSnackBar(
                       const SnackBar(content: Text('Todos los vehículos seleccionados fueron dados de baja.')),
                     );
-                    Provider.of<CheckboxProvider>(context, listen: false)
-                      .setCheckBoxes(vehiculosProvider.vehiculos.length);
+                    checkboxProvider.setCheckBoxes(vehiculosProvider.vehiculos.length);
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    if (!mounted) return;
+                    scaffoldMessenger.showSnackBar(
                       const SnackBar(content: Text('Hubo un error al dar de baja vehículos.')),
                     );
-                    print("Hubo un error al dar de baja vehículos: $e");
+                    debugPrint('Hubo un error al dar de baja vehículos: $e');
                   }
                 },
                   text: 'Dar de baja vehículos',
@@ -130,7 +132,7 @@ class _VehiculosViewState extends State<VehiculosView> {
                 offset: 0.0,
                 icon: Icon(Icons.filter_alt_sharp),
                 children: [
-                  VehiculosFiltrosDisplay()
+                  VehiculosFiltrosDisplay(parentContext: context)
                 ],
               ),
             ],

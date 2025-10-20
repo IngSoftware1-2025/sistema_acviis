@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/func/agregar_comentario_func.dart';
-import 'package:sistema_acviis/frontend/views/trabajadores/utils/agregar_anexo_contrato_dialog.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/anexos/agregar_anexo_contrato_dialog.dart';
 import 'package:sistema_acviis/frontend/widgets/checkbox.dart';
 import 'package:sistema_acviis/frontend/utils/constants/constants.dart';
 import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';

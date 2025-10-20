@@ -20,7 +20,7 @@ class _HerramientasViewState extends State<HerramientasView> {
   @override
   Widget build(BuildContext context) {  
     return PrimaryScaffold(
-      title: 'Herrmamientas',
+      title: 'Herramientas',
       body: Column(
         children: [
           Row(
@@ -77,6 +77,7 @@ class _HerramientasViewState extends State<HerramientasView> {
                   onPressed: () async {
                   final checkboxProvider = Provider.of<CheckboxProvider>(context, listen: false);
                   final herramientasProvider = Provider.of<HerramientasProvider>(context, listen: false);
+                  final scaffoldMessenger = ScaffoldMessenger.of(context);
 
                   final seleccionadas = <int>[];
                   for (int i = 1; i < checkboxProvider.checkBoxes.length; i++) {
@@ -86,7 +87,7 @@ class _HerramientasViewState extends State<HerramientasView> {
                   }
 
                   if (seleccionadas.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    scaffoldMessenger.showSnackBar(
                       const SnackBar(content: Text('Debes seleccionar al menos una herramienta.')),
                     );
                     return;
@@ -100,16 +101,17 @@ class _HerramientasViewState extends State<HerramientasView> {
 
                   try {
                     await herramientasProvider.darDeBaja(idsSeleccionados);
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    if (!mounted) return;
+                    scaffoldMessenger.showSnackBar(
                       const SnackBar(content: Text('Todas las herramientas seleccionadas fueron dadas de baja.')),
                     );
-                    Provider.of<CheckboxProvider>(context, listen: false)
-                      .setCheckBoxes(herramientasProvider.herramientas.length);
+                    checkboxProvider.setCheckBoxes(herramientasProvider.herramientas.length);
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    if (!mounted) return;
+                    scaffoldMessenger.showSnackBar(
                       const SnackBar(content: Text('Hubo un error al dar de baja herramientas.')),
                     );
-                    print("Hubo un error al dar de baja herramientas: $e");
+                    debugPrint('Hubo un error al dar de baja herramientas: $e');
                   }
                 },
                   text: 'Dar de baja herramientas',
@@ -130,7 +132,7 @@ class _HerramientasViewState extends State<HerramientasView> {
                 offset: 0.0,
                 icon: Icon(Icons.filter_alt_sharp),
                 children: [
-                  HerramientasFiltrosDisplay()
+                  HerramientasFiltrosDisplay(parentContext: context)
                 ],
               ),
             ],

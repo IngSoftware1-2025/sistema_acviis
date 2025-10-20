@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/func/descargar_anexo_pdf.dart';
 import 'package:sistema_acviis/models/trabajador.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:sistema_acviis/frontend/widgets/comentarios_contrato_tile.dart';
-import 'package:sistema_acviis/frontend/views/trabajadores/utils/agregar_anexo_contrato_dialog.dart';
+import 'package:sistema_acviis/frontend/views/trabajadores/anexos/agregar_anexo_contrato_dialog.dart';
 
 class PersonalizedExpansionTile extends StatefulWidget {
   final Trabajador trabajador;
@@ -57,7 +58,7 @@ class _PersonalizedExpansionTileState extends State<PersonalizedExpansionTile> {
                       Text('Nombre: ${t.nombreCompleto}'),
                       Text('Estado Civil: ${t.estadoCivil}'),
                       Text('RUT: ${t.rut}'),
-                      Text('Fecha de Nacimiento: ${t.fechaDeNacimiento.toLocal().toString().split(' ')[0]}'),
+                      Text('Fecha de Nacimiento: ${t.fechaDeNacimiento.toIso8601String().split('T')[0]}'),
                       Text('Dirección: ${t.direccion}'),
                       Text('Correo Electrónico: ${t.correoElectronico}'),
                       Text('Sistema de Salud: ${t.sistemaDeSalud}'),
@@ -190,33 +191,42 @@ class _HorizontalExpandableContractsState extends State<_HorizontalExpandableCon
                     return ListTile(
                       title: Text(anexo['tipo'] ?? 'Anexo ${anexo['id'] ?? i + 1}'),
                       subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('ID: ${anexo['id'] ?? ''}'),
-                          Text('Fecha de creación: ${anexo['fecha_de_creacion']?.toString().split('T').first ?? ''}'),
-                          Text('Duración: ${anexo['duracion'] ?? ''}'),
-                          Text('Parámetros: ${anexo['parametros'] ?? ''}'),
-                          if ((anexo['comentarios'] as List?)?.isNotEmpty ?? false)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('Comentario:', style: TextStyle(fontWeight: FontWeight.bold)),
-                                  ...((anexo['comentarios'] as List).map<Widget>((comentario) => Padding(
-                                        padding: const EdgeInsets.only(left: 8.0, bottom: 4.0),
-                                        child: Text(
-                                          '- ${comentario['comentario'] ?? ''}',
-                                          style: const TextStyle(fontStyle: FontStyle.italic),
-                                        ),
-                                      ))),
-                                ],
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Id_contrato: ${anexo['id_contrato'] ?? ''}'),
+                        Text('Fecha de creación: ${anexo['fecha_de_creacion']?.toString().split('T').first ?? ''}'),
+                        Text('Duración: ${anexo['duracion'] ?? ''}'),
+                        Text('Parámetros: ${anexo['parametros'] ?? ''}'),
+                        if ((anexo['comentarios'] as List?)?.isNotEmpty ?? false)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Comentario:', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ...((anexo['comentarios'] as List).map<Widget>((comentario) => Padding(
+                              padding: const EdgeInsets.only(left: 8.0, bottom: 4.0),
+                              child: Text(
+                                '- ${comentario['comentario'] ?? ''}',
+                                style: const TextStyle(fontStyle: FontStyle.italic),
                               ),
-                            ),
-                        ],
+                              ))),
+                          ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ElevatedButton.icon(
+                        icon: const Icon(Icons.remove_red_eye_sharp),
+                        label: const Text('Visualizar Anexo'),
+                        onPressed: () {
+                          descargarAnexoPDF(context, anexo['id']);
+                        },
+                        ),
+                      ],
                       ),
                     );
                   },
+
                 ),
               )
             : const Text('No hay anexos para este contrato.'),
@@ -264,14 +274,36 @@ class _HorizontalExpandableContractsState extends State<_HorizontalExpandableCon
                         Text('Estado: ${contrato['estado'] ?? ''}'),
                         Text('Fecha: ${contrato['fecha_de_contratacion'] ?? ''}'),
                         const SizedBox(height: 8),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.attach_file),
-                          label: const Text('Ver anexos'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.white,
+                        Row(
+                          children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                            icon: const Icon(Icons.attach_file),
+                            label: const Text('Ver anexos'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: anexos.isNotEmpty ? () => _showAnexosDialog(anexos) : null,
+                            ),
                           ),
-                          onPressed: anexos.isNotEmpty ? () => _showAnexosDialog(anexos) : null,
+                          const SizedBox(width: 8),
+                          /*
+                          Expanded(
+                            child: ElevatedButton.icon(
+                            icon: const Icon(Icons.remove_red_eye_sharp),
+                            label: const Text('Visualizar Contrato'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: () {
+                              descargarAnexoPDF(context, idContrato);
+                            },
+                            ),
+                          ),
+                          */
+                          ],
                         ),
                         const SizedBox(height: 8),
                         // Aquí se muestra el menú de comentarios
