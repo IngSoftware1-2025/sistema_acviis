@@ -13,6 +13,8 @@ class ListaOrdenes extends StatefulWidget {
 }
 
 class _ListaOrdenesState extends State<ListaOrdenes> {
+  bool _checkBoxesInicializados = false;
+
   @override
   void initState() {
     super.initState();
@@ -23,11 +25,33 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
       );
       await ordenesProvider.fetchOrdenes();
       if (!mounted) return;
-      Provider.of<CheckboxProvider>(
+
+      final checkboxProvider = Provider.of<CheckboxProvider>(
         context,
         listen: false,
-      ).setCheckBoxes(ordenesProvider.ordenes.length);
+      );
+
+      if (checkboxProvider.checkBoxes.length !=
+          ordenesProvider.ordenes.length + 1) {
+        checkboxProvider.setCheckBoxes(ordenesProvider.ordenes.length);
+        _checkBoxesInicializados = true;
+      }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final ordenesProvider = Provider.of<OrdenesProvider>(context);
+    final checkboxProvider = Provider.of<CheckboxProvider>(context);
+
+    if (!_checkBoxesInicializados &&
+        ordenesProvider.ordenes.isNotEmpty &&
+        checkboxProvider.checkBoxes.length !=
+            ordenesProvider.ordenes.length + 1) {
+      checkboxProvider.setCheckBoxes(ordenesProvider.ordenes.length);
+      _checkBoxesInicializados = true;
+    }
   }
 
   bool get _tieneSeleccionadas {
@@ -85,7 +109,8 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
                             .asMap()
                             .entries
                             .where((entry) =>
-                                checkboxProvider.checkBoxes[entry.key + 1].isSelected)
+                                checkboxProvider.checkBoxes[entry.key + 1]
+                                    .isSelected)
                             .map((entry) => entry.value)
                             .toList();
 
