@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
 import 'package:sistema_acviis/frontend/views/obras/dialogs/agregar_item.dart';
+import 'package:sistema_acviis/providers/itemizados_provider.dart';
 
 class GestionarItemizadosView extends StatefulWidget {
   const GestionarItemizadosView({super.key});
@@ -15,8 +17,6 @@ class _GestionarItemizadosViewState extends State<GestionarItemizadosView> {
   String? obraNombre;
   bool isLoading = false;
 
-  final List<Map<String, dynamic>> _itemizados = [];
-
   @override
   void initState() {
     super.initState();
@@ -27,6 +27,8 @@ class _GestionarItemizadosViewState extends State<GestionarItemizadosView> {
             ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>? ?? {};
         obraId = args['obraId'];
         obraNombre = args['obraNombre'];
+        // precargar itemizados desde el provider
+        Provider.of<ItemizadosProvider>(context, listen: false).precargarItemizados();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error al obtener datos de la obra: $e')),
@@ -40,9 +42,40 @@ class _GestionarItemizadosViewState extends State<GestionarItemizadosView> {
   Future<void> _abrirDialogoAgregarItem() async {
     final nuevoItem = await mostrarDialogoAgregarItem(context);
     if (nuevoItem != null) {
-      setState(() {
-        _itemizados.add(nuevoItem);
-      });
+      try {
+        setState(() => isLoading = true);
+        await Provider.of<ItemizadosProvider>(context, listen: false)
+            .crearItemizado(nuevoItem);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ítem agregado correctamente')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al agregar ítem: $e')),
+        );
+      } finally {
+        setState(() => isLoading = false);
+      }
+    }
+  }
+
+  dynamic _valorCampo(dynamic item, String campo) {
+    try {
+      if (item == null) return null;
+      if (item is Map) return item[campo];
+      final dyn = item as dynamic;
+      switch (campo) {
+        case 'nombre':
+          return dyn.nombre ?? dyn.name;
+        case 'cantidad':
+          return dyn.cantidad ?? dyn.quantity ?? dyn.cant;
+        case 'valor_total':
+          return dyn.valorTotal ?? dyn.valor_total ?? dyn.valor;
+        default:
+          return null;
+      }
+    } catch (_) {
+      return null;
     }
   }
 
@@ -53,9 +86,12 @@ class _GestionarItemizadosViewState extends State<GestionarItemizadosView> {
     obraId = args['obraId'];
     obraNombre = args['obraNombre'];
 
+    final prov = context.watch<ItemizadosProvider>();
+    final items = prov.itemizados;
+
     return PrimaryScaffold(
       title: 'Itemizado de obra ${obraNombre != null ? " - $obraNombre" : ""}',
-      body: isLoading
+      body: isLoading || prov.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
               padding: const EdgeInsets.all(16.0),
@@ -74,7 +110,7 @@ class _GestionarItemizadosViewState extends State<GestionarItemizadosView> {
                   ),
                   const SizedBox(height: 10),
                   Expanded(
-                    child: _itemizados.isEmpty
+                    child: items.isEmpty
                         ? const Center(child: Text('No hay ítems registrados aún.'))
                         : SingleChildScrollView(
                             scrollDirection: Axis.vertical,
@@ -106,15 +142,13 @@ class _GestionarItemizadosViewState extends State<GestionarItemizadosView> {
                                               style: TextStyle(
                                                   fontWeight: FontWeight.bold))),
                                     ],
-                                    rows: _itemizados
+                                    rows: items
                                         .map(
                                           (item) => DataRow(
                                             cells: [
-                                              DataCell(Text(item['nombre'])),
-                                              DataCell(
-                                                  Text(item['cantidad'].toString())),
-                                              DataCell(Text(
-                                                  item['valor_total'].toString())),
+                                              DataCell(Text(_valorCampo(item, 'nombre')?.toString() ?? '')),
+                                              DataCell(Text(_valorCampo(item, 'cantidad')?.toString() ?? '')),
+                                              DataCell(Text(_valorCampo(item, 'valor_total')?.toString() ?? '')),
                                             ],
                                           ),
                                         )

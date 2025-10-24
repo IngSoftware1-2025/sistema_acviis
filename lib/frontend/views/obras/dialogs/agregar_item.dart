@@ -69,7 +69,7 @@ Future<Map<String, dynamic>?> mostrarDialogoAgregarItem(BuildContext context) as
               Navigator.pop(context, {
                 'nombre': nombreCtrl.text.trim(),
                 'cantidad': int.parse(cantidadCtrl.text),
-                'valor_total': int.parse(valorCtrl.text),
+                'monto_disponible': int.parse(valorCtrl.text),
               });
             }
           },
