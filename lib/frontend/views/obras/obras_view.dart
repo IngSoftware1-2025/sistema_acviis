@@ -281,6 +281,20 @@ class _ObrasViewState extends State<ObrasView> {
                                   );
                                 },
                               ),
+                              ListTile(
+                                leading: const Icon(Icons.business_center, color: AppColors.primaryDarker),
+                                title: const Text('Gestionar Itemizados de obra'),
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context, 
+                                    '/home_page/obras_view/gestionar_itemizados_view',
+                                    arguments: {
+                                      'obraId': obra.id,
+                                      'obraNombre': obra.nombre
+                                    }
+                                  );
+                                },
+                              ),
                             ],
                           ),
                         );

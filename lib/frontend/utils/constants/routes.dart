@@ -37,6 +37,7 @@ import 'package:sistema_acviis/frontend/views/finanzas/facturas_view.dart';
 import 'package:sistema_acviis/frontend/views/finanzas/pagos_pendientes_view.dart';
 import 'package:sistema_acviis/frontend/views/finanzas/configurar_notificaciones_view.dart';
 import 'package:sistema_acviis/frontend/views/obras/obras_view.dart';
+import 'package:sistema_acviis/frontend/views/obras/gestionar_itemizados_view.dart';
 /*
   Aqui se importaran todas las vistas presentes en el sistema.
 */
@@ -120,5 +121,8 @@ final Map<String, WidgetBuilder> routes = {
     final obraId = args?['obraId'] as String?;
     final obraNombre = args?['obraNombre'] as String?;
     return GestionarRecursosView(obraId: obraId, obraNombre: obraNombre);
+  },
+  '/home_page/obras_view/gestionar_itemizados_view': (BuildContext context) {
+    return GestionarItemizadosView();
   },
 };
