@@ -385,6 +385,7 @@ class _AsignarEppViewState extends State<AsignarEppView> {
   Future<void> _guardarAsignacion(EppProvider eppProvider) async {
     try {
       final success = await eppProvider.modificarEPP(
+      context: context, 
         id: widget.epp.id!,
         tipo: widget.epp.tipo,
         obrasAsignadas: _obrasSeleccionadas,
