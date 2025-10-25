@@ -3,12 +3,18 @@ import 'package:sistema_acviis/backend/controllers/obra_finanzas/obtener_finanza
 import 'package:sistema_acviis/backend/controllers/obra_finanzas/crear_caja_chica.dart' as backend_crear;
 import 'package:sistema_acviis/backend/controllers/obra_finanzas/cerrar_caja_chica.dart' as backend_cerrar;
 import 'package:sistema_acviis/backend/controllers/obra_finanzas/modificar_caja_chica.dart' as backend_modificar;
+import 'package:sistema_acviis/backend/controllers/obra_finanzas/generar_pdf_caja_chica.dart' as backend_pdf;
 import 'package:sistema_acviis/models/obra_finanza.dart';
 
 class FinanzasObraProvider with ChangeNotifier {
   List<ObraFinanza> _finanzas = [];
   bool _isLoading = false;
   String? _error;
+  
+  // Cache para información de la obra
+  String? _obraNombre;
+  String? _obraDireccion;
+  String? _responsableEmail;
 
   // Getters
   List<ObraFinanza> get finanzas => _finanzas;
@@ -25,6 +31,17 @@ class FinanzasObraProvider with ChangeNotifier {
     return _finanzas.where((f) => 
       f.tipo == 'caja chica' && f.estado == 'activa'
     ).toList();
+  }
+
+  // Guardar información de la obra para uso en PDF
+  void setObraInfo({
+    required String nombre,
+    required String direccion,
+    String? responsableEmail,
+  }) {
+    _obraNombre = nombre;
+    _obraDireccion = direccion;
+    _responsableEmail = responsableEmail;
   }
 
   // Cargar finanzas de una obra
@@ -150,6 +167,26 @@ class FinanzasObraProvider with ChangeNotifier {
     }
   }
 
+  // Generar PDF de caja chica
+  Future<void> generarPDFCajaChica(ObraFinanza cajaChica) async {
+    try {
+      if (_obraNombre == null || _obraDireccion == null) {
+        throw Exception('Información de la obra no disponible. Recarga los datos.');
+      }
+
+      await backend_pdf.generarPDFCajaChica(
+        cajaChica: cajaChica,
+        obraNombre: _obraNombre!,
+        obraDireccion: _obraDireccion!,
+        responsableEmail: _responsableEmail,
+      );
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   // Limpiar caché
   Future<void> limpiarCacheFinanzasDisponibles() async {
     // Si tienes caché, límpialo aquí
@@ -158,6 +195,9 @@ class FinanzasObraProvider with ChangeNotifier {
   void clear() {
     _finanzas = [];
     _error = null;
+    _obraNombre = null;
+    _obraDireccion = null;
+    _responsableEmail = null;
     notifyListeners();
   }
 }
