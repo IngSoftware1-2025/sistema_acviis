@@ -54,6 +54,14 @@ class _GestionarFinanzasViewState extends State<GestionarFinanzasView> with Sing
       
       try {
         _finanzasProvider = Provider.of<FinanzasObraProvider>(context, listen: false);
+        
+        // Guardar información de la obra para el PDF
+        _finanzasProvider!.setObraInfo(
+          nombre: widget.obraNombre ?? 'Obra sin nombre',
+          direccion: 'Dirección no disponible', // Puedes obtenerla de la obra si la tienes
+          responsableEmail: null, // Puedes obtenerlo de la obra si lo tienes
+        );
+        
         await _finanzasProvider!.limpiarCacheFinanzasDisponibles();
         await _finanzasProvider!.cargarFinanzasObra(widget.obraId!, forceRefresh: true);
       } catch (e) {
@@ -226,6 +234,18 @@ class _GestionarFinanzasViewState extends State<GestionarFinanzasView> with Sing
               ),
               Row(
                 children: [
+                  // Botón Generar PDF
+                  ElevatedButton.icon(
+                    onPressed: () => _generarPDFCajaChica(caja),
+                    icon: const Icon(Icons.picture_as_pdf, size: 18),
+                    label: const Text('Generar PDF'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[700],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   OutlinedButton.icon(
                     onPressed: () => _mostrarDialogoModificarCajaChica(caja),
                     icon: const Icon(Icons.edit),
@@ -1331,6 +1351,58 @@ class _GestionarFinanzasViewState extends State<GestionarFinanzasView> with Sing
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
+      }
+    }
+  }
+    Future<void> _generarPDFCajaChica(dynamic cajaData) async {
+    try {
+      // Convertir dynamic a ObraFinanza
+      final caja = _finanzasProvider!.cajasChicasActivas.firstWhere(
+        (f) => f.id == cajaData.id,
+        orElse: () => throw Exception('Caja chica no encontrada'),
+      );
+
+      // Mostrar indicador de carga
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Generando PDF...'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Generar el PDF
+      await _finanzasProvider!.generarPDFCajaChica(caja);
+
+      if (mounted) {
+        // Cerrar indicador de carga
+        Navigator.pop(context);
+        
+        // Mostrar mensaje de éxito
+        _mostrarMensaje('PDF generado correctamente. Se abrirá en una nueva pestaña.');
+      }
+    } catch (e) {
+      print('Error al generar PDF: $e');
+      if (mounted) {
+        // Cerrar indicador de carga si está abierto
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
+        
+        // Mostrar mensaje de error
+        _mostrarMensaje('Error al generar PDF: $e', duracion: const Duration(seconds: 5));
       }
     }
   }
