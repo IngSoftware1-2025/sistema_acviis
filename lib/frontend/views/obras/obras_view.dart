@@ -282,7 +282,7 @@ class _ObrasViewState extends State<ObrasView> {
                                 },
                               ),
                               ListTile(
-                                leading: const Icon(Icons.business_center, color: AppColors.primaryDarker),
+                                leading: const Icon(Icons.inventory, color: AppColors.primaryDarker),
                                 title: const Text('Gestionar Itemizados de obra'),
                                 onTap: () {
                                   Navigator.pushNamed(

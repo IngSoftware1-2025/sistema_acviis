@@ -78,8 +78,8 @@ factory OrdenCompra.fromJson(Map<String, dynamic> json) {
             fechaRegistro: DateTime.now(),
           ),
     itemizado: itemizadoJson != null
-        ? Itemizado.fromJson(itemizadoJson)
-        : Itemizado(id: '', nombre: '', montoDisponible: 0),
+    ? Itemizado.fromJson(itemizadoJson)
+    : Itemizado(id: '', nombre: '', cantidad: 0, montoTotal: 0, montoDisponible: 0),
   );
 }
 
