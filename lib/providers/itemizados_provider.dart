@@ -7,6 +7,9 @@ class ItemizadosProvider extends ChangeNotifier {
   List<Itemizado> _itemizados = [];
   List<Itemizado> get itemizados => _itemizados;
 
+  List<Itemizado> _itemizadosObra = [];
+  List<Itemizado> get itemizadosObra => _itemizadosObra;
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
