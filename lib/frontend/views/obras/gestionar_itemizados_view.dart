@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sistema_acviis/models/itemizado.dart';
 import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
 import 'package:sistema_acviis/frontend/views/obras/dialogs/agregar_item.dart';
 import 'package:sistema_acviis/providers/itemizados_provider.dart';
 import 'package:sistema_acviis/frontend/utils/itemizados_pdf_generator.dart';
-
 
 class GestionarItemizadosView extends StatefulWidget {
   const GestionarItemizadosView({super.key});
@@ -43,7 +41,7 @@ class _GestionarItemizadosViewState extends State<GestionarItemizadosView> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(ok ? 'Ítem agregado' : 'Error al agregar ítem')));
+          .showSnackBar(SnackBar(content: Text(ok ? 'Ítem agregado con éxito' : 'Error al agregar ítem')));
     }
   }
 
@@ -81,62 +79,75 @@ class _GestionarItemizadosViewState extends State<GestionarItemizadosView> {
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: Consumer<ItemizadosProvider>(
-                builder: (_, provider, __) {
-                  if (provider.isLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+              child: Consumer<ItemizadosProvider>(builder: (_, provider, __) {
+                if (provider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                  if (provider.itemizados.isEmpty) {
-                    return const Center(child: Text('No hay ítems registrados aún.'));
-                  }
+                if (provider.itemizados.isEmpty) {
+                  return const Center(child: Text('No hay ítems registrados aún.'));
+                }
 
-                  final totalEstimado = provider.itemizados.fold<int>(0, (a, b) => a + b.montoTotal);
+                final totalEstimado =
+                    provider.itemizados.fold<int>(0, (a, b) => a + b.montoTotal);
 
-                  return Column(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          width: double.infinity, 
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
-                            child: DataTable(
-                              columnSpacing: 40,
-                              headingRowColor: MaterialStateProperty.all(Colors.grey.shade200),
-                              columns: const [
-                                DataColumn(label: Text('Nombre')),
-                                DataColumn(label: Text('Cantidad')),
-                                DataColumn(label: Text('Valor total')),
-                              ],
-                              rows: provider.itemizados.map((Itemizado item) {
-                                return DataRow(
-                                  cells: [
-                                    DataCell(Text(item.nombre)),
-                                    DataCell(Text(item.cantidad.toString())),
-                                    DataCell(Text('\$${item.montoTotal.toString()}')),
-                                  ],
-                                );
-                              }).toList(),
-                            ),
+                return Column(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.vertical,
+                          child: DataTable(
+                            columnSpacing: 40,
+                            headingRowColor: MaterialStateProperty.all(Colors.grey.shade200),
+                            columns: const [
+                              DataColumn(label: Text('Nombre')),
+                              DataColumn(label: Text('Cantidad')),
+                              DataColumn(label: Text('Valor total')),
+                              DataColumn(label: Text('Gasto total')),
+                              DataColumn(label: Text('Exceso de gasto')),
+                            ],
+                            rows: provider.itemizados.asMap().entries.map((entry) {
+                              final item = entry.value;
+                              bool exceso = item.gastoActual > item.montoTotal;
+
+                              Color rowColor = exceso ? Colors.red.shade100 : Colors.white;
+
+                              return DataRow(
+                                color: MaterialStateProperty.resolveWith<Color>(
+                                  (Set<MaterialState> states) {
+                                    return rowColor; 
+                                  },
+                                ),
+                                cells: [
+                                  DataCell(Text(item.nombre)),
+                                  DataCell(Text(item.cantidad.toString())),
+                                  DataCell(Text('\$${item.montoTotal.toStringAsFixed(0)}')), 
+                                  DataCell(Text('\$${item.gastoActual.toStringAsFixed(0)}')), 
+                                  DataCell(Text(exceso ? 'Sí' : 'No')), 
+                                ],
+                              );
+                            }).toList(),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          'TOTAL ESTIMADO:  \$${totalEstimado.toString()}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                      )
-                    ],
-                  );
-                },
-              ),
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        'TOTAL ESTIMADO:  \$${totalEstimado.toStringAsFixed(0)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                    ),
+                  ],
+                );
+              }),
             ),
           ],
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';  // Para usar inputFormatters
 
 Future<Map<String, dynamic>?> mostrarDialogoAgregarItem(BuildContext context) async {
   final _formKey = GlobalKey<FormState>();
@@ -26,7 +27,10 @@ Future<Map<String, dynamic>?> mostrarDialogoAgregarItem(BuildContext context) as
                 labelText: 'Nombre del ítem',
                 border: OutlineInputBorder(),
               ),
-              validator: (v) => v == null || v.isEmpty ? 'Campo requerido' : null,
+              validator: (v) {
+                if (v == null || v.isEmpty) return 'Campo requerido';
+                return null;
+              },
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -36,9 +40,10 @@ Future<Map<String, dynamic>?> mostrarDialogoAgregarItem(BuildContext context) as
                 labelText: 'Cantidad (unidades)',
                 border: OutlineInputBorder(),
               ),
-              validator: (v){
-                if(v == null || v.isEmpty) return 'Campo requerido';
-                if(int.tryParse(v) == null) return 'Debe ser un número entero';
+              validator: (v) {
+                if (v == null || v.isEmpty) return 'Campo requerido';
+                if (int.tryParse(v) == null) return 'Debe ser un número entero';
+                if (int.parse(v) <= 0) return 'La cantidad debe ser mayor que 0';
                 return null;
               },
             ),
@@ -46,13 +51,18 @@ Future<Map<String, dynamic>?> mostrarDialogoAgregarItem(BuildContext context) as
             TextFormField(
               controller: montoCtrl,
               keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,  
+                LengthLimitingTextInputFormatter(10), 
+              ],
               decoration: const InputDecoration(
                 labelText: 'Valor total estimado (CLP)',
                 border: OutlineInputBorder(),
               ),
-              validator: (v){
-                if(v == null || v.isEmpty) return 'Campo requerido';
-                if(int.tryParse(v) == null) return 'Debe ser un número válido';
+              validator: (v) {
+                if (v == null || v.isEmpty) return 'Campo requerido';
+                if (int.tryParse(v) == null) return 'Debe ser un número válido';
+                if (int.parse(v) <= 0) return 'El valor total debe ser mayor que 0';
                 return null;
               },
             ),
