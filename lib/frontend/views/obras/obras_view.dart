@@ -296,12 +296,20 @@ class _ObrasViewState extends State<ObrasView> {
                                 },
                               ),
                               ListTile(
-                                leading: const Icon(Icons.inventory, color: AppColors.primaryDarker),
+                                leading: const Icon(Icons.history, color: AppColors.primaryDarker),
                                 title: const Text('Historial de asistencia de obra'),
                                 onTap: () {
                                   Navigator.pushNamed(
                                     context, 
                                     '/home_page/obras_view/historial_asistencia_view',
+                                    arguments: {
+                                      'obraId': obra.id,
+                                      'obraNombre': obra.nombre
+                                    }
+                                  );
+                                },
+                              ),
+                              ListTile(
                                 leading: const Icon(Icons.attach_money, color: AppColors.primaryDarker),
                                 title: const Text('Gestionar recursos financieros de obra'),
                                 onTap: () {
