@@ -281,6 +281,20 @@ class _ObrasViewState extends State<ObrasView> {
                                   );
                                 },
                               ),
+                              ListTile(
+                                leading: const Icon(Icons.attach_money, color: AppColors.primaryDarker),
+                                title: const Text('Gestionar recursos financieros de obra'),
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context, 
+                                    '/home_page/obras_view/gestionar_finanzas_view',
+                                    arguments: {
+                                      'obraId': obra.id,
+                                      'obraNombre': obra.nombre
+                                    }
+                                  );
+                                },
+                              ),
                             ],
                           ),
                         );
