@@ -2,7 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'package:sistema_acviis/backend/controllers/epp/subir_certificado.dart';
+import 'package:sistema_acviis/backend/controllers/epp/descargar_certificado.dart';
 import '../models/epp.dart';
 
 class EppProvider extends ChangeNotifier {
@@ -232,8 +233,9 @@ class EppProvider extends ChangeNotifier {
 
   // ================== MÉTODOS EXISTENTES (sin cambios) ==================
 
-  // Método existente - registrar EPP
+    // Actualizar el método registrarEPP en EppProvider:
   Future<bool> registrarEPP({
+    required BuildContext context, // ⚡ AGREGAR CONTEXT COMO PARÁMETRO
     required String tipo,
     required List<String> obrasAsignadas,
     required int cantidad,
@@ -245,23 +247,11 @@ class EppProvider extends ChangeNotifier {
 
     try {
       // 1. Subir certificado a MongoDB
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('http://localhost:3000/api/epp/certificado'),
-      );
-      request.files.add(
-        await http.MultipartFile.fromPath('certificado', certificadoPdf.path),
-      );
-
-      var mongoResponse = await request.send();
-      var mongoResponseBody = await mongoResponse.stream.bytesToString();
-      var mongoData = json.decode(mongoResponseBody);
-
-      if (mongoResponse.statusCode != 200) {
-        throw Exception("Error al subir certificado: ${mongoData['error']}");
+      String? certificadoId = await subirCertificadoEpp(certificadoPdf, context);
+      
+      if (certificadoId == null) {
+        throw Exception("Error al subir certificado");
       }
-
-      String certificadoId = mongoData['fileId'];
 
       // 2. Registrar datos en PostgreSQL
       EPP nuevoEpp = EPP(
@@ -271,13 +261,13 @@ class EppProvider extends ChangeNotifier {
         certificadoId: certificadoId,
       );
 
-      var postgresResponse = await http.post(
+      var response = await http.post(
         Uri.parse('http://localhost:3000/api/epp'),
         headers: {"Content-Type": "application/json"},
         body: json.encode(nuevoEpp.toJson()),
       );
 
-      if (postgresResponse.statusCode != 200) {
+      if (response.statusCode != 200 && response.statusCode != 201) {
         throw Exception("Error al registrar en PostgreSQL");
       }
 
@@ -294,6 +284,10 @@ class EppProvider extends ChangeNotifier {
       return false;
     }
   }
+  // Método para descargar certificado
+Future<void> descargarCertificado(BuildContext context, String certificadoId) async {
+  await descargarCertificadoEpp(context, certificadoId);
+}
 
   // Método para registrar EPP sin certificado (opcional)
   Future<bool> registrarEPPSinCertificado({
@@ -339,75 +333,64 @@ class EppProvider extends ChangeNotifier {
 
   // Método para modificar EPP
   Future<bool> modificarEPP({
-    required int id,
-    required String tipo,
-    required List<String> obrasAsignadas,
-    required int cantidad,
-    File? nuevoCertificado,
-  }) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+  required BuildContext context, // ⚡ AGREGAR CONTEXT
+  required int id,
+  required String tipo,
+  required List<String> obrasAsignadas,
+  required int cantidad,
+  File? nuevoCertificado,
+}) async {
+  _isLoading = true;
+  _error = null;
+  notifyListeners();
 
-    try {
-      String? certificadoId;
+  try {
+    String? certificadoId;
 
-      // Si hay nuevo certificado, subirlo primero
-      if (nuevoCertificado != null) {
-        var request = http.MultipartRequest(
-          'POST',
-          Uri.parse('http://localhost:3000/api/epp/certificado'),
-        );
-        request.files.add(
-          await http.MultipartFile.fromPath('certificado', nuevoCertificado.path),
-        );
-
-        var mongoResponse = await request.send();
-        var mongoResponseBody = await mongoResponse.stream.bytesToString();
-        var mongoData = json.decode(mongoResponseBody);
-
-        if (mongoResponse.statusCode != 200) {
-          throw Exception("Error al subir certificado: ${mongoData['error']}");
-        }
-
-        certificadoId = mongoData['fileId'];
+    // Si hay nuevo certificado, subirlo primero
+    if (nuevoCertificado != null) {
+      certificadoId = await subirCertificadoEpp(nuevoCertificado, context);
+      
+      if (certificadoId == null) {
+        throw Exception("Error al subir certificado");
       }
-
-      // Preparar datos de actualización
-      Map<String, dynamic> updateData = {
-        'tipo': tipo,
-        'obrasAsignadas': obrasAsignadas,
-        'cantidad': cantidad,
-      };
-
-      if (certificadoId != null) {
-        updateData['certificadoId'] = certificadoId;
-      }
-
-      // Actualizar en PostgreSQL
-      var response = await http.put(
-        Uri.parse('http://localhost:3000/api/epp/$id'),
-        headers: {"Content-Type": "application/json"},
-        body: json.encode(updateData),
-      );
-
-      if (response.statusCode != 200 && response.statusCode != 201) {
-        throw Exception("Error al modificar EPP: ${response.statusCode}");
-      }
-
-      // Actualizar lista local
-      await fetchEpps();
-
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-      return false;
     }
+
+    // Preparar datos de actualización
+    Map<String, dynamic> updateData = {
+      'tipo': tipo,
+      'obrasAsignadas': obrasAsignadas,
+      'cantidad': cantidad,
+    };
+
+    if (certificadoId != null) {
+      updateData['certificadoId'] = certificadoId;
+    }
+
+    // Actualizar en PostgreSQL
+    var response = await http.put(
+      Uri.parse('http://localhost:3000/api/epp/$id'),
+      headers: {"Content-Type": "application/json"},
+      body: json.encode(updateData),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception("Error al modificar EPP: ${response.statusCode}");
+    }
+
+    // Actualizar lista local
+    await fetchEpps();
+
+    _isLoading = false;
+    notifyListeners();
+    return true;
+  } catch (e) {
+    _error = e.toString();
+    _isLoading = false;
+    notifyListeners();
+    return false;
   }
+}
 
   // Método para eliminar EPP individual
   Future<bool> eliminarEpp(int id) async {

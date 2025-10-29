@@ -281,6 +281,48 @@ class _ObrasViewState extends State<ObrasView> {
                                   );
                                 },
                               ),
+                              ListTile(
+                                leading: const Icon(Icons.inventory, color: AppColors.primaryDarker),
+                                title: const Text('Gestionar Itemizados de obra'),
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context, 
+                                    '/home_page/obras_view/gestionar_itemizados_view',
+                                    arguments: {
+                                      'obraId': obra.id,
+                                      'obraNombre': obra.nombre
+                                    }
+                                  );
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.history, color: AppColors.primaryDarker),
+                                title: const Text('Historial de asistencia de obra'),
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context, 
+                                    '/home_page/obras_view/historial_asistencia_view',
+                                    arguments: {
+                                      'obraId': obra.id,
+                                      'obraNombre': obra.nombre
+                                    }
+                                  );
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.attach_money, color: AppColors.primaryDarker),
+                                title: const Text('Gestionar recursos financieros de obra'),
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context, 
+                                    '/home_page/obras_view/gestionar_finanzas_view',
+                                    arguments: {
+                                      'obraId': obra.id,
+                                      'obraNombre': obra.nombre
+                                    }
+                                  );
+                                },
+                              ),
                             ],
                           ),
                         );
@@ -297,7 +339,7 @@ class _ObrasViewState extends State<ObrasView> {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
-      withData: true, // <-- ¡Añadimos esto para cargar los bytes del archivo!
+      withData: true,
     );
 
     if (result != null && result.files.single.bytes != null) {

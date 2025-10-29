@@ -393,6 +393,7 @@ class _SubirCertificadoViewState extends State<SubirCertificadoView> {
     try {
       // Usar el método modificarEPP para actualizar con nuevo certificado
       final success = await eppProvider.modificarEPP(
+        context: context, 
         id: widget.epp.id!,
         tipo: widget.epp.tipo,
         obrasAsignadas: widget.epp.obrasAsignadas,

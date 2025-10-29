@@ -10,7 +10,9 @@ import 'package:sistema_acviis/frontend/views/logistica/ordenes/agregar_ordenes_
 import 'package:sistema_acviis/frontend/views/logistica/ordenes/modificar_ordenes_view.dart';
 import 'package:sistema_acviis/frontend/views/logistica/ordenes/ordenes_view.dart';
 import 'package:sistema_acviis/frontend/views/obras/agregar_obras_view.dart';
+import 'package:sistema_acviis/frontend/views/obras/gestionar_finanzas_view.dart';
 import 'package:sistema_acviis/frontend/views/obras/gestionar_recursos_view.dart';
+import 'package:sistema_acviis/frontend/views/obras/gestionar_itemizados_view.dart';
 import 'package:sistema_acviis/frontend/views/obras/gestionar_trabajadores.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/agregar_trabajador_view.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/contratos_anexos.dart';
@@ -37,6 +39,7 @@ import 'package:sistema_acviis/frontend/views/finanzas/facturas_view.dart';
 import 'package:sistema_acviis/frontend/views/finanzas/pagos_pendientes_view.dart';
 import 'package:sistema_acviis/frontend/views/finanzas/configurar_notificaciones_view.dart';
 import 'package:sistema_acviis/frontend/views/obras/obras_view.dart';
+import 'package:sistema_acviis/frontend/views/obras/historial_asistencia_view.dart';
 /*
   Aqui se importaran todas las vistas presentes en el sistema.
 */
@@ -120,5 +123,13 @@ final Map<String, WidgetBuilder> routes = {
     final obraId = args?['obraId'] as String?;
     final obraNombre = args?['obraNombre'] as String?;
     return GestionarRecursosView(obraId: obraId, obraNombre: obraNombre);
+  },
+  '/home_page/obras_view/gestionar_itemizados_view': (BuildContext context) => const GestionarItemizadosView(),
+  '/home_page/obras_view/historial_asistencia_view': (BuildContext context) => const HistorialAsistenciaView(),
+  '/home_page/obras_view/gestionar_finanzas_view': (BuildContext context) {
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+    final obraId = args?['obraId'] as String?;
+    final obraNombre = args?['obraNombre'] as String?;
+    return GestionarFinanzasView(obraId: obraId, obraNombre: obraNombre);
   },
 };
