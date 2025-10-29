@@ -23,6 +23,14 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
   bool isParsing = false; // estado mientras parsea excel
   List<List<String?>> trabajadores = []; // filas leídas (cada fila: 4 columnas B..E)
 
+  // URL base para backend: ajusta según plataforma (Android emulator -> 10.0.2.2)
+  String get backendBaseUrl {
+    try {
+      if (Platform.isAndroid) return 'http://10.0.2.2:3000';
+    } catch (_) {}
+    return 'http://localhost:3000';
+  }
+
   // Navegación entre hojas
   List<String> sheetNames = [];
   int currentSheetIndex = 0;
@@ -53,12 +61,13 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
     if (obraId == null) return;
     setState(() => isLoadingFileId = true);
     try {
-      final uri = Uri.parse('http://localhost:3000/historial-asistencia/import/${Uri.encodeComponent(obraId!)}');
+      final uri = Uri.parse('$backendBaseUrl/historial-asistencia/import/${Uri.encodeComponent(obraId!)}');
       final resp = await http.get(uri).timeout(const Duration(seconds: 10));
       if (!mounted) return;
       if (resp.statusCode == 200) {
         final map = json.decode(resp.body) as Map<String, dynamic>;
-        final fid = map['fileId']?.toString();
+        // Cambiado: backend devuelve id_excel
+        final fid = map['id_excel']?.toString();
         setState(() {
           fileId = fid;
         });
@@ -105,7 +114,7 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
       // Parsear y mostrar trabajadores desde el archivo seleccionado (comienza en B12)
       await parseExcelBytes(bytes);
 
-      final uri = Uri.parse('http://localhost:3000/historial-asistencia/upload');
+      final uri = Uri.parse('$backendBaseUrl/historial-asistencia/upload-register');
       final request = http.MultipartRequest('POST', uri);
 
       if (obraId != null) request.fields['obraId'] = obraId!;
@@ -120,7 +129,8 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
         String? fid;
         try {
           final map = json.decode(response.body) as Map<String, dynamic>;
-          fid = map['fileId']?.toString();
+          // Cambiado: backend devuelve id_excel
+          fid = map['id_excel']?.toString();
         } catch (e) {
           debugPrint('Respuesta no es JSON: ${response.body}');
         }
@@ -204,18 +214,6 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
           final val = (row.length > idx) ? row[idx]?.value : null;
           return val?.toString();
         });
-
-        // Si la primera columna es un índice numérico (1,2,3...), desplazar las columnas
-        final indexRegex = RegExp(r'^\d+$');
-        if (cols.isNotEmpty && cols[0] != null && indexRegex.hasMatch(cols[0]!.trim())) {
-          final shifted = List<String?>.filled(colsToRead, null);
-          for (int i = 0; i < colsToRead - 1; i++) {
-            shifted[i] = (i + 1 < cols.length) ? cols[i + 1] : null;
-          }
-          // dejamos la última columna como null (o la que corresponda)
-          cols.setAll(0, shifted);
-        }
-
         trabajadores.add(cols);
       }
     } catch (e) {
@@ -253,17 +251,6 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
             if (cell == null) return null;
             return cell['value']?.toString();
           });
-
-          // Si la primera columna es un índice numérico (1,2,3...), desplazar las columnas
-          final indexRegex = RegExp(r'^\d+$');
-          if (cols.isNotEmpty && cols[0] != null && indexRegex.hasMatch(cols[0]!.trim())) {
-            final shifted = List<String?>.filled(colsToRead, null);
-            for (int i = 0; i < colsToRead - 1; i++) {
-              shifted[i] = (i + 1 < cols.length) ? cols[i + 1] : null;
-            }
-            cols.setAll(0, shifted);
-          }
-
           parsed.add(cols);
         }
         if (mounted) setState(() => trabajadores = parsed);
@@ -289,46 +276,182 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
        trabajadores = [];
      });
      try {
-       final uri = Uri.parse('http://localhost:3000/historial-asistencia/file/${Uri.encodeComponent(fid)}');
+       final uri = Uri.parse('$backendBaseUrl/historial-asistencia/file/${Uri.encodeComponent(fid)}');
        final resp = await http.get(uri).timeout(const Duration(seconds: 15));
        if (!mounted) return;
+       debugPrint('fetchAndParseRegisteredFile: status=${resp.statusCode} content-type=${resp.headers['content-type']}');
        if (resp.statusCode != 200) {
-         debugPrint('fetchAndParseRegisteredFile: status ${resp.statusCode}');
+         debugPrint('fetchAndParseRegisteredFile: status ${resp.statusCode} body=${resp.body}');
          return;
        }
-       final Map<String, dynamic> body = json.decode(resp.body);
 
-       // Si el backend devolvió 'sheets' ya parseadas (objetos { value, color })
-       if (body.containsKey('sheets') && body['sheets'] is List) {
-        final sheets = body['sheets'] as List<dynamic>;
-        sheetNames = [];
-        remoteSheetsRows = [];
-        for (int i = 0; i < sheets.length; i++) {
-          final s = sheets[i] as Map<String, dynamic>;
-          final name = s['name']?.toString() ?? 'Hoja ${i + 1}';
-          final rows = (s['rows'] as List<dynamic>?) ?? <dynamic>[];
-          sheetNames.add(name);
-          remoteSheetsRows.add(rows);
-        }
-        if (sheetNames.isNotEmpty) {
-          await showSheetAt(0);
-        }
-        return;
+       // Intentar decodificar JSON primero (caso 'sheets' o 'base64')
+       Map<String, dynamic>? body;
+       try {
+         body = json.decode(resp.body) as Map<String, dynamic>?;
+         debugPrint('fetchAndParseRegisteredFile: parsed JSON ok');
+       } catch (e) {
+         debugPrint('fetchAndParseRegisteredFile: respuesta no JSON, intentar parsear como bytes. error: $e');
+         body = null;
        }
 
-       // Si backend devolvió base64 del archivo, decodificar y usar el parser local
-       if (body.containsKey('base64') && body['base64'] is String) {
-         final b = base64.decode(body['base64'] as String);
-        await parseExcelBytes(Uint8List.fromList(b), sheetIndex: 0);
-         return;
+       if (body != null) {
+         // Si el backend devolvió 'sheets' ya parseadas (objetos { value, color })
+         if (body.containsKey('sheets') && body['sheets'] is List) {
+           final sheets = body['sheets'] as List<dynamic>;
+           sheetNames = [];
+           remoteSheetsRows = [];
+           for (int i = 0; i < sheets.length; i++) {
+             final s = sheets[i] as Map<String, dynamic>;
+             final name = s['name']?.toString() ?? 'Hoja ${i + 1}';
+             final rows = (s['rows'] as List<dynamic>?) ?? <dynamic>[];
+             sheetNames.add(name);
+             remoteSheetsRows.add(rows);
+           }
+           if (sheetNames.isNotEmpty) {
+             await showSheetAt(0);
+           }
+           return;
+         }
+
+         // Si backend devolvió base64 del archivo, decodificar y usar el parser local
+         if (body.containsKey('base64') && body['base64'] is String) {
+           try {
+             final b = base64.decode(body['base64'] as String);
+             lastExcelBytes = Uint8List.fromList(b);
+             await parseExcelBytes(lastExcelBytes!, sheetIndex: 0);
+             return;
+           } catch (e) {
+             debugPrint('Error decodificando base64: $e');
+             // seguir al intento con bodyBytes abajo
+           }
+         }
+
+         // Si viene otro JSON válido pero sin sheets/base64, intentar buscar un campo 'file' con base64
+         if (body.containsKey('file') && body['file'] is String) {
+           try {
+             final b = base64.decode(body['file'] as String);
+             lastExcelBytes = Uint8List.fromList(b);
+             await parseExcelBytes(lastExcelBytes!, sheetIndex: 0);
+             return;
+           } catch (e) {
+             debugPrint('Error decodificando body.file base64: $e');
+           }
+         }
        }
-       debugPrint('fetchAndParseRegisteredFile: formato de respuesta inesperado');
+
+       // Si llegamos aquí, intentar parsear directamente los bytes de la respuesta
+       final bytes = resp.bodyBytes;
+       if (bytes.isNotEmpty) {
+         try {
+           // guardar para navegación entre hojas
+           lastExcelBytes = Uint8List.fromList(bytes);
+           await parseExcelBytes(lastExcelBytes!, sheetIndex: 0);
+           return;
+         } catch (e) {
+           debugPrint('Error parseando bodyBytes como xlsx: $e');
+         }
+       }
+
+       debugPrint('fetchAndParseRegisteredFile: formato de respuesta inesperado o datos vacíos');
      } catch (e) {
        debugPrint('fetchAndParseRegisteredFile error: $e');
      } finally {
        if (mounted) setState(() => isParsing = false);
      }
    }
+
+  // Reemplazado: descarga el archivo registrado como XLSX, lo guarda en Downloads y lo abre
+  Future<void> downloadAndOpenRegisteredXlsx(String fid) async {
+    if (fid.isEmpty) return;
+    try {
+      final uri = Uri.parse('$backendBaseUrl/historial-asistencia/file/${Uri.encodeComponent(fid)}');
+      final resp = await http.get(uri).timeout(const Duration(seconds: 30));
+      if (!mounted) return;
+      debugPrint('downloadAndOpenRegisteredXlsx: status=${resp.statusCode} content-type=${resp.headers['content-type']}');
+      if (resp.statusCode != 200) {
+        debugPrint('downloadAndOpenRegisteredXlsx: body=${resp.body}');
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al descargar: ${resp.statusCode}')));
+        return;
+      }
+
+      // Obtener bytes (acepta binario o JSON con base64)
+      Uint8List bytes;
+      String filename = 'historial_$fid.xlsx';
+      try {
+        final map = json.decode(resp.body) as Map<String, dynamic>?;
+        if (map != null && map.containsKey('base64') && map['base64'] is String) {
+          bytes = base64.decode(map['base64'] as String);
+          if (map.containsKey('filename')) filename = map['filename'].toString();
+        } else if (map != null && map.containsKey('file') && map['file'] is String) {
+          bytes = base64.decode(map['file'] as String);
+          if (map.containsKey('filename')) filename = map['filename'].toString();
+        } else {
+          // JSON sin base64 -> guardar texto para inspección
+          final text = resp.body;
+          final up = Platform.isWindows ? (Platform.environment['USERPROFILE'] ?? Directory.current.path) : (Platform.environment['HOME'] ?? Directory.current.path);
+          final debugDir = Directory('$up${Platform.pathSeparator}Downloads');
+          if (!await debugDir.exists()) await debugDir.create(recursive: true);
+          final debugFile = File('${debugDir.path}${Platform.pathSeparator}historial_${fid}_response.txt');
+          await debugFile.writeAsString(text);
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Respuesta no binaria guardada en: ${debugFile.path}')));
+          debugPrint('Respuesta JSON sin base64 guardada en: ${debugFile.path}');
+          return;
+        }
+      } catch (_) {
+        // no JSON -> usar bodyBytes
+        bytes = resp.bodyBytes;
+      }
+
+      if (bytes.isEmpty) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Archivo vacío o no descargable')));
+        return;
+      }
+
+      // Intentar obtener filename desde headers Content-Disposition
+      final cd = resp.headers['content-disposition'];
+      if (cd != null) {
+        final m = RegExp("filename\\*?=(?:UTF-8'')?\"?([^\";]+)\"?").firstMatch(cd);
+        if (m != null && m.groupCount >= 1) {
+          filename = Uri.decodeFull(m.group(1)!);
+        }
+      }
+
+      // Asegurar extensión .xlsx
+      if (!filename.toLowerCase().endsWith('.xlsx')) {
+        filename = '$filename.xlsx';
+      }
+
+      // Guardar en carpeta Downloads
+      final up = Platform.isWindows ? (Platform.environment['USERPROFILE'] ?? Directory.current.path) : (Platform.environment['HOME'] ?? Directory.current.path);
+      final downloadsPath = '$up${Platform.pathSeparator}Downloads';
+      final dir = Directory(downloadsPath);
+      if (!await dir.exists()) await dir.create(recursive: true);
+
+      final safeName = filename.replaceAll(RegExp(r'[\\/:]'), '_');
+      final outFile = File('${dir.path}${Platform.pathSeparator}$safeName');
+      await outFile.writeAsBytes(bytes);
+
+      // Abrir con la aplicación por defecto (Windows)
+      try {
+        if (Platform.isWindows) {
+          await Process.run('cmd', ['/c', 'start', '', outFile.path]);
+        } else if (Platform.isLinux) {
+          await Process.run('xdg-open', [outFile.path]);
+        } else if (Platform.isMacOS) {
+          await Process.run('open', [outFile.path]);
+        }
+      } catch (e) {
+        debugPrint('No se pudo abrir automáticamente: $e');
+      }
+
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('XLSX descargado y abierto: ${outFile.path}')));
+      debugPrint('Archivo XLSX guardado en: ${outFile.path}');
+    } catch (e) {
+      debugPrint('downloadAndOpenRegisteredXlsx error: $e');
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al descargar/abrir: $e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -367,21 +490,40 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
             ],
             const SizedBox(height: 20),
 
-            // Solo botón de subir excel
-            ElevatedButton.icon(
-              onPressed: () async {
-                final fid = await pickAndUploadXlsx();
-                if (!mounted) return;
-                if (fid != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Archivo subido. ID: $fid')));
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se subió el archivo')));
-                }
-              },
-              icon: const Icon(Icons.upload_file),
-              label: const Text('Subir archivo de asistencia'),
+            // Botones: subir y abrir archivo registrado
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final fid = await pickAndUploadXlsx();
+                      if (!mounted) return;
+                      if (fid != null) {
+                        setState(() => fileId = fid);
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Archivo subido. ID: $fid')));
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se subió el archivo')));
+                      }
+                    },
+                    icon: const Icon(Icons.upload_file),
+                    label: const Text('Subir archivo de asistencia'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: (fileId != null && fileId!.isNotEmpty && !isParsing)
+                        ? () async {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Descargando y abriendo XLSX...')));
+                            await downloadAndOpenRegisteredXlsx(fileId!);
+                          }
+                        : null,
+                    icon: const Icon(Icons.download),
+                    label: const Text('Descargar y abrir XLSX registrado'),
+                  ),
+                ),
+              ],
             ),
-
             const SizedBox(height: 20),
 
             // Mostrar lista de trabajadores leídos
@@ -396,18 +538,10 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
                     final row = trabajadores[index];
 
                     // Normalizar columnas: B..E -> row[0]..row[3]
-                    String? col0 = row.length > 0 ? row[0]?.trim() : null;
-                    String? col1 = row.length > 1 ? row[1]?.trim() : null;
-                    String? col2 = row.length > 2 ? row[2]?.trim() : null;
-                    String? col3 = row.length > 3 ? row[3]?.trim() : null;
-
-                    // Si la primera columna es un índice numérico (1,2,3...), desplazar columnas a la izquierda
-                    if (col0 != null && RegExp(r'^\d+$').hasMatch(col0)) {
-                      col0 = col1;
-                      col1 = col2;
-                      col2 = col3;
-                      col3 = null;
-                    }
+                    final String? col0 = row.isNotEmpty ? row[0]?.trim() : null;
+                    final String? col1 = row.length > 1 ? row[1]?.trim() : null;
+                    final String? col2 = row.length > 2 ? row[2]?.trim() : null;
+                    final String? col3 = row.length > 3 ? row[3]?.trim() : null;
 
                     bool isRut(String? s) {
                       if (s == null) return false;
@@ -440,30 +574,41 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
 
                     // Detectar cargo: primer valor no vacío que no sea nombre ni rut
                     String? cargo;
+                    // 1) Preferir celdas que contengan letras (más probables como cargos)
                     for (final c in cols) {
-                      if (c != null && c.isNotEmpty && c != nombre && c != rut) {
+                      if (c != null && c.isNotEmpty && c != nombre && c != rut && hasLetters(c)) {
                         cargo = c;
                         break;
                       }
                     }
+                    // 2) Si no se encontró, tomar la primera que no sea puramente numérica
+                    if (cargo == null) {
+                      for (final c in cols) {
+                        if (c != null && c.isNotEmpty && c != nombre && c != rut && !RegExp(r'^\d+$').hasMatch(c)) {
+                          cargo = c;
+                          break;
+                        }
+                      }
+                    }
+                    // 3) Si aún no se encontró, dejar null y aplicar fallback más abajo
 
                     // Caso común: la primera columna es índice numérico -> desplazar
                     if ((nombre == null || nombre.isEmpty) && col0 != null && RegExp(r'^\d+$').hasMatch(col0)) {
                       if (hasLetters(col1)) {
                         nombre = col1;
                         if (rut == null && isRut(col2)) rut = col2;
-                        cargo = cargo ?? col3;
+                        cargo = cargo ?? (hasLetters(col3) ? col3 : null);
                       } else if (hasLetters(col2)) {
                         nombre = col2;
                         if (rut == null && isRut(col3)) rut = col3;
-                        cargo = cargo ?? col1;
+                        cargo = cargo ?? (hasLetters(col1) ? col1 : null);
                       }
                     }
 
                     // Fallbacks finales
                     nombre = (nombre != null && nombre.isNotEmpty) ? nombre : (col0 ?? col1 ?? col2 ?? '-');
                     rut = (rut != null && rut.isNotEmpty) ? rut : (col1 ?? col2 ?? col3 ?? '-');
-                    cargo = (cargo != null && cargo.isNotEmpty) ? cargo : (col2 ?? col3 ?? col1 ?? '-');
+                    cargo = (cargo != null && cargo.isNotEmpty) ? cargo : '-';
 
                     return ListTile(
                       leading: Text('${index + 1}.'),
