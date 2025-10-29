@@ -204,6 +204,18 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
           final val = (row.length > idx) ? row[idx]?.value : null;
           return val?.toString();
         });
+
+        // Si la primera columna es un índice numérico (1,2,3...), desplazar las columnas
+        final indexRegex = RegExp(r'^\d+$');
+        if (cols.isNotEmpty && cols[0] != null && indexRegex.hasMatch(cols[0]!.trim())) {
+          final shifted = List<String?>.filled(colsToRead, null);
+          for (int i = 0; i < colsToRead - 1; i++) {
+            shifted[i] = (i + 1 < cols.length) ? cols[i + 1] : null;
+          }
+          // dejamos la última columna como null (o la que corresponda)
+          cols.setAll(0, shifted);
+        }
+
         trabajadores.add(cols);
       }
     } catch (e) {
@@ -241,6 +253,17 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
             if (cell == null) return null;
             return cell['value']?.toString();
           });
+
+          // Si la primera columna es un índice numérico (1,2,3...), desplazar las columnas
+          final indexRegex = RegExp(r'^\d+$');
+          if (cols.isNotEmpty && cols[0] != null && indexRegex.hasMatch(cols[0]!.trim())) {
+            final shifted = List<String?>.filled(colsToRead, null);
+            for (int i = 0; i < colsToRead - 1; i++) {
+              shifted[i] = (i + 1 < cols.length) ? cols[i + 1] : null;
+            }
+            cols.setAll(0, shifted);
+          }
+
           parsed.add(cols);
         }
         if (mounted) setState(() => trabajadores = parsed);
@@ -373,10 +396,18 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
                     final row = trabajadores[index];
 
                     // Normalizar columnas: B..E -> row[0]..row[3]
-                    final String? col0 = row.length > 0 ? row[0]?.trim() : null;
-                    final String? col1 = row.length > 1 ? row[1]?.trim() : null;
-                    final String? col2 = row.length > 2 ? row[2]?.trim() : null;
-                    final String? col3 = row.length > 3 ? row[3]?.trim() : null;
+                    String? col0 = row.length > 0 ? row[0]?.trim() : null;
+                    String? col1 = row.length > 1 ? row[1]?.trim() : null;
+                    String? col2 = row.length > 2 ? row[2]?.trim() : null;
+                    String? col3 = row.length > 3 ? row[3]?.trim() : null;
+
+                    // Si la primera columna es un índice numérico (1,2,3...), desplazar columnas a la izquierda
+                    if (col0 != null && RegExp(r'^\d+$').hasMatch(col0)) {
+                      col0 = col1;
+                      col1 = col2;
+                      col2 = col3;
+                      col3 = null;
+                    }
 
                     bool isRut(String? s) {
                       if (s == null) return false;
