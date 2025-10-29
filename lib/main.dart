@@ -3,6 +3,7 @@ import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
 import 'package:sistema_acviis/frontend/views/home_page.dart';
 import 'package:sistema_acviis/frontend/utils/constants/routes.dart';
 import 'package:provider/provider.dart';
+import 'package:sistema_acviis/providers/finanzas_obra_provider.dart';
 import 'package:sistema_acviis/providers/herramientas_provider.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:sistema_acviis/providers/contratos_provider.dart';
@@ -39,6 +40,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => NotificacionesProvider()),
         ChangeNotifierProvider(create: (_) => ObrasProvider()),
         ChangeNotifierProvider(create: (_) => RecursosObraProvider()),
+        ChangeNotifierProvider(create: (_) => FinanzasObraProvider())
       ],
       child: MainApp(),
     ),

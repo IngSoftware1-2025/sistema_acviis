@@ -484,7 +484,9 @@ Widget _buildActionButtons(EppProvider eppProvider) {
         );
       } else {
         // Registrar con certificado
+      
         success = await eppProvider.registrarEPP(
+        context: context, // ⚡ AGREGAR ESTO
           tipo: _tipoSeleccionado!,
           obrasAsignadas: _obrasSeleccionadas,
           cantidad: int.parse(_cantidadController.text),
