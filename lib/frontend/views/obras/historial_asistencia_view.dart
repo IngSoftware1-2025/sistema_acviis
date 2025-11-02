@@ -24,6 +24,20 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
   Map<String, List<List<String>>> _sheets = {};
   String? _selectedSheet;
 
+  // Nuevas variables solicitadas (por hoja)
+  Map<String, List<List<String>>> AsistenciasHorasExtra = {};
+  Map<String, List<List<String>>> FinesDeSemana = {};
+  Map<String, List<List<String>>> AsistenciaDiaria = {};
+
+  // Colores por celda (paralelo a las matrices anteriores)
+  Map<String, List<List<Color?>>> _sheetsColors = {};
+  Map<String, List<List<Color?>>> AsistenciasHorasExtraColors = {};
+  Map<String, List<List<Color?>>> FinesDeSemanaColors = {};
+  Map<String, List<List<Color?>>> AsistenciaDiariaColors = {};
+
+  // Estado para mostrar una de las matrices extraídas
+  String? _selectedMatrix; // valores: 'horas_extra', 'fines_semana', 'diaria' o null
+
   // controladores horizontales separados y flag para sincronizarlos sin bucles
   final ScrollController _horizontalHeaderController = ScrollController();
   final ScrollController _horizontalBodyController = ScrollController();
@@ -120,6 +134,38 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
     }
   }
 
+  Color? _parseColorFromRaw(dynamic raw) {
+    if (raw == null) return null;
+    // si ya es Color
+    if (raw is Color) return raw;
+    // si es int (ej 0xFFAABBCC)
+    if (raw is int) {
+      try {
+        return Color(raw);
+      } catch (_) {}
+    }
+    final s = raw.toString();
+    // buscar hex como 0xFFRRGGBB o RRGGBB o FFRRGGBB
+    final hexMatch = RegExp(r'(0x[a-fA-F0-9]{6,8})').firstMatch(s);
+    String? hex;
+    if (hexMatch != null) {
+      hex = hexMatch.group(1);
+    } else {
+      final shortHex = RegExp(r'([A-Fa-f0-9]{6,8})').firstMatch(s);
+      if (shortHex != null) hex = shortHex.group(1);
+    }
+    if (hex == null) return null;
+    hex = hex.replaceFirst('0x', '');
+    // asegurar 8 dígitos ARGB
+    if (hex.length == 6) hex = 'FF$hex';
+    try {
+      final val = int.parse(hex, radix: 16);
+      return Color(int.parse('0x$hex'));
+    } catch (_) {
+      return null;
+    }
+  }
+
   // Lee XLSX, elimina filas vacías y filtra columnas con pocos datos.
   Future<void> _fetchAndReadExcel(BuildContext context, String? obraId) async {
     if (obraId == null || obraId.isEmpty) {
@@ -176,24 +222,57 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
 
       // Procesar todas las hojas y eliminar filas completamente nulas
       final Map<String, List<List<String>>> parsed = {};
+      final Map<String, List<List<Color?>>> parsedColors = {};
       for (final sheetName in excel.tables.keys) {
         final sheet = excel.tables[sheetName];
         if (sheet == null) continue;
 
-        // Convertir cada celda a string crudo y eliminar filas vacías
+        // Convertir cada celda a string crudo y capturar color de fondo por celda
         final cleanedRows = <List<String>>[];
+        final cleanedColors = <List<Color?>>[];
         for (final originalRow in sheet.rows) {
           final converted = List<String>.generate(originalRow.length, (i) {
             final cell = originalRow[i];
             final v = cell?.value;
             return v == null ? '' : v.toString().trim();
           });
-          if (converted.any((c) => c.trim().isNotEmpty)) cleanedRows.add(converted);
+          // recoger colores
+          final colorRow = List<Color?>.generate(originalRow.length, (i) {
+            final dynamic cell = originalRow[i];
+            // intentar obtener distintos nombres de propiedad que contienen estilo
+            dynamic style;
+            try {
+              style = cell?.cellStyle ?? cell?.style ?? null;
+            } catch (_) {
+              style = null;
+            }
+            dynamic rawColor;
+            try {
+              rawColor = style?.backgroundColor ?? style?.bgColor ?? style?.fillColor ?? style?.color ?? style?.foregroundColor ?? style?.patternColor;
+            } catch (_) {
+              rawColor = null;
+            }
+            // también intentar cell?.color o cell?.cellColor
+            if (rawColor == null) {
+              try {
+                rawColor = cell?.color ?? cell?.cellColor ?? null;
+              } catch (_) {
+                rawColor = null;
+              }
+            }
+            return _parseColorFromRaw(rawColor);
+          });
+
+          if (converted.any((c) => c.trim().isNotEmpty)) {
+            cleanedRows.add(converted);
+            cleanedColors.add(colorRow);
+          }
         }
 
         // 2) detectar columnas completamente vacías y eliminar columnas con 3 o menos datos (<=3)
         if (cleanedRows.isEmpty) {
           parsed[sheetName] = cleanedRows;
+          parsedColors[sheetName] = cleanedColors;
           continue;
         }
 
@@ -214,18 +293,144 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
 
         if (keepIdx.isEmpty) {
           parsed[sheetName] = [];
+          parsedColors[sheetName] = [];
         } else if (keepIdx.length == maxCols) {
           parsed[sheetName] = cleanedRows;
+          parsedColors[sheetName] = cleanedColors;
         } else {
-          final filtered = cleanedRows.map((row) {
-            return keepIdx.map((i) => i < row.length ? row[i] : '').toList();
-          }).toList();
+          final filtered = <List<String>>[];
+          final filteredColors = <List<Color?>>[];
+          for (int r = 0; r < cleanedRows.length; r++) {
+            final row = cleanedRows[r];
+            final crow = cleanedColors[r];
+            final newRow = <String>[];
+            final newColors = <Color?>[];
+            for (final i in keepIdx) {
+              newRow.add(i < row.length ? row[i] : '');
+              newColors.add(i < crow.length ? crow[i] : null);
+            }
+            filtered.add(newRow);
+            filteredColors.add(newColors);
+          }
           parsed[sheetName] = filtered;
+          parsedColors[sheetName] = filteredColors;
         }
       }
 
+      // --- EXTRAER BLOQUES desde el final con ancla "N°" (incluye 2 filas adicionales arriba) ---
+      AsistenciasHorasExtra.clear();
+      FinesDeSemana.clear();
+      AsistenciaDiaria.clear();
+      AsistenciasHorasExtraColors.clear();
+      FinesDeSemanaColors.clear();
+      AsistenciaDiariaColors.clear();
+
+      String _lower(String s) => s.toLowerCase();
+
+      for (final sheetName in parsed.keys.toList()) {
+        final rowsOrig = parsed[sheetName] ?? [];
+        final colorsOrig = parsedColors[sheetName] ?? [];
+        // trabajar sobre copia mutable
+        final rows = rowsOrig.map((r) => List<String>.from(r)).toList();
+        final colors = colorsOrig.map((r) => List<Color?>.from(r)).toList();
+
+        // helper que extrae bloque y colores
+        Map<String, dynamic> _extractLastBlock(List<List<String>> lst, List<List<Color?>> colst) {
+          int found = -1;
+          for (int i = lst.length - 1; i >= 0; i--) {
+            final row = lst[i];
+            if (row.any((cell) => cell != null && _lower(cell).contains('n°'))) {
+              found = i;
+              break;
+            }
+          }
+          if (found == -1) return {'rows': <List<String>>[], 'colors': <List<Color?>>[]};
+          final start = max(0, found - 2);
+          final blockRows = lst.sublist(start);
+          final blockColors = colst.sublist(start);
+          lst.removeRange(start, lst.length);
+          colst.removeRange(start, colst.length);
+          return {'rows': blockRows, 'colors': blockColors};
+        }
+
+        final b1 = _extractLastBlock(rows, colors);
+        AsistenciasHorasExtra[sheetName] = List<List<String>>.from(b1['rows']);
+        AsistenciasHorasExtraColors[sheetName] = List<List<Color?>>.from(b1['colors']);
+
+        final b2 = _extractLastBlock(rows, colors);
+        FinesDeSemana[sheetName] = List<List<String>>.from(b2['rows']);
+        FinesDeSemanaColors[sheetName] = List<List<Color?>>.from(b2['colors']);
+
+        final b3 = _extractLastBlock(rows, colors);
+        AsistenciaDiaria[sheetName] = List<List<String>>.from(b3['rows']);
+        AsistenciaDiariaColors[sheetName] = List<List<Color?>>.from(b3['colors']);
+
+        // dejar en parsed la matriz restante
+        parsed[sheetName] = rows;
+        parsedColors[sheetName] = colors;
+      }
+
+      // --- Eliminar primera columna de cada matriz (helper local y aplicación) ---
+      List<List<String>> _dropFirstColumnRows(List<List<String>> rows) {
+        return rows.map((r) {
+          if (r.isEmpty) return <String>[];
+          return r.length > 1 ? r.sublist(1) : <String>[];
+        }).toList();
+      }
+
+      List<List<Color?>> _dropFirstColumnColors(List<List<Color?>> rows) {
+        return rows.map((r) {
+          if (r.isEmpty) return <Color?>[];
+          return r.length > 1 ? r.sublist(1) : <Color?>[];
+        }).toList();
+      }
+
+      // Aplicar drop a parsed y a las tres matrices extraídas
+      final Map<String, List<List<String>>> parsedNoFirst = {};
+      final Map<String, List<List<Color?>>> parsedColorsNoFirst = {};
+      parsed.forEach((sheetName, rows) {
+        parsedNoFirst[sheetName] = _dropFirstColumnRows(rows);
+      });
+      parsedColors.forEach((sheetName, rows) {
+        parsedColorsNoFirst[sheetName] = _dropFirstColumnColors(rows);
+      });
+
+      final Map<String, List<List<String>>> horasExtraNoFirst = {};
+      final Map<String, List<List<Color?>>> horasExtraNoFirstColors = {};
+      AsistenciasHorasExtra.forEach((sheetName, rows) {
+        horasExtraNoFirst[sheetName] = _dropFirstColumnRows(rows);
+      });
+      AsistenciasHorasExtraColors.forEach((sheetName, rows) {
+        horasExtraNoFirstColors[sheetName] = _dropFirstColumnColors(rows);
+      });
+
+      final Map<String, List<List<String>>> finesNoFirst = {};
+      final Map<String, List<List<Color?>>> finesNoFirstColors = {};
+      FinesDeSemana.forEach((sheetName, rows) {
+        finesNoFirst[sheetName] = _dropFirstColumnRows(rows);
+      });
+      FinesDeSemanaColors.forEach((sheetName, rows) {
+        finesNoFirstColors[sheetName] = _dropFirstColumnColors(rows);
+      });
+
+      final Map<String, List<List<String>>> diariaNoFirst = {};
+      final Map<String, List<List<Color?>>> diariaNoFirstColors = {};
+      AsistenciaDiaria.forEach((sheetName, rows) {
+        diariaNoFirst[sheetName] = _dropFirstColumnRows(rows);
+      });
+      AsistenciaDiariaColors.forEach((sheetName, rows) {
+        diariaNoFirstColors[sheetName] = _dropFirstColumnColors(rows);
+      });
+
       setState(() {
-        _sheets = parsed;
+        _sheets = parsedNoFirst;
+        _sheetsColors = parsedColorsNoFirst;
+        AsistenciasHorasExtra = horasExtraNoFirst;
+        AsistenciasHorasExtraColors = horasExtraNoFirstColors;
+        FinesDeSemana = finesNoFirst;
+        FinesDeSemanaColors = finesNoFirstColors;
+        AsistenciaDiaria = diariaNoFirst;
+        AsistenciaDiariaColors = diariaNoFirstColors;
         _selectedSheet = _sheets.isNotEmpty ? _sheets.keys.first : null;
       });
 
@@ -266,8 +471,110 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
     );
   }
 
+  // Construye una tabla para una matriz (map por hoja) con colores
+  Widget _buildMatrixTable(
+      Map<String, List<List<String>>> map,
+      Map<String, List<List<Color?>>> colorMap,
+      String sheetName) {
+    final rows = map[sheetName] ?? [];
+    final colors = colorMap[sheetName] ?? [];
+    if (rows.isEmpty) return const Text('Matriz vacía.');
+
+    final int maxCols = rows.map((r) => r.length).fold(0, (a, b) => max(a as int, b));
+    const double colWidth = 140.0;
+    final double tableWidth = maxCols * colWidth;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final double minTableWidth = max(tableWidth, screenWidth);
+
+    final header = SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      controller: _horizontalHeaderController,
+      physics: const ClampingScrollPhysics(),
+      child: Container(
+        width: minTableWidth,
+        color: Colors.grey.shade100,
+        child: Row(
+          children: List.generate(maxCols, (i) {
+            return Container(
+              width: colWidth,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              decoration: BoxDecoration(border: Border(right: BorderSide(color: Colors.grey.shade300))),
+              child: Text('C${i + 1}', style: const TextStyle(fontWeight: FontWeight.w600)),
+            );
+          }),
+        ),
+      ),
+    );
+
+    final bodyInner = ConstrainedBox(
+      constraints: BoxConstraints(minWidth: minTableWidth),
+      child: SizedBox(
+        width: minTableWidth,
+        child: ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemCount: rows.length,
+          itemBuilder: (context, rowIndex) {
+            final row = rows[rowIndex];
+            final crow = rowIndex < colors.length ? colors[rowIndex] : <Color?>[];
+            return Container(
+              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.shade200))),
+              child: Row(
+                children: List.generate(maxCols, (colIndex) {
+                  final v = colIndex < row.length ? row[colIndex] : '';
+                  final bg = colIndex < crow.length ? crow[colIndex] : null;
+                  return Container(
+                    width: colWidth,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                    decoration: BoxDecoration(color: bg ?? Colors.transparent),
+                    child: Text(v ?? '', style: const TextStyle(fontSize: 13)),
+                  );
+                }),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    final horizontalScrollable = GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onHorizontalDragUpdate: (details) {
+        if (!_horizontalBodyController.hasClients) return;
+        final max = _horizontalBodyController.position.maxScrollExtent;
+        final newOffset = (_horizontalBodyController.offset - details.delta.dx).clamp(0.0, max);
+        _horizontalBodyController.jumpTo(newOffset);
+      },
+      child: Scrollbar(
+        controller: _horizontalBodyController,
+        thumbVisibility: true,
+        trackVisibility: true,
+        thickness: 10,
+        radius: const Radius.circular(8),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          controller: _horizontalBodyController,
+          physics: const ClampingScrollPhysics(),
+          child: bodyInner,
+        ),
+      ),
+    );
+
+    return Align(
+      alignment: Alignment.topLeft,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          header,
+          const Divider(height: 1),
+          Expanded(child: horizontalScrollable),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSheetTable(String sheetName) {
     final rows = _sheets[sheetName] ?? [];
+    final colors = _sheetsColors[sheetName] ?? [];
     if (rows.isEmpty) return const Text('Hoja vacía.');
 
     // calcular cantidad máxima de columnas
@@ -314,6 +621,7 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
           itemCount: rows.length,
           itemBuilder: (context, rowIndex) {
             final row = rows[rowIndex];
+            final crow = rowIndex < colors.length ? colors[rowIndex] : <Color?>[];
             return Container(
               decoration: BoxDecoration(
                 border: Border(
@@ -323,9 +631,11 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
               child: Row(
                 children: List.generate(maxCols, (colIndex) {
                   final v = colIndex < row.length ? row[colIndex] : '';
+                  final bg = colIndex < crow.length ? crow[colIndex] : null;
                   return Container(
                     width: colWidth,
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                    decoration: BoxDecoration(color: bg ?? Colors.transparent),
                     child: Builder(builder: (context) {
                       // Mostrar el valor crudo de la celda (sin procesamiento de fechas/weekday)
                       return Text(v ?? '', style: const TextStyle(fontSize: 13));
@@ -417,6 +727,31 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
             // Selector de hojas (itembox)
             _buildSheetSelector(),
             const SizedBox(height: 12),
+            // Botones para mostrar las nuevas matrices (trabajan sobre la hoja seleccionada)
+            Row(
+              children: [
+                ElevatedButton(
+                  onPressed: () => setState(() => _selectedMatrix = 'diaria'),
+                  child: const Text('Ver Asistencia Diaria'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () => setState(() => _selectedMatrix = 'fines_semana'),
+                  child: const Text('Ver Fines de Semana'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () => setState(() => _selectedMatrix = 'horas_extra'),
+                  child: const Text('Ver Horas Extra'),
+                ),
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: () => setState(() => _selectedMatrix = null),
+                  child: const Text('Volver Hoja'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             // Mostrar tabla con todas las filas y columnas de la hoja seleccionada
             Expanded(
               child: _selectedSheet == null
@@ -427,7 +762,20 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       padding: const EdgeInsets.all(8),
-                      child: _buildSheetTable(_selectedSheet!),
+                      child: Builder(builder: (context) {
+                        // Si hay una matriz seleccionada, mostrarla para la hoja seleccionada
+                        if (_selectedMatrix != null) {
+                          if (_selectedMatrix == 'horas_extra') {
+                            return _buildMatrixTable(AsistenciasHorasExtra, AsistenciasHorasExtraColors, _selectedSheet!);
+                          } else if (_selectedMatrix == 'fines_semana') {
+                            return _buildMatrixTable(FinesDeSemana, FinesDeSemanaColors, _selectedSheet!);
+                          } else if (_selectedMatrix == 'diaria') {
+                            return _buildMatrixTable(AsistenciaDiaria, AsistenciaDiariaColors, _selectedSheet!);
+                          }
+                        }
+                        // por defecto mostrar la hoja original
+                        return _buildSheetTable(_selectedSheet!);
+                      }),
                     ),
             ),
           ],
