@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:math';
 import 'package:file_picker/file_picker.dart';
+import 'package:excel/excel.dart' as exl;
 import 'package:sistema_acviis/models/trabajador_asistencia.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
-import 'package:excel/excel.dart' as excel_lib; // <-- agregado para leer xlsx
+import 'package:http/http.dart' as http;
 
 class HistorialAsistenciaView extends StatefulWidget {
   const HistorialAsistenciaView({super.key});
@@ -16,445 +17,376 @@ class HistorialAsistenciaView extends StatefulWidget {
 }
 
 class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
-  String? obraId;
-  String? obraNombre;
-  String? fileId; // ID del excel (se muestra al abrir la vista y se actualiza al subir)
-  bool isLoadingFileId = false; // <-- agregado
-  bool isParsing = false; // estado mientras parsea excel
-  List<List<String?>> trabajadores = []; // filas leídas (cada fila: 4 columnas B..E)
+  // Cambiar según la URL donde corre tu backend
+  static const String apiBase = 'http://localhost:3000';
 
-  // URL base para backend: ajusta según plataforma (Android emulator -> 10.0.2.2)
-  String get backendBaseUrl {
-    try {
-      if (Platform.isAndroid) return 'http://10.0.2.2:3000';
-    } catch (_) {}
-    return 'http://localhost:3000';
-  }
+  // Estado para almacenar las hojas leídas: nombre -> filas (cada fila es lista de valores)
+  Map<String, List<List<String>>> _sheets = {};
+  String? _selectedSheet;
 
-  // Navegación entre hojas
-  List<String> sheetNames = [];
-  int currentSheetIndex = 0;
-  Uint8List? lastExcelBytes; // para reusar al cambiar de hoja cuando el archivo vino como base64
-  List<List<dynamic>> remoteSheetsRows = []; // filas por hoja si backend devuelve sheets ya parseadas
+  // controladores horizontales separados y flag para sincronizarlos sin bucles
+  final ScrollController _horizontalHeaderController = ScrollController();
+  final ScrollController _horizontalBodyController = ScrollController();
+  bool _isSyncingHorizontal = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final route = ModalRoute.of(context);
-      final args = route?.settings.arguments as Map<String, dynamic>?;
+    _horizontalHeaderController.addListener(() {
+      if (_isSyncingHorizontal) return;
+      if (!_horizontalBodyController.hasClients || !_horizontalHeaderController.hasClients) return;
+      _isSyncingHorizontal = true;
+      final target = _horizontalHeaderController.offset.clamp(
+        0.0,
+        _horizontalBodyController.position.maxScrollExtent,
+      );
+      try {
+        _horizontalBodyController.jumpTo(target);
+      } catch (_) {}
+      _isSyncingHorizontal = false;
+    });
+
+    _horizontalBodyController.addListener(() {
+      if (_isSyncingHorizontal) return;
+      if (!_horizontalHeaderController.hasClients || !_horizontalBodyController.hasClients) return;
+      _isSyncingHorizontal = true;
+      final target = _horizontalBodyController.offset.clamp(
+        0.0,
+        _horizontalHeaderController.position.maxScrollExtent,
+      );
+      try {
+        _horizontalHeaderController.jumpTo(target);
+      } catch (_) {}
+      _isSyncingHorizontal = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    _horizontalHeaderController.dispose();
+    _horizontalBodyController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickAndUpload(BuildContext context, String? obraId) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['xlsx', 'xls'],
+      withData: true,
+    );
+
+    if (result == null || result.files.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se seleccionó archivo.')));
+      return;
+    }
+
+    final file = result.files.single;
+    final bytes = file.bytes;
+    if (bytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se pudo leer el archivo seleccionado.')));
+      return;
+    }
+
+    final uri = Uri.parse('$apiBase/historial-asistencia/upload-register');
+    final request = http.MultipartRequest('POST', uri);
+    request.files.add(http.MultipartFile.fromBytes('file', bytes, filename: file.name));
+    if (obraId != null) request.fields['obraId'] = obraId;
+    // enviar la fecha del dispositivo (local)
+    request.fields['fecha_subida'] = DateTime.now().toIso8601String();
+
+    final scaffold = ScaffoldMessenger.of(context);
+    final loading = scaffold.showSnackBar(const SnackBar(content: Text('Subiendo archivo...'), duration: Duration(days: 1)));
+
+    try {
+      final streamedResp = await request.send();
+      final respStr = await streamedResp.stream.bytesToString();
+      loading.close();
+
+      if (streamedResp.statusCode >= 200 && streamedResp.statusCode < 300) {
+        String msg = 'Archivo subido correctamente';
+        try {
+          final json = jsonDecode(respStr);
+          if (json is Map && json['id_excel'] != null) {
+            msg = 'Subida exitosa. id_excel: ${json['id_excel']}';
+          }
+        } catch (_) {}
+        scaffold.showSnackBar(SnackBar(content: Text(msg)));
+      } else {
+        scaffold.showSnackBar(SnackBar(content: Text('Error al subir (status ${streamedResp.statusCode}): $respStr')));
+      }
+    } catch (e) {
+      loading.close();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al subir archivo: $e')));
+    }
+  }
+
+  // Lee XLSX, elimina filas vacías y filtra columnas con pocos datos.
+  Future<void> _fetchAndReadExcel(BuildContext context, String? obraId) async {
+    if (obraId == null || obraId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('obraId no disponible.')));
+      return;
+    }
+
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(const SnackBar(content: Text('Buscando último archivo para la obra...')));
+
+    try {
+      final importUri = Uri.parse('$apiBase/historial-asistencia/import/${Uri.encodeComponent(obraId)}');
+      final importResp = await http.get(importUri);
+
+      if (importResp.statusCode != 200) {
+        scaffold.showSnackBar(SnackBar(content: Text('No se encontró id del archivo (status ${importResp.statusCode})')));
+        return;
+      }
+
+      final importJson = jsonDecode(importResp.body);
+      final fileId = importJson != null && importJson['id_excel'] != null ? importJson['id_excel'].toString() : null;
+      if (fileId == null || fileId.isEmpty) {
+        scaffold.showSnackBar(const SnackBar(content: Text('Respuesta no contiene id_excel')));
+        debugPrint('import response: ${importResp.body}');
+        return;
+      }
+
+      scaffold.showSnackBar(const SnackBar(content: Text('Descargando archivo desde servidor...')));
+
+      final fileUri = Uri.parse('$apiBase/historial-asistencia/file/$fileId');
+      final fileResp = await http.get(fileUri);
+
+      if (fileResp.statusCode != 200) {
+        scaffold.showSnackBar(SnackBar(content: Text('Error al descargar archivo (status ${fileResp.statusCode})')));
+        debugPrint('file download response: ${fileResp.statusCode} ${fileResp.body}');
+        return;
+      }
+
+      final bytes = fileResp.bodyBytes;
+      if (bytes == null || bytes.isEmpty) {
+        scaffold.showSnackBar(const SnackBar(content: Text('Archivo descargado vacío')));
+        return;
+      }
+
+      // Leer XLSX en memoria usando package:excel
+      exl.Excel excel;
+      try {
+        excel = exl.Excel.decodeBytes(bytes);
+      } catch (e) {
+        scaffold.showSnackBar(const SnackBar(content: Text('Error al parsear XLSX')));
+        debugPrint('Error decodeBytes: $e');
+        return;
+      }
+
+      // Procesar todas las hojas y eliminar filas completamente nulas
+      final Map<String, List<List<String>>> parsed = {};
+      for (final sheetName in excel.tables.keys) {
+        final sheet = excel.tables[sheetName];
+        if (sheet == null) continue;
+
+        // Convertir cada celda a string crudo y eliminar filas vacías
+        final cleanedRows = <List<String>>[];
+        for (final originalRow in sheet.rows) {
+          final converted = List<String>.generate(originalRow.length, (i) {
+            final cell = originalRow[i];
+            final v = cell?.value;
+            return v == null ? '' : v.toString().trim();
+          });
+          if (converted.any((c) => c.trim().isNotEmpty)) cleanedRows.add(converted);
+        }
+
+        // 2) detectar columnas completamente vacías y eliminar columnas con 3 o menos datos (<=3)
+        if (cleanedRows.isEmpty) {
+          parsed[sheetName] = cleanedRows;
+          continue;
+        }
+
+        final int maxCols = cleanedRows.map((r) => r.length).fold(0, (a, b) => max(a as int, b));
+        final List<int> colCounts = List<int>.filled(maxCols, 0);
+
+        for (final row in cleanedRows) {
+          for (int c = 0; c < row.length; c++) {
+            if (row[c].trim().isNotEmpty) colCounts[c] += 1;
+          }
+        }
+
+        // Mantener solo columnas con más de 3 celdas no vacías (eliminar si todos nulos o <=3)
+        final List<int> keepIdx = [];
+        for (int i = 0; i < colCounts.length; i++) {
+          if (colCounts[i] > 3) keepIdx.add(i);
+        }
+
+        if (keepIdx.isEmpty) {
+          parsed[sheetName] = [];
+        } else if (keepIdx.length == maxCols) {
+          parsed[sheetName] = cleanedRows;
+        } else {
+          final filtered = cleanedRows.map((row) {
+            return keepIdx.map((i) => i < row.length ? row[i] : '').toList();
+          }).toList();
+          parsed[sheetName] = filtered;
+        }
+      }
+
       setState(() {
-        obraId = args?['obraId']?.toString();
-        obraNombre = args?['obraNombre']?.toString();
-        fileId = args?['fileId']?.toString(); // si la navegación pasó el id, mostrarlo
+        _sheets = parsed;
+        _selectedSheet = _sheets.isNotEmpty ? _sheets.keys.first : null;
       });
 
-      // si no vino fileId y sí hay obraId, pedir al backend el último fileId
-      if (obraId != null && (fileId == null || fileId!.isEmpty)) {
-        loadLatestFileId();
-      }
-    });
-  }
-
-  // Nuevo: consulta al backend el último fileId para la obra
-  Future<void> loadLatestFileId() async {
-    if (obraId == null) return;
-    setState(() => isLoadingFileId = true);
-    try {
-      final uri = Uri.parse('$backendBaseUrl/historial-asistencia/import/${Uri.encodeComponent(obraId!)}');
-      final resp = await http.get(uri).timeout(const Duration(seconds: 10));
-      if (!mounted) return;
-      if (resp.statusCode == 200) {
-        final map = json.decode(resp.body) as Map<String, dynamic>;
-        // Cambiado: backend devuelve id_excel
-        final fid = map['id_excel']?.toString();
-        setState(() {
-          fileId = fid;
-        });
-
-        // Si encontramos fileId, cargar y parsear el excel registrado automáticamente
-        if (fid != null && fid.isNotEmpty) {
-          await fetchAndParseRegisteredFile(fid);
-        }
-      } else {
-        // no encontrado o error; mantener fileId como estaba
-        debugPrint('loadLatestFileId: ${resp.statusCode} ${resp.body}');
-      }
-    } catch (e) {
-      debugPrint('loadLatestFileId error: $e');
-    } finally {
-      if (mounted) setState(() => isLoadingFileId = false);
+      scaffold.showSnackBar(const SnackBar(content: Text('Lectura completada. Revisa la vista para ver las filas.')));
+    } catch (e, st) {
+      debugPrint('Error en _fetchAndReadExcel: $e\n$st');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
-  // Selecciona un .xlsx y lo sube al backend, retorna el fileId si tuvo éxito
-  Future<String?> pickAndUploadXlsx() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['xlsx'],
-        withData: true,
-      );
-      if (result == null || result.files.isEmpty) return null;
+  Widget _buildSheetSelector() {
+    if (_sheets.isEmpty) return const SizedBox.shrink();
 
-      final picked = result.files.first;
-      Uint8List? bytes = picked.bytes;
-      final fileName = picked.name;
-
-      if (bytes == null && picked.path != null) {
-        // Evitar dart:io File en web
-        try {
-          bytes = await File(picked.path!).readAsBytes();
-        } catch (_) {
-          // si falla (ej. web), continuar; picked.bytes debería contener los datos si withData:true
-        }
-      }
-      if (bytes == null) return null;
-
-      // Parsear y mostrar trabajadores desde el archivo seleccionado (comienza en B12)
-      await parseExcelBytes(bytes);
-
-      final uri = Uri.parse('$backendBaseUrl/historial-asistencia/upload-register');
-      final request = http.MultipartRequest('POST', uri);
-
-      if (obraId != null) request.fields['obraId'] = obraId!;
-
-      request.files.add(http.MultipartFile.fromBytes('file', bytes, filename: fileName));
-
-      final streamed = await request.send();
-      final response = await http.Response.fromStream(streamed);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        // validar que body sea JSON antes de decodificar
-        String? fid;
-        try {
-          final map = json.decode(response.body) as Map<String, dynamic>;
-          // Cambiado: backend devuelve id_excel
-          fid = map['id_excel']?.toString();
-        } catch (e) {
-          debugPrint('Respuesta no es JSON: ${response.body}');
-        }
-        if (fid != null) {
-          setState(() => fileId = fid);
-        }
-        return fid;
-      } else {
-        debugPrint('Upload failed: ${response.statusCode} ${response.body}');
-        return null;
-      }
-    } catch (e) {
-      debugPrint('pickAndUploadXlsx error: $e');
-      return null;
-    }
+    final names = _sheets.keys.toList();
+    return Row(
+      children: [
+        const Text('Hojas: ', style: TextStyle(fontWeight: FontWeight.w600)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: names.map((name) {
+                final selected = name == _selectedSheet;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: ChoiceChip(
+                    label: Text(name),
+                    selected: selected,
+                    onSelected: (_) => setState(() => _selectedSheet = name),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
-  // Nuevo: permite seleccionar archivo local y solo parsearlo/mostrar trabajadores (sin subir)
-  Future<void> pickAndParseLocalXlsx() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['xlsx'],
-        withData: true,
-      );
-      if (result == null || result.files.isEmpty) return;
-      final picked = result.files.first;
-      Uint8List? bytes = picked.bytes;
-      if (bytes == null && picked.path != null) {
-        try {
-          bytes = await File(picked.path!).readAsBytes();
-        } catch (_) {}
-      }
-      if (bytes == null) return;
-      await parseExcelBytes(bytes);
-    } catch (e) {
-      debugPrint('pickAndParseLocalXlsx error: $e');
-    }
-  }
+  Widget _buildSheetTable(String sheetName) {
+    final rows = _sheets[sheetName] ?? [];
+    if (rows.isEmpty) return const Text('Hoja vacía.');
 
-  // Lee bytes de un xlsx con package:excel y recorre la tabla comenzando en B12.
-  // Lee 4 columnas (B, C, D, E) por fila y agrega filas hasta que la primera columna esté vacía.
-  Future<void> parseExcelBytes(Uint8List bytes, {int sheetIndex = 0}) async {
-    setState(() {
-      isParsing = true;
-      trabajadores = [];
-    });
-    try {
-      lastExcelBytes = bytes;
-       final excel = excel_lib.Excel.decodeBytes(bytes);
-       if (excel.tables.isEmpty) {
-         debugPrint('parseExcelBytes: no hay hojas en el archivo');
-         return;
-       }
+    // calcular cantidad máxima de columnas
+    final int maxCols = rows.map((r) => r.length).fold(0, (a, b) => max(a as int, b));
 
-      // Registrar nombres de hojas
-      sheetNames = excel.tables.keys.toList();
-      if (sheetNames.isEmpty) return;
-      currentSheetIndex = sheetIndex.clamp(0, sheetNames.length - 1);
+    // ancho por columna (ajusta si quieres columnas más estrechas/anchas)
+    const double colWidth = 140.0;
+    final double tableWidth = maxCols * colWidth;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final double minTableWidth = max(tableWidth, screenWidth);
 
-      // usar la hoja seleccionada
-      final sheetName = sheetNames[currentSheetIndex];
-      final sheet = excel.tables[sheetName]!;
+    // Header (fila de títulos C1, C2, ...)
+    final header = SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      controller: _horizontalHeaderController, // usa controller del header
+      physics: const ClampingScrollPhysics(),
+      child: Container(
+        width: minTableWidth,
+        color: Colors.grey.shade100,
+        child: Row(
+          children: List.generate(maxCols, (i) {
+            return Container(
+              width: colWidth,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              decoration: BoxDecoration(
+                border: Border(
+                  right: BorderSide(color: Colors.grey.shade300),
+                ),
+              ),
+              child: Text('C${i + 1}', style: const TextStyle(fontWeight: FontWeight.w600)),
+            );
+          }),
+        ),
+      ),
+    );
 
-      // filas en package:sheet.rows (cada celda es Data? con .value)
-      final startRowIndex = 12; // 0-based -> fila 13 en Excel (una fila más abajo)
-      final startColIndex = 1; // columna B => índice 1
-      final colsToRead = 4; // B, C, D, E
+    // Body: ListView.builder para scroll vertical perezoso, envuelto en SingleChildScrollView horizontal
+    final bodyInner = ConstrainedBox(
+      constraints: BoxConstraints(minWidth: minTableWidth),
+      child: SizedBox(
+        width: minTableWidth,
+        child: ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(), // permite scroll vertical normalmente
+          itemCount: rows.length,
+          itemBuilder: (context, rowIndex) {
+            final row = rows[rowIndex];
+            return Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey.shade200),
+                ),
+              ),
+              child: Row(
+                children: List.generate(maxCols, (colIndex) {
+                  final v = colIndex < row.length ? row[colIndex] : '';
+                  return Container(
+                    width: colWidth,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                    child: Builder(builder: (context) {
+                      // Mostrar el valor crudo de la celda (sin procesamiento de fechas/weekday)
+                      return Text(v ?? '', style: const TextStyle(fontSize: 13));
+                    }),
+                  );
+                }),
+              ),
+            );
+          },
+        ),
+      ),
+    );
 
-      for (int r = startRowIndex; r < sheet.maxRows; r++) {
-        final row = (r < sheet.rows.length) ? sheet.rows[r] : <dynamic>[];
-        final firstCell = (row.length > startColIndex) ? row[startColIndex]?.value : null;
-        final firstText = firstCell?.toString().trim();
-        if (firstText == null || firstText.isEmpty) {
-          // terminar si la primera columna de la fila está vacía
-          break;
-        }
-        // leer las 4 columnas (si faltan celdas, quedan como null)
-        final List<String?> cols = List.generate(colsToRead, (i) {
-          final idx = startColIndex + i;
-          final val = (row.length > idx) ? row[idx]?.value : null;
-          return val?.toString();
-        });
-        trabajadores.add(cols);
-      }
-    } catch (e) {
-      debugPrint('parseExcelBytes error: $e');
-    } finally {
-      if (mounted) setState(() => isParsing = false);
-    }
-  }
+    // Envolver el area horizontal con GestureDetector para permitir arrastrar en touch
+    final horizontalScrollable = GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onHorizontalDragUpdate: (details) {
+        if (!_horizontalBodyController.hasClients) return;
+        final max = _horizontalBodyController.position.maxScrollExtent;
+        final newOffset = (_horizontalBodyController.offset - details.delta.dx).clamp(0.0, max);
+        _horizontalBodyController.jumpTo(newOffset);
+      },
+      child: Scrollbar(
+        controller: _horizontalBodyController, // usa controller del body (la barra controla el body)
+        thumbVisibility: true,
+        trackVisibility: true,
+        thickness: 10,
+        radius: const Radius.circular(8),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          controller: _horizontalBodyController, // usa controller del body
+          physics: const ClampingScrollPhysics(),
+          child: bodyInner,
+        ),
+      ),
+    );
 
-  // Mostrar hoja remota ya parseada (cuando backend devuelve 'sheets')
-  Future<void> showSheetAt(int idx) async {
-    if (idx < 0 || idx >= sheetNames.length) return;
-    setState(() {
-      isParsing = true;
-      trabajadores = [];
-      currentSheetIndex = idx;
-    });
-    try {
-      const startRowIndex = 12;
-      const startColIndex = 1;
-      const colsToRead = 4;
-
-      if (remoteSheetsRows.isNotEmpty) {
-        final rows = remoteSheetsRows[idx];
-        final List<List<String?>> parsed = [];
-        for (int r = startRowIndex; r < rows.length; r++) {
-          final row = rows[r] as List<dynamic>;
-          final firstCell = (row.length > startColIndex) ? row[startColIndex] : null;
-          final firstText = firstCell != null ? (firstCell['value']?.toString() ?? '').trim() : '';
-          if (firstText.isEmpty) break;
-          final List<String?> cols = List.generate(colsToRead, (i) {
-            final colIdx = startColIndex + i;
-            if (row.length <= colIdx) return null;
-            final cell = row[colIdx];
-            if (cell == null) return null;
-            return cell['value']?.toString();
-          });
-          parsed.add(cols);
-        }
-        if (mounted) setState(() => trabajadores = parsed);
-        return;
-      }
-
-      // si no hay filas remotas, intentar reusar los bytes locales
-      if (lastExcelBytes != null) {
-        await parseExcelBytes(lastExcelBytes!, sheetIndex: idx);
-      }
-    } catch (e) {
-      debugPrint('showSheetAt error: $e');
-    } finally {
-      if (mounted) setState(() => isParsing = false);
-    }
-  }
-
-   // Nuevo: obtiene el Excel registrado (endpoint /file/:fileId) y parsea las filas
-   Future<void> fetchAndParseRegisteredFile(String fid) async {
-     if (fid.isEmpty) return;
-     setState(() {
-       isParsing = true;
-       trabajadores = [];
-     });
-     try {
-       final uri = Uri.parse('$backendBaseUrl/historial-asistencia/file/${Uri.encodeComponent(fid)}');
-       final resp = await http.get(uri).timeout(const Duration(seconds: 15));
-       if (!mounted) return;
-       debugPrint('fetchAndParseRegisteredFile: status=${resp.statusCode} content-type=${resp.headers['content-type']}');
-       if (resp.statusCode != 200) {
-         debugPrint('fetchAndParseRegisteredFile: status ${resp.statusCode} body=${resp.body}');
-         return;
-       }
-
-       // Intentar decodificar JSON primero (caso 'sheets' o 'base64')
-       Map<String, dynamic>? body;
-       try {
-         body = json.decode(resp.body) as Map<String, dynamic>?;
-         debugPrint('fetchAndParseRegisteredFile: parsed JSON ok');
-       } catch (e) {
-         debugPrint('fetchAndParseRegisteredFile: respuesta no JSON, intentar parsear como bytes. error: $e');
-         body = null;
-       }
-
-       if (body != null) {
-         // Si el backend devolvió 'sheets' ya parseadas (objetos { value, color })
-         if (body.containsKey('sheets') && body['sheets'] is List) {
-           final sheets = body['sheets'] as List<dynamic>;
-           sheetNames = [];
-           remoteSheetsRows = [];
-           for (int i = 0; i < sheets.length; i++) {
-             final s = sheets[i] as Map<String, dynamic>;
-             final name = s['name']?.toString() ?? 'Hoja ${i + 1}';
-             final rows = (s['rows'] as List<dynamic>?) ?? <dynamic>[];
-             sheetNames.add(name);
-             remoteSheetsRows.add(rows);
-           }
-           if (sheetNames.isNotEmpty) {
-             await showSheetAt(0);
-           }
-           return;
-         }
-
-         // Si backend devolvió base64 del archivo, decodificar y usar el parser local
-         if (body.containsKey('base64') && body['base64'] is String) {
-           try {
-             final b = base64.decode(body['base64'] as String);
-             lastExcelBytes = Uint8List.fromList(b);
-             await parseExcelBytes(lastExcelBytes!, sheetIndex: 0);
-             return;
-           } catch (e) {
-             debugPrint('Error decodificando base64: $e');
-             // seguir al intento con bodyBytes abajo
-           }
-         }
-
-         // Si viene otro JSON válido pero sin sheets/base64, intentar buscar un campo 'file' con base64
-         if (body.containsKey('file') && body['file'] is String) {
-           try {
-             final b = base64.decode(body['file'] as String);
-             lastExcelBytes = Uint8List.fromList(b);
-             await parseExcelBytes(lastExcelBytes!, sheetIndex: 0);
-             return;
-           } catch (e) {
-             debugPrint('Error decodificando body.file base64: $e');
-           }
-         }
-       }
-
-       // Si llegamos aquí, intentar parsear directamente los bytes de la respuesta
-       final bytes = resp.bodyBytes;
-       if (bytes.isNotEmpty) {
-         try {
-           // guardar para navegación entre hojas
-           lastExcelBytes = Uint8List.fromList(bytes);
-           await parseExcelBytes(lastExcelBytes!, sheetIndex: 0);
-           return;
-         } catch (e) {
-           debugPrint('Error parseando bodyBytes como xlsx: $e');
-         }
-       }
-
-       debugPrint('fetchAndParseRegisteredFile: formato de respuesta inesperado o datos vacíos');
-     } catch (e) {
-       debugPrint('fetchAndParseRegisteredFile error: $e');
-     } finally {
-       if (mounted) setState(() => isParsing = false);
-     }
-   }
-
-  // Reemplazado: descarga el archivo registrado como XLSX, lo guarda en Downloads y lo abre
-  Future<void> downloadAndOpenRegisteredXlsx(String fid) async {
-    if (fid.isEmpty) return;
-    try {
-      final uri = Uri.parse('$backendBaseUrl/historial-asistencia/file/${Uri.encodeComponent(fid)}');
-      final resp = await http.get(uri).timeout(const Duration(seconds: 30));
-      if (!mounted) return;
-      debugPrint('downloadAndOpenRegisteredXlsx: status=${resp.statusCode} content-type=${resp.headers['content-type']}');
-      if (resp.statusCode != 200) {
-        debugPrint('downloadAndOpenRegisteredXlsx: body=${resp.body}');
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al descargar: ${resp.statusCode}')));
-        return;
-      }
-
-      // Obtener bytes (acepta binario o JSON con base64)
-      Uint8List bytes;
-      String filename = 'historial_$fid.xlsx';
-      try {
-        final map = json.decode(resp.body) as Map<String, dynamic>?;
-        if (map != null && map.containsKey('base64') && map['base64'] is String) {
-          bytes = base64.decode(map['base64'] as String);
-          if (map.containsKey('filename')) filename = map['filename'].toString();
-        } else if (map != null && map.containsKey('file') && map['file'] is String) {
-          bytes = base64.decode(map['file'] as String);
-          if (map.containsKey('filename')) filename = map['filename'].toString();
-        } else {
-          // JSON sin base64 -> guardar texto para inspección
-          final text = resp.body;
-          final up = Platform.isWindows ? (Platform.environment['USERPROFILE'] ?? Directory.current.path) : (Platform.environment['HOME'] ?? Directory.current.path);
-          final debugDir = Directory('$up${Platform.pathSeparator}Downloads');
-          if (!await debugDir.exists()) await debugDir.create(recursive: true);
-          final debugFile = File('${debugDir.path}${Platform.pathSeparator}historial_${fid}_response.txt');
-          await debugFile.writeAsString(text);
-          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Respuesta no binaria guardada en: ${debugFile.path}')));
-          debugPrint('Respuesta JSON sin base64 guardada en: ${debugFile.path}');
-          return;
-        }
-      } catch (_) {
-        // no JSON -> usar bodyBytes
-        bytes = resp.bodyBytes;
-      }
-
-      if (bytes.isEmpty) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Archivo vacío o no descargable')));
-        return;
-      }
-
-      // Intentar obtener filename desde headers Content-Disposition
-      final cd = resp.headers['content-disposition'];
-      if (cd != null) {
-        final m = RegExp("filename\\*?=(?:UTF-8'')?\"?([^\";]+)\"?").firstMatch(cd);
-        if (m != null && m.groupCount >= 1) {
-          filename = Uri.decodeFull(m.group(1)!);
-        }
-      }
-
-      // Asegurar extensión .xlsx
-      if (!filename.toLowerCase().endsWith('.xlsx')) {
-        filename = '$filename.xlsx';
-      }
-
-      // Guardar en carpeta Downloads
-      final up = Platform.isWindows ? (Platform.environment['USERPROFILE'] ?? Directory.current.path) : (Platform.environment['HOME'] ?? Directory.current.path);
-      final downloadsPath = '$up${Platform.pathSeparator}Downloads';
-      final dir = Directory(downloadsPath);
-      if (!await dir.exists()) await dir.create(recursive: true);
-
-      final safeName = filename.replaceAll(RegExp(r'[\\/:]'), '_');
-      final outFile = File('${dir.path}${Platform.pathSeparator}$safeName');
-      await outFile.writeAsBytes(bytes);
-
-      // Abrir con la aplicación por defecto (Windows)
-      try {
-        if (Platform.isWindows) {
-          await Process.run('cmd', ['/c', 'start', '', outFile.path]);
-        } else if (Platform.isLinux) {
-          await Process.run('xdg-open', [outFile.path]);
-        } else if (Platform.isMacOS) {
-          await Process.run('open', [outFile.path]);
-        }
-      } catch (e) {
-        debugPrint('No se pudo abrir automáticamente: $e');
-      }
-
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('XLSX descargado y abierto: ${outFile.path}')));
-      debugPrint('Archivo XLSX guardado en: ${outFile.path}');
-    } catch (e) {
-      debugPrint('downloadAndOpenRegisteredXlsx error: $e');
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al descargar/abrir: $e')));
-    }
+    return Align(
+      alignment: Alignment.topLeft,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // header fijo arriba (se moverá horizontalmente con el cuerpo)
+          header,
+          const Divider(height: 1),
+          // body con scroll vertical y horizontal (Scrollbar + GestureDetector para pan)
+          Expanded(child: horizontalScrollable),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final route = ModalRoute.of(context);
+    final args = route?.settings.arguments as Map<String, dynamic>?;
+
+    final obraId = args?['obraId']?.toString();
+    final obraNombre = args?['obraNombre']?.toString();
+    final fileId = args?['fileId']?.toString();
+
     return PrimaryScaffold(
       title: 'Obra${obraNombre != null ? " - $obraNombre" : ""}',
       body: Padding(
@@ -462,169 +394,42 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Navegador de hojas
-            if (sheetNames.isNotEmpty) ...[
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: (currentSheetIndex > 0 && !isParsing)
-                        ? () => showSheetAt(currentSheetIndex - 1)
-                        : null,
-                  ),
-                  Expanded(
-                    child: Text(
-                      '${sheetNames[currentSheetIndex]}  (${currentSheetIndex + 1}/${sheetNames.length})',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: (currentSheetIndex < sheetNames.length - 1 && !isParsing)
-                        ? () => showSheetAt(currentSheetIndex + 1)
-                        : null,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-            ],
-            const SizedBox(height: 20),
-
-            // Botones: subir y abrir archivo registrado
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () async {
-                      final fid = await pickAndUploadXlsx();
-                      if (!mounted) return;
-                      if (fid != null) {
-                        setState(() => fileId = fid);
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Archivo subido. ID: $fid')));
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se subió el archivo')));
-                      }
-                    },
                     icon: const Icon(Icons.upload_file),
-                    label: const Text('Subir archivo de asistencia'),
+                    label: const Text('Subir archivo XLSX'),
+                    onPressed: () => _pickAndUpload(context, obraId),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: (fileId != null && fileId!.isNotEmpty && !isParsing)
-                        ? () async {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Descargando y abriendo XLSX...')));
-                            await downloadAndOpenRegisteredXlsx(fileId!);
-                          }
-                        : null,
                     icon: const Icon(Icons.download),
-                    label: const Text('Descargar y abrir XLSX registrado'),
+                    label: const Text('Descargar y leer XLSX (debug)'),
+                    onPressed: () => _fetchAndReadExcel(context, obraId),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-
-            // Mostrar lista de trabajadores leídos
-            if (trabajadores.isNotEmpty) ...[
-              const Text('Trabajadores detectados:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              Expanded(
-                child: ListView.separated(
-                  itemCount: trabajadores.length,
-                  separatorBuilder: (_, __) => const Divider(),
-                  itemBuilder: (context, index) {
-                    final row = trabajadores[index];
-
-                    // Normalizar columnas: B..E -> row[0]..row[3]
-                    final String? col0 = row.isNotEmpty ? row[0]?.trim() : null;
-                    final String? col1 = row.length > 1 ? row[1]?.trim() : null;
-                    final String? col2 = row.length > 2 ? row[2]?.trim() : null;
-                    final String? col3 = row.length > 3 ? row[3]?.trim() : null;
-
-                    bool isRut(String? s) {
-                      if (s == null) return false;
-                      final t = s.replaceAll('.', '').replaceAll(' ', '');
-                      return RegExp(r'^\d+[-–—]?[0-9kK]$').hasMatch(t);
-                    }
-
-                    bool hasLetters(String? s) =>
-                        s != null && RegExp(r'[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]').hasMatch(s);
-
-                    final cols = [col0, col1, col2, col3];
-
-                    // Detectar rut primero
-                    String? rut;
-                    for (final c in cols) {
-                      if (isRut(c)) {
-                        rut = c;
-                        break;
-                      }
-                    }
-
-                    // Detectar nombre (primera columna con letras que no sea el rut)
-                    String? nombre;
-                    for (final c in cols) {
-                      if (c != null && c.isNotEmpty && c != rut && hasLetters(c)) {
-                        nombre = c;
-                        break;
-                      }
-                    }
-
-                    // Detectar cargo: primer valor no vacío que no sea nombre ni rut
-                    String? cargo;
-                    // 1) Preferir celdas que contengan letras (más probables como cargos)
-                    for (final c in cols) {
-                      if (c != null && c.isNotEmpty && c != nombre && c != rut && hasLetters(c)) {
-                        cargo = c;
-                        break;
-                      }
-                    }
-                    // 2) Si no se encontró, tomar la primera que no sea puramente numérica
-                    if (cargo == null) {
-                      for (final c in cols) {
-                        if (c != null && c.isNotEmpty && c != nombre && c != rut && !RegExp(r'^\d+$').hasMatch(c)) {
-                          cargo = c;
-                          break;
-                        }
-                      }
-                    }
-                    // 3) Si aún no se encontró, dejar null y aplicar fallback más abajo
-
-                    // Caso común: la primera columna es índice numérico -> desplazar
-                    if ((nombre == null || nombre.isEmpty) && col0 != null && RegExp(r'^\d+$').hasMatch(col0)) {
-                      if (hasLetters(col1)) {
-                        nombre = col1;
-                        if (rut == null && isRut(col2)) rut = col2;
-                        cargo = cargo ?? (hasLetters(col3) ? col3 : null);
-                      } else if (hasLetters(col2)) {
-                        nombre = col2;
-                        if (rut == null && isRut(col3)) rut = col3;
-                        cargo = cargo ?? (hasLetters(col1) ? col1 : null);
-                      }
-                    }
-
-                    // Fallbacks finales
-                    nombre = (nombre != null && nombre.isNotEmpty) ? nombre : (col0 ?? col1 ?? col2 ?? '-');
-                    rut = (rut != null && rut.isNotEmpty) ? rut : (col1 ?? col2 ?? col3 ?? '-');
-                    cargo = (cargo != null && cargo.isNotEmpty) ? cargo : '-';
-
-                    return ListTile(
-                      leading: Text('${index + 1}.'),
-                      title: Text(nombre),
-                      subtitle: Text('RUT: $rut  •  CARGO: $cargo'),
-                    );
-                  },
-                ),
-              ),
-            ] else if (isParsing) ...[
-              const SizedBox(height: 12),
-              const Center(child: CircularProgressIndicator()),
-            ] else ...[
-              const SizedBox(height: 12),
-              const Text('No hay trabajadores cargados (usar el botón para seleccionar un archivo).'),
-            ],
+            const SizedBox(height: 16),
+            // Selector de hojas (itembox)
+            _buildSheetSelector(),
+            const SizedBox(height: 12),
+            // Mostrar tabla con todas las filas y columnas de la hoja seleccionada
+            Expanded(
+              child: _selectedSheet == null
+                  ? const Center(child: Text('No hay hojas cargadas.'))
+                  : Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: _buildSheetTable(_selectedSheet!),
+                    ),
+            ),
           ],
         ),
       ),
