@@ -43,7 +43,6 @@ class ExpansionTileVehiculos extends StatelessWidget {
         await updateVehiculo({
           'id': vehiculo.id,
           'patente': vehiculo.patente,
-          'permiso_circ': vehiculo.permisoCirc,
           'permiso_id': permisoId,
           'revision_tecnica': vehiculo.revisionTecnica.toIso8601String(),
           'revision_gases': vehiculo.revisionGases.toIso8601String(),
@@ -117,10 +116,6 @@ class ExpansionTileVehiculos extends StatelessWidget {
       title: Text(vehiculo.patente),
       subtitle: Text('Tipo: ${vehiculo.tipo} | Estado: ${vehiculo.estado}'),
       children: [
-        ListTile(
-          title: const Text('Permiso de circulación'),
-          subtitle: Text(vehiculo.permisoCirc),
-        ),
         ListTile(
           title: const Text('Revisión técnica'),
           subtitle: Text(DateFormat('yyyy-MM-dd').format(vehiculo.revisionTecnica)),
