@@ -149,7 +149,6 @@ class _ModificarVehiculosViewState extends State<ModificarVehiculosView> {
                       const SizedBox(height: 12),
                       ElevatedButton(
                         onPressed: () async {
-                          // Validación simple
                           final camposObligatorios = [
                             c['patente']!,
                             c['permiso_circ']!,

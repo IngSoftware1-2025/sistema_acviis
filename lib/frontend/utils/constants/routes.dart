@@ -14,6 +14,7 @@ import 'package:sistema_acviis/frontend/views/obras/gestionar_finanzas_view.dart
 import 'package:sistema_acviis/frontend/views/obras/gestionar_recursos_view.dart';
 import 'package:sistema_acviis/frontend/views/obras/gestionar_itemizados_view.dart';
 import 'package:sistema_acviis/frontend/views/obras/gestionar_trabajadores.dart';
+import 'package:sistema_acviis/frontend/views/obras/modificar_obras.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/agregar_trabajador_view.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/contratos_anexos.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/eliminar_trabajadores_view.dart';
@@ -115,6 +116,10 @@ final Map<String, WidgetBuilder> routes = {
 
   '/home_page/obras_view': (BuildContext context) => const ObrasView(),
   '/home_page/obras_view/agregar_obras_view': (BuildContext context) => const AgregarObrasView(),
+  '/home_page/obras_view/modificar_obras_view': (BuildContext context) {
+    final args = ModalRoute.of(context)!.settings.arguments as List<dynamic>;
+    return ModificarObrasView(obras: args);
+  },
   '/home_page/obras_view/gestionar_trabajadores_view': (BuildContext context) {
     return const GestionarTrabajadoresView();
   },

@@ -118,7 +118,6 @@ class _ObrasViewState extends State<ObrasView> {
                           }
                         }
                         
-                        // Obtener las obras seleccionadas
                         final obrasSeleccionadas = seleccionados
                           .map((i) => obrasProvider.obras[i])
                           .toList();
@@ -129,12 +128,9 @@ class _ObrasViewState extends State<ObrasView> {
                           );
                           return;
                         }
+                        Navigator.pushNamed(context, '/home_page/obras_view/modificar_obras_view',
+                        arguments: obrasSeleccionadas);
                         
-                        // Aquí iría la navegación a la vista de modificación
-                        // Navigator.pushNamed(context, '/home_page/obras_view/modificar_obras_view', 
-                        //   arguments: obrasSeleccionadas);
-                        
-                        // Por ahora mostraremos un SnackBar
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Seleccionaste ${obrasSeleccionadas.length} obras para modificar')),
                         );
@@ -346,8 +342,6 @@ class _ObrasViewState extends State<ObrasView> {
       final file = result.files.single;
       final provider = Provider.of<ObrasProvider>(context, listen: false);
 
-      // No usamos await aquí. Simplemente iniciamos la subida.
-      // El provider se encargará de todo, incluyendo la notificación.
       provider.subirAsistencia(
         charlaId: charlaId,
         fileName: file.name,
@@ -356,29 +350,25 @@ class _ObrasViewState extends State<ObrasView> {
     }
   }
 
-  // Modificamos la función para que reciba el ID de la charla y la obra
   Future<void> _visualizarAsistencias(BuildContext context, String obraId, String charlaId) async {
     final provider = Provider.of<ObrasProvider>(context, listen: false);
 
-    // Mostramos un diálogo de carga mientras se actualizan los datos
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => const PopScope(canPop: false, child: Center(child: CircularProgressIndicator())),
     );
 
-    // Buscamos la obra actualizada
     final obraActualizada = await provider.fetchObraById(obraId);
 
     if (!context.mounted) return;
-    Navigator.of(context).pop(); // Cerramos el diálogo de carga
+    Navigator.of(context).pop(); 
 
     if (obraActualizada == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error al actualizar los datos.')));
       return;
     }
 
-    // Encontramos la charla y sus asistencias actualizadas
     final charlaActualizada = obraActualizada.charlas.firstWhere((c) => c.id == charlaId);
     final asistencias = charlaActualizada.asistencias;
 
@@ -387,11 +377,9 @@ class _ObrasViewState extends State<ObrasView> {
       return;
     }
 
-    // Mostramos el diálogo con los datos frescos
     showDialog(
       context: context,
       builder: (dialogContext) {
-        // Usamos StatefulBuilder para poder actualizar el contenido del diálogo
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
             return AlertDialog(
