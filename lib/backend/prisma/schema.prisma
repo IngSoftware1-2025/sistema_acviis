@@ -121,48 +121,47 @@ model vehiculos {
   estado             String         @db.VarChar
   proxima_mantencion DateTime       @db.Date
   tipo               String         @db.VarChar
+  permiso_id         String?        @db.VarChar
   obra_recursos      obra_recurso[]
 }
 
 model ordenes_de_compra {
-  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  numero_orden      String?   @unique @db.VarChar
-  fecha_emision     DateTime? @db.Date
-  centro_costo      String?   @db.VarChar
-  numero_cotizacion String?   @db.VarChar
-  nombre_servicio   String?   @db.VarChar
+  id                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  numero_orden      String?      @unique @db.VarChar
+  fecha_emision     DateTime?    @db.Date
+  centro_costo      String?      @db.VarChar
+  numero_cotizacion String?      @db.VarChar
+  nombre_servicio   String?      @db.VarChar
   valor             Int?
   descuento         Boolean?
-  notas_adicionales String?   @db.VarChar
-  estado            String?   @default("Activo") @db.VarChar
-  numero_contacto   String?   @db.VarChar
-  proveedorId       String?   @db.Uuid
-  itemizadoId       String?   @db.Uuid
-  createdAt         DateTime? @default(now()) @db.Timestamp(6)
-  updatedAt         DateTime? @default(now()) @updatedAt @db.Timestamp(6)
-
-  itemizado itemizados?  @relation(fields: [itemizadoId], references: [id], onUpdate: NoAction, map: "fk_ordenes_itemizados")
-  proveedor proveedores? @relation(fields: [proveedorId], references: [id], onUpdate: NoAction, map: "fk_ordenes_proveedores")
+  notas_adicionales String?      @db.VarChar
+  estado            String?      @default("Activo") @db.VarChar
+  numero_contacto   String?      @db.VarChar
+  proveedorId       String?      @db.Uuid
+  itemizadoId       String?      @db.Uuid
+  createdAt         DateTime?    @default(now()) @db.Timestamp(6)
+  updatedAt         DateTime?    @default(now()) @updatedAt @db.Timestamp(6)
+  itemizado         itemizados?  @relation(fields: [itemizadoId], references: [id], onUpdate: NoAction, map: "fk_ordenes_itemizados")
+  proveedor         proveedores? @relation(fields: [proveedorId], references: [id], onUpdate: NoAction, map: "fk_ordenes_proveedores")
 }
 
 model pagos {
-  id                  String   @id(map: "facturas_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                  String      @id(map: "facturas_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   nombre_mandante     String
-  rut_mandante        String   @db.VarChar
+  rut_mandante        String      @db.VarChar
   direccion_comercial String
   codigo              String
   servicio_ofrecido   String
   valor               Float
-  plazo_pagar         DateTime @db.Date
+  plazo_pagar         DateTime    @db.Date
   estado_pago         String
   fotografia_id       String
   tipo_pago           String
   sentido             Boolean
   visualizacion       String
-  notificado          Boolean? @default(false)
-
-  itemizadoId         String?       @db.Uuid
-  itemizado           itemizados?   @relation("ItemizadoPagos", fields: [itemizadoId], references: [id])
+  notificado          Boolean?    @default(false)
+  itemizadoId         String?     @db.Uuid
+  itemizado           itemizados? @relation("ItemizadoPagos", fields: [itemizadoId], references: [id])
 }
 
 model configuracion_notificaciones {
@@ -172,39 +171,37 @@ model configuracion_notificaciones {
 }
 
 model itemizados {
-  id               String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  nombre           String              @db.VarChar             
-  cantidad         Int                 @default(1)             
-  monto_total      Float                  
-  monto_disponible Float               
-  gasto_actual     Float               @default(0)              
-  obraId           String              @map("obraid") @db.Uuid  
-  createdAt        DateTime?           @default(now()) @map("createdat") @db.Timestamp(6)
-  updatedAt        DateTime?           @default(now()) @map("updatedat") @db.Timestamp(6)
-  exceso_notificado Boolean @default(false)
-
-  obra             obras               @relation(fields: [obraId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_itemizados_obra")
-  ordenes          ordenes_de_compra[] 
-  facturas         pagos[]             @relation("ItemizadoPagos")
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre            String              @db.VarChar
+  monto_total       Float
+  monto_disponible  Float
+  obraId            String              @map("obraid") @db.Uuid
+  createdAt         DateTime?           @default(now()) @map("createdat") @db.Timestamp(6)
+  updatedAt         DateTime?           @default(now()) @map("updatedat") @db.Timestamp(6)
+  cantidad          Int                 @default(1)
+  gasto_actual      Float               @default(0)
+  exceso_notificado Boolean             @default(false)
+  obra              obras               @relation(fields: [obraId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_itemizados_obra")
+  ordenes           ordenes_de_compra[]
+  facturas          pagos[]             @relation("ItemizadoPagos")
 }
 
 model obras {
-  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  nombre            String            @db.VarChar
-  descripcion       String?           @db.VarChar
-  createdat         DateTime?         @default(now()) @db.Timestamp(6)
-  updatedat         DateTime?         @default(now()) @db.Timestamp(6)
-  responsable_email String?           @db.VarChar
-  direccion         String
-  obraInicio        DateTime?         @db.Date
-  obraFin           DateTime?         @db.Date
-  jornada           String?
-  charlas           charlas[]
-  itemizados        itemizados[]
-  obra_recursos     obra_recurso[]
-  obra_finanzas     obra_finanza[]    
-  trabajador_obra   trabajador_obra[]
+  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre               String                 @db.VarChar
+  descripcion          String?                @db.VarChar
+  createdat            DateTime?              @default(now()) @db.Timestamp(6)
+  updatedat            DateTime?              @default(now()) @db.Timestamp(6)
+  responsable_email    String?                @db.VarChar
+  direccion            String
+  obraInicio           DateTime?              @db.Date
+  obraFin              DateTime?              @db.Date
+  jornada              String?
+  charlas              charlas[]
   historial_asistencia historial_asistencia[]
+  itemizados           itemizados[]
+  obra_recursos        obra_recurso[]
+  trabajador_obra      trabajador_obra[]
 }
 
 model charlas {
@@ -278,23 +275,8 @@ model historial_asistencia {
   id_excel     String   @db.VarChar
   obraId       String   @db.Uuid
   fecha_subida DateTime @default(now()) @db.Timestamp(6)
+  obra         obras    @relation(fields: [obraId], references: [id], onDelete: NoAction, map: "historial_asistencia_obraId_fkey")
 
-  obra obras @relation(fields: [obraId], references: [id], onDelete: NoAction, map: "historial_asistencia_obraId_fkey")
-
-  @@map("historial_asistencia")
   @@index([obraId], map: "idx_archivos_excel_obra")
-}
-model obra_finanza {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  obra_id         String   @map("obraId") @db.Uuid
-  tipo            String   @db.VarChar // 'caja chica', etc.
-  fecha_asignacion DateTime @default(now()) @map("fechaAsignacion") @db.Timestamp(6)
-  proposito       String   @db.VarChar
-  estado          String   @default("activa") @db.VarChar // 'activa' o 'cerrada'
-  detalles        Json?    // Aquí van todos los montos y demás información
-  
-  obra            obras    @relation(fields: [obra_id], references: [id], onDelete: Cascade)
-  
-  @@index([obra_id], map: "idx_obra_finanza_obra")
-  @@map("obra_finanzas")
+  @@map("historial_asistencia")
 }
