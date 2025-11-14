@@ -3,7 +3,6 @@ import 'dart:convert';
 
 Future<String> createVehiculo({
   required String patente,
-  required String permisoCirculacion, 
   DateTime? fechaRevisionTecnica,
   DateTime? fechaRevisionGases,
   DateTime? fechaUltimaMantencion,
@@ -22,7 +21,6 @@ Future<String> createVehiculo({
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({
       'patente': patente,
-      'permiso_circ': permisoCirculacion,
       'revision_tecnica': fechaRevisionTecnica?.toIso8601String(),
       'revision_gases': fechaRevisionGases?.toIso8601String(),
       'ultima_mantencion': fechaUltimaMantencion?.toIso8601String(),

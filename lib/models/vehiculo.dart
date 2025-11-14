@@ -2,6 +2,7 @@ class Vehiculo {
   final String id;
   final String patente;
   final String permisoCirc;
+  final String? permisoId; // ID del archivo PDF en MongoDB
   final DateTime revisionTecnica;
   final DateTime revisionGases;
   final DateTime ultimaMantencion;
@@ -18,6 +19,7 @@ class Vehiculo {
     required this.id,
     required this.patente,
     required this.permisoCirc,
+    this.permisoId,
     required this.revisionTecnica,
     required this.revisionGases,
     required this.ultimaMantencion,
@@ -36,6 +38,7 @@ class Vehiculo {
       id: json['id'],
       patente: json['patente'],
       permisoCirc: json['permiso_circ'],
+      permisoId: json['permiso_id'],
       revisionTecnica: DateTime.parse(json['revision_tecnica']),
       revisionGases: DateTime.parse(json['revision_gases']),
       ultimaMantencion: DateTime.parse(json['ultima_mantencion']),
@@ -55,6 +58,7 @@ class Vehiculo {
       'id': id,
       'patente': patente,
       'permiso_circ': permisoCirc,
+      'permiso_id': permisoId,
       'revision_tecnica': revisionTecnica.toIso8601String(),
       'revision_gases': revisionGases.toIso8601String(),
       'ultima_mantencion': ultimaMantencion.toIso8601String(),
