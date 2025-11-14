@@ -109,7 +109,6 @@ model herramientas {
 model vehiculos {
   id                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   patente            String         @unique @db.VarChar
-  permiso_circ       String         @db.VarChar
   revision_tecnica   DateTime       @db.Date
   revision_gases     DateTime       @db.Date
   ultima_mantencion  DateTime       @db.Date
