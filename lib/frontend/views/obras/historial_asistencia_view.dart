@@ -1,13 +1,9 @@
-import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
-import 'dart:math';
+import 'dart:async';
 import 'package:file_picker/file_picker.dart';
-import 'package:excel/excel.dart' as exl;
-import 'package:sistema_acviis/models/trabajador_asistencia.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sistema_acviis/frontend/widgets/scaffold.dart';
-import 'package:http/http.dart' as http;
+import 'package:sistema_acviis/providers/historial_asistencia_provider.dart';
 
 class HistorialAsistenciaView extends StatefulWidget {
   const HistorialAsistenciaView({super.key});
@@ -17,83 +13,73 @@ class HistorialAsistenciaView extends StatefulWidget {
 }
 
 class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
-  // Cambiar según la URL donde corre tu backend
-  static const String apiBase = 'http://localhost:3000';
-
-  // Estado para almacenar las hojas leídas: nombre -> filas (cada fila es lista de valores)
-  Map<String, List<List<String>>> _sheets = {};
-  String? _selectedSheet;
-
-  // Nuevas variables solicitadas (por hoja)
-  Map<String, List<List<String>>> AsistenciasHorasExtra = {};
-  Map<String, List<List<String>>> FinesDeSemana = {};
-  Map<String, List<List<String>>> AsistenciaDiaria = {};
-
-  // Colores por celda (paralelo a las matrices anteriores)
-  Map<String, List<List<Color?>>> _sheetsColors = {};
-  Map<String, List<List<Color?>>> AsistenciasHorasExtraColors = {};
-  Map<String, List<List<Color?>>> FinesDeSemanaColors = {};
-  Map<String, List<List<Color?>>> AsistenciaDiariaColors = {};
-
-  // Estado para mostrar una de las matrices extraídas
-  String? _selectedMatrix; // valores: 'horas_extra', 'fines_semana', 'diaria' o null
-
-  // controladores horizontales separados y flag para sincronizarlos sin bucles
-  final ScrollController _horizontalHeaderController = ScrollController();
   final ScrollController _horizontalBodyController = ScrollController();
-  bool _isSyncingHorizontal = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _horizontalHeaderController.addListener(() {
-      if (_isSyncingHorizontal) return;
-      if (!_horizontalBodyController.hasClients || !_horizontalHeaderController.hasClients) return;
-      _isSyncingHorizontal = true;
-      final target = _horizontalHeaderController.offset.clamp(
-        0.0,
-        _horizontalBodyController.position.maxScrollExtent,
-      );
-      try {
-        _horizontalBodyController.jumpTo(target);
-      } catch (_) {}
-      _isSyncingHorizontal = false;
-    });
-
-    _horizontalBodyController.addListener(() {
-      if (_isSyncingHorizontal) return;
-      if (!_horizontalHeaderController.hasClients || !_horizontalBodyController.hasClients) return;
-      _isSyncingHorizontal = true;
-      final target = _horizontalBodyController.offset.clamp(
-        0.0,
-        _horizontalHeaderController.position.maxScrollExtent,
-      );
-      try {
-        _horizontalHeaderController.jumpTo(target);
-      } catch (_) {}
-      _isSyncingHorizontal = false;
-    });
-  }
+  final Map<String, int?> _selectedPersonaIndex = {};
+  String? _selectedSheet;
+  Timer? _autoLoadTimer;
+  bool _autoLoadTriggeredForSheet = false;
 
   @override
   void dispose() {
-    _horizontalHeaderController.dispose();
     _horizontalBodyController.dispose();
     super.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+    // Limpiar todos los datos del Excel al entrar en la vista
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        final provider = Provider.of<HistorialAsistenciaProvider>(context, listen: false);
+        // Limpiar todo el estado del provider y resetar selección local
+        provider.clearAll();
+        setState(() {
+          _selectedSheet = null;
+          _selectedPersonaIndex.clear();
+        });
+      } catch (_) {
+        // Si el provider no está disponible en este momento, no bloquear la UI.
+      }
+    });
+  }
+
+  String _formatDate(String raw) {
+    final s = raw.trim();
+    if (s.isEmpty) return '';
+    final dt = DateTime.tryParse(s);
+    if (dt != null) {
+      return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+    }
+    final matchYmd = RegExp(r'^(\d{4})[^\d]?(\d{1,2})[^\d]?(\d{1,2})$').firstMatch(s);
+    if (matchYmd != null) {
+      final y = int.parse(matchYmd[1]!);
+      final m = int.parse(matchYmd[2]!);
+      final d = int.parse(matchYmd[3]!);
+      return '${d.toString().padLeft(2, '0')}/${m.toString().padLeft(2, '0')}/${y}';
+    }
+    final matchDmy = RegExp(r'^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$').firstMatch(s);
+    if (matchDmy != null) {
+      final d = int.parse(matchDmy[1]!);
+      final m = int.parse(matchDmy[2]!);
+      var y = int.parse(matchDmy[3]!);
+      if (y < 100) y += 2000;
+      return '${d.toString().padLeft(2, '0')}/${m.toString().padLeft(2, '0')}/${y}';
+    }
+    return s;
+  }
+
   Future<void> _pickAndUpload(BuildContext context, String? obraId) async {
+    final provider = Provider.of<HistorialAsistenciaProvider>(context, listen: false);
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['xlsx', 'xls'],
       withData: true,
     );
-
     if (result == null || result.files.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se seleccionó archivo.')));
       return;
     }
-
     final file = result.files.single;
     final bytes = file.bytes;
     if (bytes == null) {
@@ -101,589 +87,509 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
       return;
     }
 
-    final uri = Uri.parse('$apiBase/historial-asistencia/upload-register');
-    final request = http.MultipartRequest('POST', uri);
-    request.files.add(http.MultipartFile.fromBytes('file', bytes, filename: file.name));
-    if (obraId != null) request.fields['obraId'] = obraId;
-    // enviar la fecha del dispositivo (local)
-    request.fields['fecha_subida'] = DateTime.now().toIso8601String();
-
     final scaffold = ScaffoldMessenger.of(context);
-    final loading = scaffold.showSnackBar(const SnackBar(content: Text('Subiendo archivo...'), duration: Duration(days: 1)));
-
+    scaffold.showSnackBar(const SnackBar(content: Text('Subiendo archivo...'), duration: Duration(days: 1)));
     try {
-      final streamedResp = await request.send();
-      final respStr = await streamedResp.stream.bytesToString();
-      loading.close();
-
-      if (streamedResp.statusCode >= 200 && streamedResp.statusCode < 300) {
-        String msg = 'Archivo subido correctamente';
-        try {
-          final json = jsonDecode(respStr);
-          if (json is Map && json['id_excel'] != null) {
-            msg = 'Subida exitosa. id_excel: ${json['id_excel']}';
-          }
-        } catch (_) {}
-        scaffold.showSnackBar(SnackBar(content: Text(msg)));
-      } else {
-        scaffold.showSnackBar(SnackBar(content: Text('Error al subir (status ${streamedResp.statusCode}): $respStr')));
+      await provider.uploadFileFromBytes(bytes, file.name, obraId: obraId);
+      scaffold.hideCurrentSnackBar();
+      scaffold.showSnackBar(const SnackBar(content: Text('Subida exitosa.')));
+      if (obraId != null) {
+        await provider.fetchAndProcessExcel(obraId);
+        if (provider.lastError != null) scaffold.showSnackBar(SnackBar(content: Text('Error: ${provider.lastError}')));
+        else if (provider.statusMessage != null) scaffold.showSnackBar(SnackBar(content: Text(provider.statusMessage!)));
       }
     } catch (e) {
-      loading.close();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al subir archivo: $e')));
+      scaffold.hideCurrentSnackBar();
+      scaffold.showSnackBar(SnackBar(content: Text('Error al subir archivo: $e')));
     }
   }
 
-  Color? _parseColorFromRaw(dynamic raw) {
-    if (raw == null) return null;
-    // si ya es Color
-    if (raw is Color) return raw;
-    // si es int (ej 0xFFAABBCC)
-    if (raw is int) {
-      try {
-        return Color(raw);
-      } catch (_) {}
-    }
-    final s = raw.toString();
-    // buscar hex como 0xFFRRGGBB o RRGGBB o FFRRGGBB
-    final hexMatch = RegExp(r'(0x[a-fA-F0-9]{6,8})').firstMatch(s);
-    String? hex;
-    if (hexMatch != null) {
-      hex = hexMatch.group(1);
-    } else {
-      final shortHex = RegExp(r'([A-Fa-f0-9]{6,8})').firstMatch(s);
-      if (shortHex != null) hex = shortHex.group(1);
-    }
-    if (hex == null) return null;
-    hex = hex.replaceFirst('0x', '');
-    // asegurar 8 dígitos ARGB
-    if (hex.length == 6) hex = 'FF$hex';
-    try {
-      final val = int.parse(hex, radix: 16);
-      return Color(int.parse('0x$hex'));
-    } catch (_) {
-      return null;
-    }
-  }
-
-  // Lee XLSX, elimina filas vacías y filtra columnas con pocos datos.
+  // El botón descarga y procesa
   Future<void> _fetchAndReadExcel(BuildContext context, String? obraId) async {
     if (obraId == null || obraId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('obraId no disponible.')));
       return;
     }
-
+    final provider = Provider.of<HistorialAsistenciaProvider>(context, listen: false);
     final scaffold = ScaffoldMessenger.of(context);
-    scaffold.showSnackBar(const SnackBar(content: Text('Buscando último archivo para la obra...')));
+    scaffold.showSnackBar(const SnackBar(content: Text('Descargando y procesando archivo...'), duration: Duration(seconds: 2)));
+    await provider.fetchAndProcessExcel(obraId);
+    if (provider.lastError != null) scaffold.showSnackBar(SnackBar(content: Text('Error: ${provider.lastError}')));
+    else if (provider.statusMessage != null) scaffold.showSnackBar(SnackBar(content: Text(provider.statusMessage!)));
+  }
 
-    try {
-      final importUri = Uri.parse('$apiBase/historial-asistencia/import/${Uri.encodeComponent(obraId)}');
-      final importResp = await http.get(importUri);
+  Widget _buildPersonasList(HistorialAsistenciaProvider provider, String sheetName) {
+    final personas = (provider.personasAsistencia[sheetName] ?? []).reversed.toList();
+    if (personas.isEmpty) return const Center(child: Text('No hay personas procesadas.'));
 
-      if (importResp.statusCode != 200) {
-        scaffold.showSnackBar(SnackBar(content: Text('No se encontró id del archivo (status ${importResp.statusCode})')));
-        return;
+    String _initials(String name) {
+      final parts = name.trim().split(RegExp(r'\s+'));
+      if (parts.isEmpty) return '';
+      if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+      return (parts.first[0] + parts.last[0]).toUpperCase();
+    }
+
+    List<String> _asStringList(dynamic v) {
+      if (v == null) return <String>[];
+      if (v is List<String>) return v;
+      if (v is List) return v.map((e) => e?.toString() ?? '').toList();
+      return <String>[];
+    }
+
+    int _countLetter(List<dynamic> list, String letter) {
+      var c = 0;
+      for (var v in list) {
+        final s = v?.toString() ?? '';
+        if (s.toLowerCase().contains(letter)) c++;
       }
+      return c;
+    }
 
-      final importJson = jsonDecode(importResp.body);
-      final fileId = importJson != null && importJson['id_excel'] != null ? importJson['id_excel'].toString() : null;
-      if (fileId == null || fileId.isEmpty) {
-        scaffold.showSnackBar(const SnackBar(content: Text('Respuesta no contiene id_excel')));
-        debugPrint('import response: ${importResp.body}');
-        return;
-      }
-
-      scaffold.showSnackBar(const SnackBar(content: Text('Descargando archivo desde servidor...')));
-
-      final fileUri = Uri.parse('$apiBase/historial-asistencia/file/$fileId');
-      final fileResp = await http.get(fileUri);
-
-      if (fileResp.statusCode != 200) {
-        scaffold.showSnackBar(SnackBar(content: Text('Error al descargar archivo (status ${fileResp.statusCode})')));
-        debugPrint('file download response: ${fileResp.statusCode} ${fileResp.body}');
-        return;
-      }
-
-      final bytes = fileResp.bodyBytes;
-      if (bytes == null || bytes.isEmpty) {
-        scaffold.showSnackBar(const SnackBar(content: Text('Archivo descargado vacío')));
-        return;
-      }
-
-      // Leer XLSX en memoria usando package:excel
-      exl.Excel excel;
-      try {
-        excel = exl.Excel.decodeBytes(bytes);
-      } catch (e) {
-        scaffold.showSnackBar(const SnackBar(content: Text('Error al parsear XLSX')));
-        debugPrint('Error decodeBytes: $e');
-        return;
-      }
-
-      // Procesar todas las hojas y eliminar filas completamente nulas
-      final Map<String, List<List<String>>> parsed = {};
-      final Map<String, List<List<Color?>>> parsedColors = {};
-      for (final sheetName in excel.tables.keys) {
-        final sheet = excel.tables[sheetName];
-        if (sheet == null) continue;
-
-        // Convertir cada celda a string crudo y capturar color de fondo por celda
-        final cleanedRows = <List<String>>[];
-        final cleanedColors = <List<Color?>>[];
-        for (final originalRow in sheet.rows) {
-          final converted = List<String>.generate(originalRow.length, (i) {
-            final cell = originalRow[i];
-            final v = cell?.value;
-            return v == null ? '' : v.toString().trim();
-          });
-          // recoger colores
-          final colorRow = List<Color?>.generate(originalRow.length, (i) {
-            final dynamic cell = originalRow[i];
-            // intentar obtener distintos nombres de propiedad que contienen estilo
-            dynamic style;
-            try {
-              style = cell?.cellStyle ?? cell?.style ?? null;
-            } catch (_) {
-              style = null;
-            }
-            dynamic rawColor;
-            try {
-              rawColor = style?.backgroundColor ?? style?.bgColor ?? style?.fillColor ?? style?.color ?? style?.foregroundColor ?? style?.patternColor;
-            } catch (_) {
-              rawColor = null;
-            }
-            // también intentar cell?.color o cell?.cellColor
-            if (rawColor == null) {
-              try {
-                rawColor = cell?.color ?? cell?.cellColor ?? null;
-              } catch (_) {
-                rawColor = null;
-              }
-            }
-            return _parseColorFromRaw(rawColor);
-          });
-
-          if (converted.any((c) => c.trim().isNotEmpty)) {
-            cleanedRows.add(converted);
-            cleanedColors.add(colorRow);
-          }
-        }
-
-        // 2) detectar columnas completamente vacías y eliminar columnas con 3 o menos datos (<=3)
-        if (cleanedRows.isEmpty) {
-          parsed[sheetName] = cleanedRows;
-          parsedColors[sheetName] = cleanedColors;
+    int _diasAsistidos(List<dynamic> lista) {
+      var total = 0;
+      for (var v in lista) {
+        final s = v?.toString().trim() ?? '';
+        if (s.isEmpty) continue;
+        final d = double.tryParse(s.replaceAll(',', '.'));
+        if (d != null) {
+          total += d.toInt();
           continue;
         }
-
-        final int maxCols = cleanedRows.map((r) => r.length).fold(0, (a, b) => max(a as int, b));
-        final List<int> colCounts = List<int>.filled(maxCols, 0);
-
-        for (final row in cleanedRows) {
-          for (int c = 0; c < row.length; c++) {
-            if (row[c].trim().isNotEmpty) colCounts[c] += 1;
-          }
-        }
-
-        // Mantener solo columnas con más de 3 celdas no vacías (eliminar si todos nulos o <=3)
-        final List<int> keepIdx = [];
-        for (int i = 0; i < colCounts.length; i++) {
-          if (colCounts[i] > 3) keepIdx.add(i);
-        }
-
-        if (keepIdx.isEmpty) {
-          parsed[sheetName] = [];
-          parsedColors[sheetName] = [];
-        } else if (keepIdx.length == maxCols) {
-          parsed[sheetName] = cleanedRows;
-          parsedColors[sheetName] = cleanedColors;
-        } else {
-          final filtered = <List<String>>[];
-          final filteredColors = <List<Color?>>[];
-          for (int r = 0; r < cleanedRows.length; r++) {
-            final row = cleanedRows[r];
-            final crow = cleanedColors[r];
-            final newRow = <String>[];
-            final newColors = <Color?>[];
-            for (final i in keepIdx) {
-              newRow.add(i < row.length ? row[i] : '');
-              newColors.add(i < crow.length ? crow[i] : null);
-            }
-            filtered.add(newRow);
-            filteredColors.add(newColors);
-          }
-          parsed[sheetName] = filtered;
-          parsedColors[sheetName] = filteredColors;
-        }
+        final match = RegExp(r'-?\d+').firstMatch(s);
+        if (match != null) total += int.tryParse(match.group(0)!) ?? 0;
       }
-
-      // --- EXTRAER BLOQUES desde el final con ancla "N°" (incluye 2 filas adicionales arriba) ---
-      AsistenciasHorasExtra.clear();
-      FinesDeSemana.clear();
-      AsistenciaDiaria.clear();
-      AsistenciasHorasExtraColors.clear();
-      FinesDeSemanaColors.clear();
-      AsistenciaDiariaColors.clear();
-
-      String _lower(String s) => s.toLowerCase();
-
-      for (final sheetName in parsed.keys.toList()) {
-        final rowsOrig = parsed[sheetName] ?? [];
-        final colorsOrig = parsedColors[sheetName] ?? [];
-        // trabajar sobre copia mutable
-        final rows = rowsOrig.map((r) => List<String>.from(r)).toList();
-        final colors = colorsOrig.map((r) => List<Color?>.from(r)).toList();
-
-        // helper que extrae bloque y colores
-        Map<String, dynamic> _extractLastBlock(List<List<String>> lst, List<List<Color?>> colst) {
-          int found = -1;
-          for (int i = lst.length - 1; i >= 0; i--) {
-            final row = lst[i];
-            if (row.any((cell) => cell != null && _lower(cell).contains('n°'))) {
-              found = i;
-              break;
-            }
-          }
-          if (found == -1) return {'rows': <List<String>>[], 'colors': <List<Color?>>[]};
-          final start = max(0, found - 2);
-          final blockRows = lst.sublist(start);
-          final blockColors = colst.sublist(start);
-          lst.removeRange(start, lst.length);
-          colst.removeRange(start, colst.length);
-          return {'rows': blockRows, 'colors': blockColors};
-        }
-
-        final b1 = _extractLastBlock(rows, colors);
-        AsistenciasHorasExtra[sheetName] = List<List<String>>.from(b1['rows']);
-        AsistenciasHorasExtraColors[sheetName] = List<List<Color?>>.from(b1['colors']);
-
-        final b2 = _extractLastBlock(rows, colors);
-        FinesDeSemana[sheetName] = List<List<String>>.from(b2['rows']);
-        FinesDeSemanaColors[sheetName] = List<List<Color?>>.from(b2['colors']);
-
-        final b3 = _extractLastBlock(rows, colors);
-        AsistenciaDiaria[sheetName] = List<List<String>>.from(b3['rows']);
-        AsistenciaDiariaColors[sheetName] = List<List<Color?>>.from(b3['colors']);
-
-        // dejar en parsed la matriz restante
-        parsed[sheetName] = rows;
-        parsedColors[sheetName] = colors;
-      }
-
-      // --- Eliminar primera columna de cada matriz (helper local y aplicación) ---
-      List<List<String>> _dropFirstColumnRows(List<List<String>> rows) {
-        return rows.map((r) {
-          if (r.isEmpty) return <String>[];
-          return r.length > 1 ? r.sublist(1) : <String>[];
-        }).toList();
-      }
-
-      List<List<Color?>> _dropFirstColumnColors(List<List<Color?>> rows) {
-        return rows.map((r) {
-          if (r.isEmpty) return <Color?>[];
-          return r.length > 1 ? r.sublist(1) : <Color?>[];
-        }).toList();
-      }
-
-      // Aplicar drop a parsed y a las tres matrices extraídas
-      final Map<String, List<List<String>>> parsedNoFirst = {};
-      final Map<String, List<List<Color?>>> parsedColorsNoFirst = {};
-      parsed.forEach((sheetName, rows) {
-        parsedNoFirst[sheetName] = _dropFirstColumnRows(rows);
-      });
-      parsedColors.forEach((sheetName, rows) {
-        parsedColorsNoFirst[sheetName] = _dropFirstColumnColors(rows);
-      });
-
-      final Map<String, List<List<String>>> horasExtraNoFirst = {};
-      final Map<String, List<List<Color?>>> horasExtraNoFirstColors = {};
-      AsistenciasHorasExtra.forEach((sheetName, rows) {
-        horasExtraNoFirst[sheetName] = _dropFirstColumnRows(rows);
-      });
-      AsistenciasHorasExtraColors.forEach((sheetName, rows) {
-        horasExtraNoFirstColors[sheetName] = _dropFirstColumnColors(rows);
-      });
-
-      final Map<String, List<List<String>>> finesNoFirst = {};
-      final Map<String, List<List<Color?>>> finesNoFirstColors = {};
-      FinesDeSemana.forEach((sheetName, rows) {
-        finesNoFirst[sheetName] = _dropFirstColumnRows(rows);
-      });
-      FinesDeSemanaColors.forEach((sheetName, rows) {
-        finesNoFirstColors[sheetName] = _dropFirstColumnColors(rows);
-      });
-
-      final Map<String, List<List<String>>> diariaNoFirst = {};
-      final Map<String, List<List<Color?>>> diariaNoFirstColors = {};
-      AsistenciaDiaria.forEach((sheetName, rows) {
-        diariaNoFirst[sheetName] = _dropFirstColumnRows(rows);
-      });
-      AsistenciaDiariaColors.forEach((sheetName, rows) {
-        diariaNoFirstColors[sheetName] = _dropFirstColumnColors(rows);
-      });
-
-      setState(() {
-        _sheets = parsedNoFirst;
-        _sheetsColors = parsedColorsNoFirst;
-        AsistenciasHorasExtra = horasExtraNoFirst;
-        AsistenciasHorasExtraColors = horasExtraNoFirstColors;
-        FinesDeSemana = finesNoFirst;
-        FinesDeSemanaColors = finesNoFirstColors;
-        AsistenciaDiaria = diariaNoFirst;
-        AsistenciaDiariaColors = diariaNoFirstColors;
-        _selectedSheet = _sheets.isNotEmpty ? _sheets.keys.first : null;
-      });
-
-      scaffold.showSnackBar(const SnackBar(content: Text('Lectura completada. Revisa la vista para ver las filas.')));
-    } catch (e, st) {
-      debugPrint('Error en _fetchAndReadExcel: $e\n$st');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      return total;
     }
-  }
 
-  Widget _buildSheetSelector() {
-    if (_sheets.isEmpty) return const SizedBox.shrink();
+    double _horasExtraSum(List<dynamic> lista) {
+      var sum = 0.0;
+      for (var v in lista) {
+        final s = v?.toString().trim() ?? '';
+        if (s.isEmpty) continue;
+        final d = double.tryParse(s.replaceAll(',', '.'));
+        if (d != null) {
+          sum += d;
+          continue;
+        }
+        final match = RegExp(r'-?\d+(\.\d+)?').firstMatch(s.replaceAll(',', '.'));
+        if (match != null) sum += double.tryParse(match.group(0)!) ?? 0;
+      }
+      return sum;
+    }
 
-    final names = _sheets.keys.toList();
-    return Row(
-      children: [
-        const Text('Hojas: ', style: TextStyle(fontWeight: FontWeight.w600)),
-        const SizedBox(width: 8),
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: names.map((name) {
-                final selected = name == _selectedSheet;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: ChoiceChip(
-                    label: Text(name),
-                    selected: selected,
-                    onSelected: (_) => setState(() => _selectedSheet = name),
-                  ),
-                );
-              }).toList(),
+    Widget _summaryChip(String label, String value, {Color? color}) {
+      // Mostrar etiqueta y valor en una sola fila
+      return Container(
+        margin: const EdgeInsets.only(right: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        constraints: const BoxConstraints(minWidth: 140),
+        decoration: BoxDecoration(
+          color: color ?? Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                '$label: ',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                value,
+                style: const TextStyle(fontSize: 12),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget _badge(String text, Color bg) => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(10)),
+          child: Text(text, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+        );
+
+    Widget _rowWithLabel(String label, List<String> fila, Widget Function(String) cellBuilder) {
+      return Row(
+        children: [
+          SizedBox(width: 140, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w700))),
+          Row(
+            children: List.generate(
+              fila.length,
+              (i) => Container(
+                width: 72,
+                height: 36,
+                alignment: Alignment.center,
+                child: cellBuilder(fila[i]),
+              ),
             ),
           ),
+        ],
+      );
+    }
+
+    Widget _buildPersonMatrix(p) {
+      // normalizar listas del objeto persona antes de usarlas
+      final fechaList = _asStringList(p.fecha);
+      final diariaList = _asStringList(p.asistenciaDiaria);
+      final finesList = _asStringList(p.asistenciaFinesSemana);
+      final horasList = _asStringList(p.horasExtra);
+
+      final maxForP = [fechaList.length, diariaList.length, finesList.length, horasList.length].fold(0, (a, b) => a > b ? a : b);
+
+      // Espacios aumentados para que el texto quede visible y alineado
+      const double labelWidth = 120.0;
+      const double cellWidth = 72.0;
+      const double cellHeight = 40.0;
+      const double gap = 6.0;
+      const double fontSizeLabel = 13.0;
+      const double fontSizeCell = 12.0;
+
+      Widget _cellBox(String s) {
+        final t = s.trim();
+        if (t.isEmpty) return const SizedBox.shrink();
+        final lower = t.toLowerCase();
+        if (lower.contains('p')) return _badge('Permiso', Colors.amber.shade100);
+        if (lower.contains('f')) return _badge('Falla', Colors.red.shade100);
+        if (lower.contains('l')) return _badge('Licencia', Colors.blue.shade100);
+        if (lower.contains('r')) return _badge('Renuncia', Colors.grey.shade300);
+        final numVal = double.tryParse(t.replaceAll(',', '.'));
+        if (numVal != null) {
+          final text = (numVal == numVal.truncateToDouble()) ? numVal.toInt().toString() : numVal.toStringAsFixed(1);
+          return Text(text, style: TextStyle(fontWeight: FontWeight.w600, fontSize: fontSizeCell));
+        }
+        return Text(t, style: TextStyle(fontSize: fontSizeCell), maxLines: 2, overflow: TextOverflow.ellipsis);
+      }
+
+      final borderColor = Colors.grey.shade300;
+      final borderWidth = 0.6;
+
+      // columnas con más espacio por fila y líneas divisorias
+      final List<Widget> columns = List.generate(maxForP, (i) {
+        final fecha = i < fechaList.length ? _formatDate(fechaList[i]) : '';
+        final diaria = i < diariaList.length ? diariaList[i] : '';
+        final fines = i < finesList.length ? finesList[i] : '';
+        final horas = i < horasList.length ? horasList[i] : '';
+        return Container(
+          width: cellWidth,
+          margin: EdgeInsets.only(right: gap),
+          decoration: BoxDecoration(
+            border: Border(right: BorderSide(color: borderColor, width: borderWidth)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Fecha
+              Container(
+                width: cellWidth,
+                height: cellHeight,
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: borderColor, width: borderWidth))),
+                child: Text(fecha, textAlign: TextAlign.center, style: TextStyle(fontSize: fontSizeLabel, fontWeight: FontWeight.w700)),
+              ),
+              // Asistencia diaria
+              Container(
+                width: cellWidth,
+                height: cellHeight,
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: borderColor, width: borderWidth))),
+                child: _cellBox(diaria),
+              ),
+              // Fines de semana
+              Container(
+                width: cellWidth,
+                height: cellHeight,
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: borderColor, width: borderWidth))),
+                child: _cellBox(fines),
+              ),
+              // Horas extra
+              Container(
+                width: cellWidth,
+                height: cellHeight,
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                alignment: Alignment.center,
+                child: _cellBox(horas),
+              ),
+            ],
+          ),
+        );
+      });
+
+      final double totalColumnsWidth = (cellWidth + gap) * maxForP;
+      final double minAreaWidth = MediaQuery.of(context).size.width - labelWidth - 32;
+      final double areaWidth = totalColumnsWidth < minAreaWidth ? minAreaWidth : totalColumnsWidth;
+
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+        constraints: const BoxConstraints(minHeight: 120, maxHeight: 260),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // labels alineadas con las filas, cada label usa la misma altura que una fila de celda
+            SizedBox(
+              width: labelWidth,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    height: cellHeight,
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(border: Border(bottom: BorderSide(color: borderColor, width: borderWidth))),
+                    child: Text('Fecha', style: TextStyle(fontWeight: FontWeight.w700, fontSize: fontSizeLabel)),
+                  ),
+                  Container(
+                    height: cellHeight,
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(border: Border(bottom: BorderSide(color: borderColor, width: borderWidth))),
+                    child: Text('Asistencia diaria', style: TextStyle(fontWeight: FontWeight.w700, fontSize: fontSizeLabel)),
+                  ),
+                  Container(
+                    height: cellHeight,
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(border: Border(bottom: BorderSide(color: borderColor, width: borderWidth))),
+                    child: Text('Fines de semana', style: TextStyle(fontWeight: FontWeight.w700, fontSize: fontSizeLabel)),
+                  ),
+                  Container(
+                    height: cellHeight,
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text('Horas extra', style: TextStyle(fontWeight: FontWeight.w700, fontSize: fontSizeLabel)),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Scrollbar(
+                controller: _horizontalBodyController,
+                thumbVisibility: true,
+                child: SingleChildScrollView(
+                  controller: _horizontalBodyController,
+                  scrollDirection: Axis.horizontal,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: SizedBox(
+                    width: areaWidth,
+                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: columns),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
+      );
+    }
+
+    return ListView.builder(
+      itemCount: personas.length,
+      itemBuilder: (context, i) {
+        final p = personas[i];
+        final diaria = _asStringList(p.asistenciaDiaria);
+        final fines = _asStringList(p.asistenciaFinesSemana);
+        final combined = [...diaria, ...fines];
+        final dias = _diasAsistidos(combined);
+        final horasSum = _horasExtraSum(_asStringList(p.horasExtra));
+        final horasText = (horasSum == horasSum.truncateToDouble()) ? horasSum.toInt().toString() : horasSum.toStringAsFixed(2);
+
+        // resumen previo a la selección
+        final cntP = _countLetter(combined, 'p');
+        final cntF = _countLetter(combined, 'f');
+        final cntL = _countLetter(combined, 'l');
+        final cntR = _countLetter(combined, 'r');
+        final cols = _asStringList(p.fecha).length;
+
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 6),
+          elevation: 1,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            leading: CircleAvatar(
+              radius: 22,
+              backgroundColor: Colors.blue.shade100,
+              child: Text(_initials(p.nombre), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+            ),
+            // título compuesto: a la izquierda nombre/cargo/rut; a la derecha resumen 2x3 en la misma altura
+            title: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(p.nombre, style: const TextStyle(fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 4),
+                      Text(p.cargo, style: const TextStyle(color: Colors.black54, fontSize: 12)),
+                      Text(p.rut, style: const TextStyle(color: Colors.black45, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _summaryChip('Asistencia Diaria', dias.toString(), color: Colors.green.shade50),
+                        const SizedBox(width: 8),
+                        _summaryChip('Horas Extra', horasText, color: Colors.orange.shade50),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _summaryChip('Permiso', cntP.toString(), color: Colors.amber.shade50),
+                        const SizedBox(width: 8),
+                        _summaryChip('Falla', cntF.toString(), color: Colors.red.shade50),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _summaryChip('Licencia', cntL.toString(), color: Colors.blue.shade50),
+                        const SizedBox(width: 8),
+                        _summaryChip('Renuncia', cntR.toString(), color: Colors.grey.shade200),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            // Al expandir solo mostrar la matriz con los datos de la persona
+            children: [
+              Container(
+                padding: const EdgeInsets.only(top: 8, bottom: 8),
+                decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade200), borderRadius: BorderRadius.circular(8)),
+                child: _buildPersonMatrix(p),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  // Construye una tabla para una matriz (map por hoja) con colores
-  Widget _buildMatrixTable(
-      Map<String, List<List<String>>> map,
-      Map<String, List<List<Color?>>> colorMap,
-      String sheetName) {
-    final rows = map[sheetName] ?? [];
-    final colors = colorMap[sheetName] ?? [];
-    if (rows.isEmpty) return const Text('Matriz vacía.');
+  Widget _buildSheetSelector(HistorialAsistenciaProvider provider, String? selectedSheet, void Function(String) onSelect) {
+    final sheets = provider.sheets;
+    if (sheets.isEmpty) {
+      return const SizedBox(height: 40, child: Align(alignment: Alignment.centerLeft, child: Text('No hay hojas cargadas.'))); 
+    }
+    final sheetNames = sheets.keys.toList();
+    final selected = selectedSheet ?? sheetNames.first;
 
-    final int maxCols = rows.map((r) => r.length).fold(0, (a, b) => max(a as int, b));
-    const double colWidth = 140.0;
-    final double tableWidth = maxCols * colWidth;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final double minTableWidth = max(tableWidth, screenWidth);
-
-    final header = SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      controller: _horizontalHeaderController,
-      physics: const ClampingScrollPhysics(),
-      child: Container(
-        width: minTableWidth,
-        color: Colors.grey.shade100,
-        child: Row(
-          children: List.generate(maxCols, (i) {
-            return Container(
-              width: colWidth,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-              decoration: BoxDecoration(border: Border(right: BorderSide(color: Colors.grey.shade300))),
-              child: Text('C${i + 1}', style: const TextStyle(fontWeight: FontWeight.w600)),
-            );
-          }),
-        ),
-      ),
-    );
-
-    final bodyInner = ConstrainedBox(
-      constraints: BoxConstraints(minWidth: minTableWidth),
-      child: SizedBox(
-        width: minTableWidth,
-        child: ListView.builder(
-          physics: const AlwaysScrollableScrollPhysics(),
-          itemCount: rows.length,
-          itemBuilder: (context, rowIndex) {
-            final row = rows[rowIndex];
-            final crow = rowIndex < colors.length ? colors[rowIndex] : <Color?>[];
-            return Container(
-              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.shade200))),
-              child: Row(
-                children: List.generate(maxCols, (colIndex) {
-                  final v = colIndex < row.length ? row[colIndex] : '';
-                  final bg = colIndex < crow.length ? crow[colIndex] : null;
-                  return Container(
-                    width: colWidth,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                    decoration: BoxDecoration(color: bg ?? Colors.transparent),
-                    child: Text(v ?? '', style: const TextStyle(fontSize: 13)),
-                  );
-                }),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-
-    final horizontalScrollable = GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onHorizontalDragUpdate: (details) {
-        if (!_horizontalBodyController.hasClients) return;
-        final max = _horizontalBodyController.position.maxScrollExtent;
-        final newOffset = (_horizontalBodyController.offset - details.delta.dx).clamp(0.0, max);
-        _horizontalBodyController.jumpTo(newOffset);
-      },
-      child: Scrollbar(
-        controller: _horizontalBodyController,
-        thumbVisibility: true,
-        trackVisibility: true,
-        thickness: 10,
-        radius: const Radius.circular(8),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          controller: _horizontalBodyController,
-          physics: const ClampingScrollPhysics(),
-          child: bodyInner,
-        ),
-      ),
-    );
-
-    return Align(
-      alignment: Alignment.topLeft,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          header,
-          const Divider(height: 1),
-          Expanded(child: horizontalScrollable),
-        ],
-      ),
+    final primaryColor = Theme.of(context).appBarTheme.backgroundColor ?? Colors.cyan.shade200;
+ 
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: sheetNames.map((name) {
+        final sel = name == selected;
+        return ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: sel ? primaryColor : Colors.white,
+            foregroundColor: sel ? Colors.black : Colors.black87, // texto negro cuando está seleccionado
+            side: BorderSide(color: sel ? Colors.transparent : Colors.grey.shade300),
+            elevation: sel ? 2 : 0,
+          ),
+          onPressed: () => onSelect(name),
+          child: Text(name),
+        );
+      }).toList(),
     );
   }
 
-  Widget _buildSheetTable(String sheetName) {
-    final rows = _sheets[sheetName] ?? [];
-    final colors = _sheetsColors[sheetName] ?? [];
-    if (rows.isEmpty) return const Text('Hoja vacía.');
+  Widget _buildSheetSummary(HistorialAsistenciaProvider provider, String sheetName) {
+    final asistencia = provider.asistenciaDiaria[sheetName] ?? <List<String>>[];
+    final horasExtra = provider.asistenciasHorasExtra[sheetName] ?? <List<String>>[];
 
-    // calcular cantidad máxima de columnas
-    final int maxCols = rows.map((r) => r.length).fold(0, (a, b) => max(a as int, b));
+    if (asistencia.isEmpty) return const SizedBox.shrink();
 
-    // ancho por columna (ajusta si quieres columnas más estrechas/anchas)
-    const double colWidth = 140.0;
-    final double tableWidth = maxCols * colWidth;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final double minTableWidth = max(tableWidth, screenWidth);
+    final header = asistencia.first;
+    final int cols = header.length;
 
-    // Header (fila de títulos C1, C2, ...)
-    final header = SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      controller: _horizontalHeaderController, // usa controller del header
-      physics: const ClampingScrollPhysics(),
-      child: Container(
-        width: minTableWidth,
-        color: Colors.grey.shade100,
+    // contar asistencias por columna
+    final List<int> asistCount = List<int>.filled(cols, 0);
+    for (int r = 1; r < asistencia.length; r++) {
+      final row = asistencia[r];
+      for (int c = 0; c < cols; c++) {
+        final cell = (c < row.length ? (row[c] ?? '') : '').toString().trim();
+        if (cell.isNotEmpty) asistCount[c] = asistCount[c] + 1;
+      }
+    }
+
+    // sumar horas extra por columna
+    final List<double> horasSum = List<double>.filled(cols, 0.0);
+    for (int r = 0; r < horasExtra.length; r++) {
+      final row = horasExtra[r];
+      for (int c = 0; c < cols; c++) {
+        final raw = (c < row.length ? (row[c] ?? '') : '').toString().trim();
+        if (raw.isEmpty) continue;
+        final v = double.tryParse(raw.replaceAll(',', '.'));
+        if (v != null) horasSum[c] = horasSum[c] + v;
+        else {
+          final m = RegExp(r'-?\d+(\.\d+)?').firstMatch(raw.replaceAll(',', '.'));
+          if (m != null) horasSum[c] = horasSum[c] + (double.tryParse(m.group(0)!) ?? 0.0);
+        }
+      }
+    }
+
+    // fila horizontal desplazable
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(6)),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
         child: Row(
-          children: List.generate(maxCols, (i) {
+          children: List.generate(cols, (i) {
+            final dateLabel = _formatDate(header[i] ?? '');
+            final asist = asistCount[i];
+            final horas = horasSum[i];
+            final horasText = (horas == horas.truncateToDouble()) ? horas.toInt().toString() : horas.toStringAsFixed(1);
             return Container(
-              width: colWidth,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-              decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(color: Colors.grey.shade300),
-                ),
+              width: 92,
+              margin: const EdgeInsets.only(left: 8),
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+              decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade200), borderRadius: BorderRadius.circular(8), color: Colors.white),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(dateLabel, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4), decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(6)), child: Text('D: $asist', style: const TextStyle(fontSize: 12))),
+                      const SizedBox(width: 6),
+                      Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4), decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(6)), child: Text('HE: $horasText', style: const TextStyle(fontSize: 12))),
+                    ],
+                  ),
+                ],
               ),
-              child: Text('C${i + 1}', style: const TextStyle(fontWeight: FontWeight.w600)),
             );
           }),
         ),
-      ),
-    );
-
-    // Body: ListView.builder para scroll vertical perezoso, envuelto en SingleChildScrollView horizontal
-    final bodyInner = ConstrainedBox(
-      constraints: BoxConstraints(minWidth: minTableWidth),
-      child: SizedBox(
-        width: minTableWidth,
-        child: ListView.builder(
-          physics: const AlwaysScrollableScrollPhysics(), // permite scroll vertical normalmente
-          itemCount: rows.length,
-          itemBuilder: (context, rowIndex) {
-            final row = rows[rowIndex];
-            final crow = rowIndex < colors.length ? colors[rowIndex] : <Color?>[];
-            return Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: Colors.grey.shade200),
-                ),
-              ),
-              child: Row(
-                children: List.generate(maxCols, (colIndex) {
-                  final v = colIndex < row.length ? row[colIndex] : '';
-                  final bg = colIndex < crow.length ? crow[colIndex] : null;
-                  return Container(
-                    width: colWidth,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                    decoration: BoxDecoration(color: bg ?? Colors.transparent),
-                    child: Builder(builder: (context) {
-                      // Mostrar el valor crudo de la celda (sin procesamiento de fechas/weekday)
-                      return Text(v ?? '', style: const TextStyle(fontSize: 13));
-                    }),
-                  );
-                }),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-
-    // Envolver el area horizontal con GestureDetector para permitir arrastrar en touch
-    final horizontalScrollable = GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onHorizontalDragUpdate: (details) {
-        if (!_horizontalBodyController.hasClients) return;
-        final max = _horizontalBodyController.position.maxScrollExtent;
-        final newOffset = (_horizontalBodyController.offset - details.delta.dx).clamp(0.0, max);
-        _horizontalBodyController.jumpTo(newOffset);
-      },
-      child: Scrollbar(
-        controller: _horizontalBodyController, // usa controller del body (la barra controla el body)
-        thumbVisibility: true,
-        trackVisibility: true,
-        thickness: 10,
-        radius: const Radius.circular(8),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          controller: _horizontalBodyController, // usa controller del body
-          physics: const ClampingScrollPhysics(),
-          child: bodyInner,
-        ),
-      ),
-    );
-
-    return Align(
-      alignment: Alignment.topLeft,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // header fijo arriba (se moverá horizontalmente con el cuerpo)
-          header,
-          const Divider(height: 1),
-          // body con scroll vertical y horizontal (Scrollbar + GestureDetector para pan)
-          Expanded(child: horizontalScrollable),
-        ],
       ),
     );
   }
@@ -692,95 +598,78 @@ class _HistorialAsistenciaViewState extends State<HistorialAsistenciaView> {
   Widget build(BuildContext context) {
     final route = ModalRoute.of(context);
     final args = route?.settings.arguments as Map<String, dynamic>?;
-
     final obraId = args?['obraId']?.toString();
     final obraNombre = args?['obraNombre']?.toString();
-    final fileId = args?['fileId']?.toString();
 
-    return PrimaryScaffold(
-      title: 'Obra${obraNombre != null ? " - $obraNombre" : ""}',
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.upload_file),
-                    label: const Text('Subir archivo XLSX'),
-                    onPressed: () => _pickAndUpload(context, obraId),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.download),
-                    label: const Text('Descargar y leer XLSX (debug)'),
-                    onPressed: () => _fetchAndReadExcel(context, obraId),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Selector de hojas (itembox)
-            _buildSheetSelector(),
-            const SizedBox(height: 12),
-            // Botones para mostrar las nuevas matrices (trabajan sobre la hoja seleccionada)
-            Row(
-              children: [
-                ElevatedButton(
-                  onPressed: () => setState(() => _selectedMatrix = 'diaria'),
-                  child: const Text('Ver Asistencia Diaria'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () => setState(() => _selectedMatrix = 'fines_semana'),
-                  child: const Text('Ver Fines de Semana'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () => setState(() => _selectedMatrix = 'horas_extra'),
-                  child: const Text('Ver Horas Extra'),
-                ),
-                const SizedBox(width: 8),
-                TextButton(
-                  onPressed: () => setState(() => _selectedMatrix = null),
-                  child: const Text('Volver Hoja'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // Mostrar tabla con todas las filas y columnas de la hoja seleccionada
-            Expanded(
-              child: _selectedSheet == null
-                  ? const Center(child: Text('No hay hojas cargadas.'))
-                  : Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(8),
+    final primaryColor = Theme.of(context).appBarTheme.backgroundColor ?? Colors.cyan.shade200;
+ 
+    return Consumer<HistorialAsistenciaProvider>(builder: (context, provider, child) {
+      if (_selectedSheet == null && provider.sheets.isNotEmpty) _selectedSheet = provider.sheets.keys.first;
+ 
+      return PrimaryScaffold(
+        title: 'Obra${obraNombre != null ? " - $obraNombre" : ""}',
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.black, // texto e iconos en negro
+                        elevation: 2,
                       ),
-                      padding: const EdgeInsets.all(8),
-                      child: Builder(builder: (context) {
-                        // Si hay una matriz seleccionada, mostrarla para la hoja seleccionada
-                        if (_selectedMatrix != null) {
-                          if (_selectedMatrix == 'horas_extra') {
-                            return _buildMatrixTable(AsistenciasHorasExtra, AsistenciasHorasExtraColors, _selectedSheet!);
-                          } else if (_selectedMatrix == 'fines_semana') {
-                            return _buildMatrixTable(FinesDeSemana, FinesDeSemanaColors, _selectedSheet!);
-                          } else if (_selectedMatrix == 'diaria') {
-                            return _buildMatrixTable(AsistenciaDiaria, AsistenciaDiariaColors, _selectedSheet!);
-                          }
-                        }
-                        // por defecto mostrar la hoja original
-                        return _buildSheetTable(_selectedSheet!);
-                      }),
+                      icon: const Icon(Icons.upload_file),
+                      label: const Text('Subir archivo XLSX'),
+                      onPressed: () => _pickAndUpload(context, obraId),
                     ),
-            ),
-          ],
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.black, // texto e iconos en negro
+                        elevation: 2,
+                      ),
+                      icon: const Icon(Icons.download),
+                      label: const Text('Descargar y cargar XLSX'),
+                      onPressed: () => _fetchAndReadExcel(context, obraId),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildSheetSelector(provider, _selectedSheet, (name) {
+                setState(() => _selectedSheet = name);
+              }),
+              const SizedBox(height: 12),
+              Expanded(
+                child: _selectedSheet == null
+                    ? const Center(child: Text('No hay hojas cargadas.'))
+                    : Container(
+                        decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.all(8),
+                        child: Builder(builder: (context) {
+                          final sheet = _selectedSheet!;
+                          if ((provider.personasAsistencia[sheet] ?? []).isEmpty && (provider.personas[sheet]?.isNotEmpty ?? false)) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              provider.extractPersonasAsistencias(sheetName: sheet);
+                            });
+                            return const Center(child: CircularProgressIndicator());
+                          }
+                          // Mostrar únicamente la lista de personas
+                          return _buildPersonasList(provider, sheet);
+                        }),
+                      ),
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }
