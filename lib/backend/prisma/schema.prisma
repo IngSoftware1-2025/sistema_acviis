@@ -121,6 +121,7 @@ model vehiculos {
   proxima_mantencion DateTime       @db.Date
   tipo               String         @db.VarChar
   permiso_id         String?        @db.VarChar
+  obra_asig          String?        @db.VarChar
   obra_recursos      obra_recurso[]
 }
 

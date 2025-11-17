@@ -152,6 +152,10 @@ class ExpansionTileVehiculos extends StatelessWidget {
           title: const Text('Observaciones'),
           subtitle: Text(vehiculo.observaciones ?? 'Sin observaciones'),
         ),
+        ListTile(
+          title: const Text('Obra asignada'),
+          subtitle: Text(vehiculo.obraAsig ?? 'Sin obra asignada'),
+        ),
         const Divider(),
         Padding(
           padding: const EdgeInsets.all(8.0),

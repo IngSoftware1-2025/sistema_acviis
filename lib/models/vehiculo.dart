@@ -13,6 +13,7 @@ class Vehiculo {
   final String estado;
   final DateTime proximaMantencion;
   final String tipo;
+  final String? obraAsig;
 
   Vehiculo({
     required this.id,
@@ -29,6 +30,7 @@ class Vehiculo {
     required this.estado,
     required this.proximaMantencion,
     required this.tipo,
+    this.obraAsig,
   });
 
   factory Vehiculo.fromJson(Map<String, dynamic> json) {
@@ -47,6 +49,7 @@ class Vehiculo {
       estado: json['estado'],
       proximaMantencion: DateTime.parse(json['proxima_mantencion']),
       tipo: json['tipo'] ?? 'No especificado',
+      obraAsig: json['obra_asig'],
     );
   }
 
@@ -66,6 +69,7 @@ class Vehiculo {
       'estado': estado,
       'proxima_mantencion': proximaMantencion.toIso8601String(),
       'tipo': tipo,
+      'obra_asig': obraAsig,
     };
   }
 }

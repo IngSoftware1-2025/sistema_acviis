@@ -51,7 +51,6 @@ class _GestionarRecursosViewState extends State<GestionarRecursosView> with Sing
     
     // SOLUCIÓN: Cargar datos cada vez que cambian las dependencias
     // Esto asegura que siempre tengamos los datos más recientes
-    print('[SOLUCIÓN] didChangeDependencies llamado - cargando datos frescos');
     _cargarDatos();
   }
 
@@ -504,20 +503,22 @@ class _GestionarRecursosViewState extends State<GestionarRecursosView> with Sing
                     
                     const SizedBox(height: 16),
                     
-                    // Campo para la cantidad
-                    TextFormField(
-                      decoration: const InputDecoration(
-                        labelText: 'Cantidad',
-                        border: OutlineInputBorder(),
+                    // Campo para la cantidad (solo visible para herramientas y EPP)
+                    if (tipo != 'vehiculo')
+                      TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: 'Cantidad',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                        initialValue: '1',
+                        onChanged: (value) {
+                          cantidad = int.tryParse(value) ?? 1;
+                        },
                       ),
-                      keyboardType: TextInputType.number,
-                      initialValue: '1',
-                      onChanged: (value) {
-                        cantidad = int.tryParse(value) ?? 1;
-                      },
-                    ),
                     
-                    const SizedBox(height: 16),
+                    if (tipo != 'vehiculo')
+                      const SizedBox(height: 16),
                     
                     // Campo para observaciones
                     TextFormField(
@@ -629,7 +630,6 @@ class _GestionarRecursosViewState extends State<GestionarRecursosView> with Sing
   // Método para procesar el retiro de un recurso
   Future<void> _procesarRetiroRecurso(String id, String? observaciones) async {
     try {
-      print('[SOLUCIÓN] Iniciando retiro de recurso ID: $id');
       
       await _recursosProvider!.retirarRecursoObra(id, observaciones: observaciones);
       
@@ -637,9 +637,7 @@ class _GestionarRecursosViewState extends State<GestionarRecursosView> with Sing
         _mostrarMensaje('Recurso retirado correctamente');
       }
       
-      // SOLUCIÓN DRÁSTICA: Similar a la asignación, forzar una recarga completa
       if (mounted) {
-        print('[SOLUCIÓN] Forzando recarga completa después del retiro...');
         
         // Reinicializar el estado del widget
         setState(() {
@@ -682,12 +680,6 @@ class _GestionarRecursosViewState extends State<GestionarRecursosView> with Sing
     String? observaciones
   }) async {
     try {
-      // Log para depuración
-      print('[SOLUCIÓN] Iniciando asignación de recurso:');
-      print('- Tipo: $tipo');
-      print('- ID: $recursoId');
-      print('- Cantidad: $cantidad');
-      print('- Obra ID: ${widget.obraId}');
       
       if (mounted) {
         setState(() => _isLoading = true);
@@ -730,11 +722,7 @@ class _GestionarRecursosViewState extends State<GestionarRecursosView> with Sing
         _mostrarMensaje('${_capitalizeFirst(tipo)} asignado correctamente');
       }
       
-      // SOLUCIÓN DRÁSTICA: En lugar de intentar actualizar parcialmente la interfaz,
-      // vamos a forzar una recarga completa mediante una reinicialización
-      
       if (mounted) {
-        print('[SOLUCIÓN] Forzando recarga completa...');
         
         // Reinicializar el estado del widget
         setState(() {
