@@ -22,28 +22,12 @@ class ExpansionTileHerramienta extends StatelessWidget {
           ),
         ),
         ListTile(
-          title: Text('Cantidad'),
-          subtitle: Text(herramienta.cantidad.toString()),
+          title: Text('Cantidad Total'),
+          subtitle: Text(herramienta.cantidadTotal.toString()),
         ),
         ListTile(
-          title: Text('Obra asignada'),
-          subtitle: Text(herramienta.obraAsig ?? 'Sin asignar'),
-        ),
-        ListTile(
-          title: Text('Inicio de asignación'),
-          subtitle: Text(
-            herramienta.asigInicio != null 
-            ? DateFormat('yyyy-MM-dd').format(herramienta.asigInicio!) :
-            'No asignada',
-          ),
-        ),
-        ListTile(
-          title: Text('Fin de asignación'),
-          subtitle: Text(
-            herramienta.asigFin != null 
-            ? DateFormat('yyyy-MM-dd').format(herramienta.asigFin!) :
-            'No asignada',
-          ),
+          title: Text('Cantidad Disponible'),
+          subtitle: Text(herramienta.cantidadDisponible?.toString() ?? herramienta.cantidadTotal.toString()),
         ),
       ],
     );

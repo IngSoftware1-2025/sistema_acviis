@@ -154,6 +154,13 @@ class _ObrasViewState extends State<ObrasView> {
                       itemCount: obrasProvider.obras.length,
                       itemBuilder: (context, index) {
                         final obra = obrasProvider.obras[index];
+                        
+                        // Validación para evitar crash si los checkboxes no están sincronizados
+                        if (checkboxProvider.checkBoxes.length <= index + 1) {
+                          // Retornar un placeholder temporal mientras se sincronizan
+                          return const SizedBox.shrink();
+                        }
+                        
                         return Card(
                           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           elevation: 4,

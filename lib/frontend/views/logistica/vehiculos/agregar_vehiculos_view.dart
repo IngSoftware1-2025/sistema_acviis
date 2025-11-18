@@ -21,11 +21,6 @@ class _AgregarVehiculosViewState extends State<AgregarVehiculosView> {
     ][DateTime.now().millisecondsSinceEpoch % 3],
   );
 
-  // ===================== Permiso de circulación (link PDF random)
-  final TextEditingController _permisoController = TextEditingController(
-    text: 'https://www.ejemplo.com/permiso_${DateTime.now().millisecondsSinceEpoch}.pdf',
-  );
-
   // ===================== Fecha revisión técnica
   final TextEditingController _revTecnicaController = TextEditingController(
     text: '${2024 + DateTime.now().millisecondsSinceEpoch % 2}-'
@@ -134,7 +129,6 @@ class _AgregarVehiculosViewState extends State<AgregarVehiculosView> {
 
         await createVehiculo(
           patente: _patenteController.text,
-          permisoCirculacion: _permisoController.text,
           fechaRevisionTecnica: revTecnica,
           fechaRevisionGases: revGases,
           fechaUltimaMantencion: ultimaMantencion,
@@ -187,14 +181,6 @@ class _AgregarVehiculosViewState extends State<AgregarVehiculosView> {
               TextFormField(
                 controller: _patenteController,
                 decoration: const InputDecoration(labelText: 'Patente'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Campo requerido' : null,
-              ),
-
-              // Permiso circulación (PDF URL)
-              TextFormField(
-                controller: _permisoController,
-                decoration: const InputDecoration(labelText: 'Permiso de circulación (URL PDF)'),
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Campo requerido' : null,
               ),

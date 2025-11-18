@@ -19,11 +19,9 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
   String? _estado; 
   DateTime? _garantiaDesde;
   DateTime? _garantiaHasta;
-  String? _obraAsig;
   RangeValues? _rangoCantidad;
 
   late TextEditingController _tipoController;
-  late TextEditingController _obraController;
 
 
   @override
@@ -34,17 +32,14 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
     _estado = provider.estado;
     _garantiaDesde = provider.garantiaDesde;
     _garantiaHasta = provider.garantiaHasta;
-    _obraAsig = provider.obraAsig;
     _rangoCantidad = provider.rangoCantidad;
 
     _tipoController = TextEditingController(text: context.read<HerramientasProvider>().tipo ?? '');
-    _obraController = TextEditingController(text: context.read<HerramientasProvider>().obraAsig ?? '');
   }
 
   @override
   void dispose() {
     _tipoController.dispose();
-    _obraController.dispose();
     super.dispose();
   }
 
@@ -54,10 +49,8 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
       _estado = null;
       _garantiaDesde = null;
       _garantiaHasta = null;
-      _obraAsig = null;
       _rangoCantidad = null;
       _tipoController.clear();
-      _obraController.clear();
     });
   }
 
@@ -71,18 +64,6 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
       .map((h) => h.tipo)
       .toSet()
       .toList();
-
-
-    final obrasUnicas = provider
-      .herramientas
-      .map((h) => h.obraAsig)
-      .where((obra) => obra != null && obra.isNotEmpty)
-      .cast<String>()
-      .toSet()
-      .toList();
-
-    
-
 
     return Column(
       children: [
@@ -200,27 +181,6 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
           ],
         ),
 
-        // ===================== Obra asignada =====================
-        Row(
-          children: [
-            const Text('Obra asignada'),
-            const Spacer(),
-            DropdownMenu<String>(
-              initialSelection: _obraAsig,
-              hintText: 'Selecciona obra',
-              key: ValueKey(_obraAsig),
-              dropdownMenuEntries: obrasUnicas
-                  .map((obra) => DropdownMenuEntry(value: obra, label: obra))
-                  .toList(),
-              onSelected: (String? value) {
-                setState(() {
-                  _obraAsig = value;
-                });
-              },
-            ),
-          ],
-        ),
-
         // ===================== Cantidad =====================
         Row(
           children: [
@@ -258,7 +218,6 @@ class _HerramientasFiltrosDisplayState extends State<HerramientasFiltrosDisplay>
             estado: _estado,
             garantiaDesde: _garantiaDesde,
             garantiaHasta: _garantiaHasta,
-            obraAsig: _obraAsig,
             rangoCantidad: _rangoCantidad,
           );
         }),

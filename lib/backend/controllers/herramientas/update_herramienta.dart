@@ -11,7 +11,7 @@ Future<void> updateHerramienta(Map<String, dynamic> herramientaData) async {
     body: jsonEncode({
       'tipo': herramientaData['tipo'],
       'garantia': herramientaData['garantia'],
-      'cantidad': herramientaData['cantidad'],
+      'cantidad_total': herramientaData['cantidad_total'],
       'obra_asig': herramientaData['obra_asig'],
       'asig_inicio': herramientaData['asig_inicio'],
       'asig_fin': herramientaData['asig_fin'],
