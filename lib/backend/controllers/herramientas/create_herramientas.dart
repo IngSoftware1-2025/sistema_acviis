@@ -4,10 +4,7 @@ import 'dart:convert';
 Future<String> createHerramienta({
   required String tipo,
   DateTime? garantia,
-  required int cantidad,
-  String? obraAsig,
-  DateTime? asigInicio,
-  DateTime? asigFin,
+  required int cantidadTotal,
 }) async {
   final url = Uri.parse('http://localhost:3000/herramientas');
 
@@ -17,10 +14,7 @@ Future<String> createHerramienta({
     body: jsonEncode({
       'tipo': tipo,
       'garantia': garantia?.toIso8601String(),
-      'cantidad': cantidad,
-      'obra_asig': obraAsig,
-      'asig_inicio': asigInicio?.toIso8601String(),
-      'asig_fin': asigFin?.toIso8601String(),
+      'cantidad_total': cantidadTotal,
     }),
   );
 

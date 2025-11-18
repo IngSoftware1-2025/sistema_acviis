@@ -407,6 +407,7 @@ class _GestionarRecursosViewState extends State<GestionarRecursosView> with Sing
     int cantidad = 1;
     String? observaciones;
     List<dynamic> recursosDisponibles = [];
+    int? cantidadMaximaDisponible; // Para limitar la cantidad según el recurso seleccionado
     
     try {
       // Mostrar indicador de carga
@@ -480,7 +481,7 @@ class _GestionarRecursosViewState extends State<GestionarRecursosView> with Sing
                             value = recurso['id'];
                             break;
                           case 'herramienta':
-                            label = '${recurso['tipo']} - ${recurso['cantidad']} unidades';
+                            label = '${recurso['tipo']} - Disponible: ${recurso['cantidad_disponible']} unidades';
                             value = recurso['id'];
                             break;
                           case 'epp':
@@ -497,6 +498,21 @@ class _GestionarRecursosViewState extends State<GestionarRecursosView> with Sing
                       onChanged: (value) {
                         setState(() {
                           recursoId = value;
+                          
+                          // Actualizar cantidad máxima disponible cuando se selecciona una herramienta
+                          if (tipo == 'herramienta' && value != null) {
+                            final recursoSeleccionado = recursosDisponibles.firstWhere(
+                              (r) => r['id'] == value,
+                              orElse: () => null,
+                            );
+                            if (recursoSeleccionado != null) {
+                              cantidadMaximaDisponible = recursoSeleccionado['cantidad_disponible'] as int?;
+                              // Resetear cantidad a 1 o al máximo si es menor
+                              cantidad = cantidadMaximaDisponible != null && cantidadMaximaDisponible! > 0
+                                  ? (cantidadMaximaDisponible! < cantidad ? cantidadMaximaDisponible! : cantidad)
+                                  : 1;
+                            }
+                          }
                         });
                       },
                     ),
@@ -505,16 +521,43 @@ class _GestionarRecursosViewState extends State<GestionarRecursosView> with Sing
                     
                     // Campo para la cantidad (solo visible para herramientas y EPP)
                     if (tipo != 'vehiculo')
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Cantidad',
-                          border: OutlineInputBorder(),
-                        ),
-                        keyboardType: TextInputType.number,
-                        initialValue: '1',
-                        onChanged: (value) {
-                          cantidad = int.tryParse(value) ?? 1;
-                        },
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextFormField(
+                            decoration: InputDecoration(
+                              labelText: 'Cantidad',
+                              border: OutlineInputBorder(),
+                              helperText: tipo == 'herramienta' && cantidadMaximaDisponible != null
+                                  ? 'Máximo disponible: $cantidadMaximaDisponible'
+                                  : null,
+                            ),
+                            keyboardType: TextInputType.number,
+                            initialValue: '1',
+                            onChanged: (value) {
+                              final nuevaCantidad = int.tryParse(value) ?? 1;
+                              
+                              // Validar que no exceda el máximo disponible para herramientas
+                              if (tipo == 'herramienta' && cantidadMaximaDisponible != null) {
+                                if (nuevaCantidad > cantidadMaximaDisponible!) {
+                                  setState(() {
+                                    cantidad = cantidadMaximaDisponible!;
+                                  });
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('La cantidad no puede ser mayor a $cantidadMaximaDisponible'),
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                } else {
+                                  cantidad = nuevaCantidad;
+                                }
+                              } else {
+                                cantidad = nuevaCantidad;
+                              }
+                            },
+                          ),
+                        ],
                       ),
                     
                     if (tipo != 'vehiculo')
@@ -549,6 +592,16 @@ class _GestionarRecursosViewState extends State<GestionarRecursosView> with Sing
                     const SnackBar(content: Text('Debes seleccionar un recurso')),
                   );
                   return;
+                }
+                
+                // Validación adicional para herramientas
+                if (tipo == 'herramienta' && cantidadMaximaDisponible != null) {
+                  if (cantidad > cantidadMaximaDisponible!) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('La cantidad no puede ser mayor a $cantidadMaximaDisponible')),
+                    );
+                    return;
+                  }
                 }
                 
                 // Guardar la información que necesitamos antes de cerrar el diálogo

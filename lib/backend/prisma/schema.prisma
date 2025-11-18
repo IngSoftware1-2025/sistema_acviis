@@ -94,15 +94,13 @@ model proveedores {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model herramientas {
-  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tipo          String         @db.VarChar
-  estado        String         @db.VarChar
-  garantia      DateTime?      @db.Date
-  cantidad      Int            @db.SmallInt
-  obra_asig     String?        @db.VarChar
-  asig_inicio   DateTime?      @db.Date
-  asig_fin      DateTime?      @db.Date
-  obra_recursos obra_recurso[]
+  id                  String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tipo                String         @db.VarChar
+  estado              String         @db.VarChar
+  garantia            DateTime?      @db.Date
+  cantidad_total      Int            @db.SmallInt
+  cantidad_disponible Int?           @db.SmallInt
+  obra_recursos       obra_recurso[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -200,6 +198,7 @@ model obras {
   charlas              charlas[]
   historial_asistencia historial_asistencia[]
   itemizados           itemizados[]
+  obra_finanzas        obra_finanzas[]
   obra_recursos        obra_recurso[]
   trabajador_obra      trabajador_obra[]
 }
@@ -279,4 +278,15 @@ model historial_asistencia {
 
   @@index([obraId], map: "idx_archivos_excel_obra")
   @@map("historial_asistencia")
+}
+
+model obra_finanzas {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  obraId          String   @db.Uuid
+  tipo            String   @db.VarChar
+  fechaAsignacion DateTime @default(now()) @db.Timestamp(6)
+  proposito       String   @db.VarChar
+  estado          String   @default("activa") @db.VarChar
+  detalles        Json?
+  obras           obras    @relation(fields: [obraId], references: [id], onDelete: Cascade)
 }

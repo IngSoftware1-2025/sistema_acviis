@@ -16,7 +16,6 @@ class HerramientasProvider extends ChangeNotifier {
   String? estado; // "Activa" o "De baja"
   DateTime? garantiaDesde;
   DateTime? garantiaHasta;
-  String? obraAsig;
   RangeValues? rangoCantidad; // rango de cantidad disponible
   String? textoBusqueda;
 
@@ -59,14 +58,12 @@ class HerramientasProvider extends ChangeNotifier {
     String? estado,
     DateTime? garantiaDesde,
     DateTime? garantiaHasta,
-    String? obraAsig,
     RangeValues? rangoCantidad,
   }) {
     this.tipo = tipo ?? this.tipo;
     this.estado = estado ?? this.estado;
     this.garantiaDesde = garantiaDesde ?? this.garantiaDesde;
     this.garantiaHasta = garantiaHasta ?? this.garantiaHasta;
-    this.obraAsig = obraAsig ?? this.obraAsig;
     this.rangoCantidad = rangoCantidad ?? this.rangoCantidad;
     filtrar();
   }
@@ -89,16 +86,13 @@ class HerramientasProvider extends ChangeNotifier {
         return false;
       }
 
-      if (obraAsig != null && obraAsig!.isNotEmpty && h.obraAsig != obraAsig) return false;
-
       if (rangoCantidad != null) {
-        if (h.cantidad < rangoCantidad!.start || h.cantidad > rangoCantidad!.end) return false;
+        if (h.cantidadTotal < rangoCantidad!.start || h.cantidadTotal > rangoCantidad!.end) return false;
       }
 
       if (textoBusqueda != null && textoBusqueda!.isNotEmpty) {
         final texto = textoBusqueda!.toLowerCase();
-        if (!h.tipo.toLowerCase().contains(texto) &&
-            !(h.obraAsig?.toLowerCase().contains(texto) ?? false)) {
+        if (!h.tipo.toLowerCase().contains(texto)) {
           return false;
         }
       }
@@ -114,7 +108,6 @@ class HerramientasProvider extends ChangeNotifier {
     estado = null;
     garantiaDesde = null;
     garantiaHasta = null;
-    obraAsig = null;
     rangoCantidad = null;
     textoBusqueda = null;
     filtrar();
