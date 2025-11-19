@@ -5,7 +5,7 @@ import 'package:sistema_acviis/frontend/utils/constants/constants.dart';
 import 'package:sistema_acviis/frontend/widgets/buttons.dart';
 
 class EppFiltrosDisplay extends StatefulWidget {
-  final VoidCallback? onClose; // Callback para cerrar el panel
+  final VoidCallback? onClose;
   
   const EppFiltrosDisplay({super.key, this.onClose});
 
@@ -20,31 +20,39 @@ class _EppFiltrosDisplayState extends State<EppFiltrosDisplay> {
   RangeValues? _rangoCantidad;
   bool? _tieneCertificado;
 
-  // Todos los tipos y obras disponibles (hardcoded para evitar problemas)
+  // ✅ CORRECCIÓN 1: LISTA SINCRONIZADA CON AGREGAR/MODIFICAR
   final List<String> _todosLosTipos = [
-    'Casco de Seguridad',
-    'Guantes de Trabajo',
-    'Botas de Seguridad',
-    'Chaleco Reflectivo',
-    'Gafas de Protección',
-    'Respirador/Mascarilla',
+    'Guante Cabritilla',
+    'Guante Multiflex',
+    'Tapón Auditivo',
+    'Tapón Auditivo tipo Fono',
+    'Antiparra de Seguridad Clara',
+    'Antiparra de Seguridad Oscura',
+    'Sobre lente Claro',
+    'Sobre lente Oscuro',
+    'Casco Azul',
+    'Casco Blanco',
+    'Geólogo',
+    'Polera',
     'Arnés de Seguridad',
-    'Protección Auditiva',
-    'Overol de Trabajo',
-    'Cinturón de Herramientas',
-    'Rodilleras',
-    'Protector Facial',
+    'Cabo de Vida',
+    'Zapato de Seguridad',
+    'Guante Soldador',
+    'Guante Mosquetero',
+    'Chaqueta Soldador',
+    'Polainas Soldador',
+    'Careta Facial',
+    'Soporte Careta Facial',
   ];
 
+  // ✅ CORRECCIÓN 2: AGREGAR "Oficina Central"
   final List<String> _todasLasObras = [
+    'Oficina Central', // <--- Importante
     'Instalación Residencial Las Condes',
     'Proyecto Industrial Maipú',
     'Mantenimiento Red Eléctrica Centro',
     'Construcción Subestación Norte',
-    'Ampliación Sistema Eléctrico Sur',
-    'Reparación Líneas de Transmisión',
-    'Instalación Paneles Solares',
-    'Mantenimiento Transformadores',
+    'Reparación Sistema Alumbrado Sur',
     'Sin asignar',
   ];
 
