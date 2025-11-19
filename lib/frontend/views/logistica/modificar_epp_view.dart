@@ -26,6 +26,7 @@ class _ModificarEppViewState extends State<ModificarEppView> {
   
   // Controladores
   final _cantidadController = TextEditingController();
+  final _tallaController = TextEditingController(); // [NUEVO]
   
   // Variables del formulario
   String? _tipoSeleccionado;
@@ -33,42 +34,84 @@ class _ModificarEppViewState extends State<ModificarEppView> {
   File? _nuevoCertificado;
   bool _cambiarCertificado = false;
   
-  // Opciones predefinidas
+  // ✅ LISTA ACTUALIZADA (Debe coincidir con AgregarEppView)
   final List<String> _tiposEpp = [
-    'Casco de Seguridad',
-    'Guantes de Trabajo',
-    'Botas de Seguridad',
-    'Chaleco Reflectivo',
-    'Gafas de Protección',
-    'Respirador/Mascarilla',
+    'Guante Cabritilla',
+    'Guante Multiflex',
+    'Tapón Auditivo',
+    'Tapón Auditivo tipo Fono',
+    'Antiparra de Seguridad Clara',
+    'Antiparra de Seguridad Oscura',
+    'Sobre lente Claro',
+    'Sobre lente Oscuro',
+    'Casco Azul',
+    'Casco Blanco',
+    'Geólogo',
+    'Polera',
     'Arnés de Seguridad',
-    'Protección Auditiva',
-    'Ropa de Trabajo',
-    'Equipo de Soldadura',
+    'Cabo de Vida',
+    'Zapato de Seguridad',
+    'Guante Soldador',
+    'Guante Mosquetero',
+    'Chaqueta Soldador',
+    'Polainas Soldador',
+    'Careta Facial',
+    'Soporte Careta Facial',
   ];
   
-  // TODO: Estas obras deberían venir de un provider/API
-  final List<String> _obrasDisponibles = [
-    'Instalación Residencial Las Condes',
-    'Proyecto Industrial Maipú', 
-    'Mantenimiento Red Eléctrica Centro',
-    'Construcción Subestación Norte',
-    'Reparación Sistema Alumbrado Sur',
-    'Sin asignar a obra específica',
-  ];
-
   @override
   void initState() {
     super.initState();
-    // Inicializar con los datos actuales del EPP
-    _tipoSeleccionado = widget.epp.tipo;
+    _inicializarDatos();
+  }
+
+  void _inicializarDatos() {
+    // 1. Cargar Cantidad y Obras
     _cantidadController.text = widget.epp.cantidad.toString();
     _obrasSeleccionadas = List.from(widget.epp.obrasAsignadas);
+
+    // 2. Lógica para separar "Tipo (Talla)"
+    // Ej: "Chaqueta Soldador (45)" -> Tipo="Chaqueta Soldador", Talla="45"
+    String tipoCompleto = widget.epp.tipo;
+    bool encontrado = false;
+
+    for (String tipoBase in _tiposEpp) {
+      // Verificamos si el string guardado empieza con uno de nuestros tipos base
+      if (tipoCompleto.startsWith(tipoBase)) {
+        // Si son idénticos, es solo el tipo sin talla
+        if (tipoCompleto.length == tipoBase.length) {
+          _tipoSeleccionado = tipoBase;
+          encontrado = true;
+          break;
+        } 
+        // Si es más largo, verificamos si tiene el formato " (Talla)"
+        else if (tipoCompleto.length > tipoBase.length) {
+          String resto = tipoCompleto.substring(tipoBase.length); // Lo que sobra
+          if (resto.startsWith(' (') && resto.endsWith(')')) {
+            _tipoSeleccionado = tipoBase;
+            // Extraer lo que está entre paréntesis: " (45)" -> "45"
+            _tallaController.text = resto.substring(2, resto.length - 1);
+            encontrado = true;
+            break;
+          }
+        }
+      }
+    }
+
+    // Si no encontramos coincidencia (ej: un tipo antiguo eliminado), 
+    // dejamos _tipoSeleccionado en null para que el usuario seleccione uno nuevo,
+    // evitando el crash.
+    if (!encontrado) {
+      // Opcional: Podríamos poner el valor antiguo en 'talla' para no perderlo visualmente
+      // _tallaController.text = tipoCompleto;
+      debugPrint('Tipo de EPP "$tipoCompleto" no encontrado en la lista actual.');
+    }
   }
 
   @override
   void dispose() {
     _cantidadController.dispose();
+    _tallaController.dispose();
     super.dispose();
   }
 
@@ -85,22 +128,19 @@ class _ModificarEppViewState extends State<ModificarEppView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header con información del EPP
                   _buildHeader(),
-                  
                   SizedBox(height: normalPadding * 2),
                   
                   // Sección: Información Básica
                   _buildSectionHeader('Información Básica', Icons.edit),
                   _buildTipoEppField(),
+                  
+                  // Campo de Talla Agregado
+                  SizedBox(height: normalPadding),
+                  _buildTallaField(),
+                  
                   SizedBox(height: normalPadding),
                   _buildCantidadField(),
-                  
-                  SizedBox(height: normalPadding * 2),
-                  
-                  // Sección: Asignación de Obras
-                  _buildSectionHeader('Asignación de Obras', Icons.construction),
-                  _buildObrasField(),
                   
                   SizedBox(height: normalPadding * 2),
                   
@@ -110,12 +150,8 @@ class _ModificarEppViewState extends State<ModificarEppView> {
                   
                   SizedBox(height: normalPadding * 3),
                   
-                  // Botones de acción
                   _buildActionButtons(eppProvider),
                   
-                  SizedBox(height: normalPadding),
-                  
-                  // Mostrar error si existe
                   if (eppProvider.error != null)
                     _buildErrorMessage(eppProvider.error!),
                 ],
@@ -152,24 +188,13 @@ class _ModificarEppViewState extends State<ModificarEppView> {
                         ),
                       ),
                       Text(
-                        'ID: ${widget.epp.id} | Fecha registro: ${widget.epp.fechaRegistro?.toLocal().toString().split(' ')[0] ?? 'No especificada'}',
-                        style: TextStyle(
-                          color: Colors.orange[600],
-                          fontSize: 14,
-                        ),
+                        'ID: ${widget.epp.id}',
+                        style: TextStyle(color: Colors.orange[600], fontSize: 14),
                       ),
                     ],
                   ),
                 ),
               ],
-            ),
-            SizedBox(height: normalPadding / 2),
-            Text(
-              'Modifica los campos necesarios y guarda los cambios.',
-              style: TextStyle(
-                color: Colors.orange[600],
-                fontSize: 14,
-              ),
             ),
           ],
         ),
@@ -217,12 +242,22 @@ class _ModificarEppViewState extends State<ModificarEppView> {
           _tipoSeleccionado = value;
         });
       },
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Debe seleccionar un tipo de EPP';
-        }
-        return null;
-      },
+      validator: (value) => value == null ? 'Debe seleccionar un tipo' : null,
+    );
+  }
+
+  // [NUEVO] Campo para editar la talla
+  Widget _buildTallaField() {
+    return TextFormField(
+      controller: _tallaController,
+      decoration: InputDecoration(
+        labelText: 'Talla o Detalle (Opcional)',
+        hintText: 'Ej: L, 42, o color específico',
+        prefixIcon: Icon(Icons.straighten),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
     );
   }
 
@@ -232,7 +267,7 @@ class _ModificarEppViewState extends State<ModificarEppView> {
       keyboardType: TextInputType.number,
       decoration: InputDecoration(
         labelText: 'Cantidad *',
-        hintText: 'Ingrese la cantidad de unidades',
+        hintText: 'Ingrese la cantidad',
         prefixIcon: Icon(Icons.format_list_numbered),
         suffix: Text('unidades'),
         border: OutlineInputBorder(
@@ -240,76 +275,11 @@ class _ModificarEppViewState extends State<ModificarEppView> {
         ),
       ),
       validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Debe ingresar una cantidad';
-        }
-        final cantidad = int.tryParse(value);
-        if (cantidad == null || cantidad <= 0) {
-          return 'Debe ingresar un número válido mayor a 0';
-        }
-        if (cantidad > 9999) {
-          return 'La cantidad no puede ser mayor a 9999';
-        }
+        if (value == null || value.isEmpty) return 'Ingrese una cantidad';
+        final c = int.tryParse(value);
+        if (c == null || c <= 0) return 'Cantidad inválida';
         return null;
       },
-    );
-  }
-
-  Widget _buildObrasField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Seleccione las obras donde se utilizará este EPP:',
-          style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-        ),
-        SizedBox(height: normalPadding / 2),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[400]!),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            children: _obrasDisponibles.map((obra) {
-              final isSelected = _obrasSeleccionadas.contains(obra);
-              return CheckboxListTile(
-                title: Text(obra),
-                subtitle: obra.contains('Sin asignar') 
-                  ? Text('EPP disponible para cualquier obra', 
-                      style: TextStyle(color: Colors.orange[600], fontSize: 12))
-                  : null,
-                value: isSelected,
-                onChanged: (bool? value) {
-                  setState(() {
-                    if (value == true) {
-                      // Si selecciona "Sin asignar", deseleccionar otras
-                      if (obra.contains('Sin asignar')) {
-                        _obrasSeleccionadas.clear();
-                        _obrasSeleccionadas.add(obra);
-                      } else {
-                        // Si selecciona una obra específica, quitar "Sin asignar"
-                        _obrasSeleccionadas.removeWhere((o) => o.contains('Sin asignar'));
-                        _obrasSeleccionadas.add(obra);
-                      }
-                    } else {
-                      _obrasSeleccionadas.remove(obra);
-                    }
-                  });
-                },
-                controlAffinity: ListTileControlAffinity.leading,
-              );
-            }).toList(),
-          ),
-        ),
-        if (_obrasSeleccionadas.isEmpty)
-          Padding(
-            padding: EdgeInsets.only(top: normalPadding / 2),
-            child: Text(
-              'Debe seleccionar al menos una obra o "Sin asignar"',
-              style: TextStyle(color: Colors.red[700], fontSize: 12),
-            ),
-          ),
-      ],
     );
   }
 
@@ -319,128 +289,56 @@ class _ModificarEppViewState extends State<ModificarEppView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Estado actual del certificado
         Container(
-          width: double.infinity,
           padding: EdgeInsets.all(normalPadding),
           decoration: BoxDecoration(
             color: tieneCertificado ? Colors.green[50] : Colors.orange[50],
-            border: Border.all(
-              color: tieneCertificado ? Colors.green[300]! : Colors.orange[300]!,
-            ),
+            border: Border.all(color: tieneCertificado ? Colors.green : Colors.orange),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  Icon(
-                    tieneCertificado ? Icons.verified_user : Icons.warning,
-                    color: tieneCertificado ? Colors.green[700] : Colors.orange[700],
-                  ),
-                  SizedBox(width: normalPadding / 2),
-                  Text(
-                    'Estado actual: ${tieneCertificado ? 'Con certificado' : 'Sin certificado'}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: tieneCertificado ? Colors.green[700] : Colors.orange[700],
-                    ),
-                  ),
-                ],
-              ),
-              if (tieneCertificado) ...[
-                SizedBox(height: normalPadding / 2),
-                Text(
-                  'ID: ${widget.epp.certificadoId}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.green[600],
-                    fontFamily: 'monospace',
-                  ),
-                ),
-              ],
+              Icon(tieneCertificado ? Icons.check_circle : Icons.warning, 
+                color: tieneCertificado ? Colors.green : Colors.orange),
+              SizedBox(width: normalPadding),
+              Text(tieneCertificado ? 'Certificado actual válido' : 'Sin certificado actual'),
             ],
           ),
         ),
-        
         SizedBox(height: normalPadding),
-        
-        // Opción para cambiar certificado
-        Row(
-          children: [
-            Checkbox(
-              value: _cambiarCertificado,
-              onChanged: (value) {
-                setState(() {
-                  _cambiarCertificado = value ?? false;
-                  if (!_cambiarCertificado) {
-                    _nuevoCertificado = null;
-                  }
-                });
-              },
-            ),
-            Expanded(
-              child: Text(
-                tieneCertificado 
-                  ? 'Reemplazar certificado existente'
-                  : 'Agregar certificado',
-                style: TextStyle(fontSize: 14),
-              ),
-            ),
-          ],
+        CheckboxListTile(
+          title: Text(tieneCertificado ? 'Reemplazar certificado' : 'Agregar certificado'),
+          value: _cambiarCertificado,
+          onChanged: (val) => setState(() {
+            _cambiarCertificado = val ?? false;
+            if (!_cambiarCertificado) _nuevoCertificado = null;
+          }),
+          controlAffinity: ListTileControlAffinity.leading,
+          contentPadding: EdgeInsets.zero,
         ),
-        
-        if (_cambiarCertificado) ...[
-          SizedBox(height: normalPadding),
-          _buildUploadCertificado(),
-        ],
+        if (_cambiarCertificado) _buildUploadCertificado(),
       ],
     );
   }
 
   Widget _buildUploadCertificado() {
     return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(normalPadding * 1.5),
+      padding: EdgeInsets.all(normalPadding),
       decoration: BoxDecoration(
-        border: Border.all(
-          color: _nuevoCertificado != null ? Colors.green : Colors.grey[400]!,
-          width: 2,
-        ),
-        borderRadius: BorderRadius.circular(12),
-        color: _nuevoCertificado != null ? Colors.green[50] : Colors.grey[50],
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(8),
+        color: Colors.grey[50],
       ),
       child: Column(
         children: [
-          Icon(
-            _nuevoCertificado != null ? Icons.check_circle : Icons.upload_file,
-            size: 48,
-            color: _nuevoCertificado != null ? Colors.green : Colors.grey[600],
-          ),
-          SizedBox(height: normalPadding / 2),
-          Text(
-            _nuevoCertificado != null 
-              ? 'Nuevo certificado seleccionado:'
-              : 'Seleccionar nuevo certificado PDF',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: _nuevoCertificado != null ? Colors.green[700] : Colors.grey[700],
-            ),
-          ),
-          if (_nuevoCertificado != null) ...[
-            SizedBox(height: normalPadding / 2),
-            Text(
-              _nuevoCertificado!.path.split('/').last,
-              style: TextStyle(fontSize: 12, color: Colors.green[600]),
-              textAlign: TextAlign.center,
-            ),
-          ],
-          SizedBox(height: normalPadding),
+          Text(_nuevoCertificado != null 
+            ? 'Archivo: ${_nuevoCertificado!.path.split('/').last}' 
+            : 'Seleccione un PDF'),
+          SizedBox(height: 8),
           ElevatedButton.icon(
             onPressed: _seleccionarCertificado,
-            icon: Icon(_nuevoCertificado != null ? Icons.change_circle : Icons.folder_open),
-            label: Text(_nuevoCertificado != null ? 'Cambiar archivo' : 'Seleccionar PDF'),
+            icon: Icon(Icons.upload_file),
+            label: Text('Seleccionar PDF'),
           ),
         ],
       ),
@@ -448,17 +346,11 @@ class _ModificarEppViewState extends State<ModificarEppView> {
   }
 
   Widget _buildActionButtons(EppProvider eppProvider) {
-    final hasChanges = _hasChanges();
-    
     return Row(
       children: [
         Expanded(
           child: BorderButton(
-            onPressed: () {
-              if (!eppProvider.isLoading) {
-                Navigator.pop(context);
-              }
-            },
+            onPressed: () => Navigator.pop(context),
             text: 'Cancelar',
             size: Size(double.infinity, 50),
           ),
@@ -468,15 +360,9 @@ class _ModificarEppViewState extends State<ModificarEppView> {
           flex: 2,
           child: PrimaryButton(
             onPressed: () {
-              if (hasChanges && !eppProvider.isLoading) {
-                _guardarCambios(eppProvider);
-              }
+              if (!eppProvider.isLoading) _guardarCambios(eppProvider);
             },
-            text: eppProvider.isLoading 
-              ? 'Guardando...' 
-              : hasChanges 
-                ? 'Guardar Cambios'
-                : 'Sin cambios',
+            text: eppProvider.isLoading ? 'Guardando...' : 'Guardar Cambios',
             size: Size(double.infinity, 50),
           ),
         ),
@@ -486,43 +372,10 @@ class _ModificarEppViewState extends State<ModificarEppView> {
 
   Widget _buildErrorMessage(String error) {
     return Container(
-      width: double.infinity,
       padding: EdgeInsets.all(normalPadding),
-      decoration: BoxDecoration(
-        color: Colors.red[50],
-        border: Border.all(color: Colors.red[300]!),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline, color: Colors.red[700]),
-          SizedBox(width: normalPadding / 2),
-          Expanded(
-            child: Text(
-              error,
-              style: TextStyle(color: Colors.red[700]),
-            ),
-          ),
-        ],
-      ),
+      color: Colors.red[50],
+      child: Text(error, style: TextStyle(color: Colors.red)),
     );
-  }
-
-  bool _hasChanges() {
-    return _tipoSeleccionado != widget.epp.tipo ||
-           int.tryParse(_cantidadController.text) != widget.epp.cantidad ||
-           !_listEquals(_obrasSeleccionadas, widget.epp.obrasAsignadas) ||
-           _nuevoCertificado != null;
-  }
-
-  bool _listEquals(List<String> list1, List<String> list2) {
-    if (list1.length != list2.length) return false;
-    final sorted1 = List<String>.from(list1)..sort();
-    final sorted2 = List<String>.from(list2)..sort();
-    for (int i = 0; i < sorted1.length; i++) {
-      if (sorted1[i] != sorted2[i]) return false;
-    }
-    return true;
   }
 
   Future<void> _seleccionarCertificado() async {
@@ -532,62 +385,42 @@ class _ModificarEppViewState extends State<ModificarEppView> {
         allowedExtensions: ['pdf'],
         allowMultiple: false,
       );
-
       if (result != null && result.files.single.path != null) {
-        setState(() {
-          _nuevoCertificado = File(result.files.single.path!);
-        });
+        setState(() => _nuevoCertificado = File(result.files.single.path!));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al seleccionar archivo: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      debugPrint('Error: $e');
     }
   }
 
   Future<void> _guardarCambios(EppProvider eppProvider) async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    if (_obrasSeleccionadas.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Debe seleccionar al menos una obra'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     try {
+      // ⚡ RECONSTRUIR TIPO + TALLA
+      String tipoFinal = _tipoSeleccionado!;
+      if (_tallaController.text.trim().isNotEmpty) {
+        tipoFinal = '$tipoFinal (${_tallaController.text.trim()})';
+      }
+
       final success = await eppProvider.modificarEPP(
         context: context,
         id: widget.epp.id!,
-        tipo: _tipoSeleccionado!,
+        tipo: tipoFinal, // Enviamos el string combinado
         obrasAsignadas: _obrasSeleccionadas,
         cantidad: int.parse(_cantidadController.text),
         nuevoCertificado: _nuevoCertificado,
       );
 
-      if (success) {
+      if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('EPP modificado exitosamente'),
-            backgroundColor: Colors.green,
-          ),
+          const SnackBar(content: Text('EPP modificado exitosamente'), backgroundColor: Colors.green),
         );
-        Navigator.pop(context, true); // Indicar que hubo cambios
+        Navigator.pop(context, true);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al guardar cambios: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
       );
     }
   }
