@@ -22,7 +22,7 @@ factory EPP.fromJson(Map<String, dynamic> json) {
   return EPP(
     id: json['id'],
     tipo: json['tipo'],
-    // ⚡ ASEGURAR QUE SIEMPRE SEA UN ARRAY:
+    // ASEGURAR QUE SIEMPRE SEA UN ARRAY:
     obrasAsignadas: json['obrasAsignadas'] != null 
       ? List<String>.from(json['obrasAsignadas']) 
       : [], // ← Array vacío si es null
