@@ -198,7 +198,7 @@ model obras {
   charlas              charlas[]
   historial_asistencia historial_asistencia[]
   itemizados           itemizados[]
-  obra_finanzas        obra_finanzas[]
+  obra_finanza       obra_finanza[]
   obra_recursos        obra_recurso[]
   trabajador_obra      trabajador_obra[]
 }
@@ -280,13 +280,18 @@ model historial_asistencia {
   @@map("historial_asistencia")
 }
 
-model obra_finanzas {
+model obra_finanza {
   id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  obraId          String   @db.Uuid
-  tipo            String   @db.VarChar
-  fechaAsignacion DateTime @default(now()) @db.Timestamp(6)
+  obra_id         String   @map("obraId") @db.Uuid
+  tipo            String   @db.VarChar // 'caja chica', etc.
+  fecha_asignacion DateTime @default(now()) @map("fechaAsignacion") @db.Timestamp(6)
   proposito       String   @db.VarChar
-  estado          String   @default("activa") @db.VarChar
-  detalles        Json?
-  obras           obras    @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  estado          String   @default("activa") @db.VarChar // 'activa' o 'cerrada'
+  detalles        Json?    // Aquí van todos los montos y demás información
+  
+  obra            obras    @relation(fields: [obra_id], references: [id], onDelete: Cascade)
+  
+  @@index([obra_id], map: "idx_obra_finanza_obra")
+  @@map("obra_finanzas")
 }
+
