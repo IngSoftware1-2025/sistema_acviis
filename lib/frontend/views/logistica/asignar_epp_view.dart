@@ -24,6 +24,7 @@ class _AsignarEppViewState extends State<AsignarEppView> {
   
   // Lista de obras disponibles (esto debería venir de un provider/API en el futuro)
   final List<String> _obrasDisponibles = [
+    'Oficina Central',
     'Instalación Residencial Las Condes',
     'Proyecto Industrial Maipú',
     'Mantenimiento Red Eléctrica Centro',
