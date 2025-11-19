@@ -1,3 +1,4 @@
+// lib/frontend/views/logistica/agregar_epp_view.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -20,40 +21,42 @@ class _AgregarEppViewState extends State<AgregarEppView> {
   
   // Controladores
   final _cantidadController = TextEditingController();
+  final _tallaController = TextEditingController(); // [NUEVO] Controlador para talla
   
   // Variables del formulario
   String? _tipoSeleccionado;
-  List<String> _obrasSeleccionadas = [];
   File? _certificadoSeleccionado;
   bool _certificadoOpcional = true;
   
-  // Opciones predefinidas
+  // ✅ LISTA ACTUALIZADA DE EPPs
   final List<String> _tiposEpp = [
-    'Casco de Seguridad',
-    'Guantes de Trabajo',
-    'Botas de Seguridad',
-    'Chaleco Reflectivo',
-    'Gafas de Protección',
-    'Respirador/Mascarilla',
+    'Guante Cabritilla',
+    'Guante Multiflex',
+    'Tapón Auditivo',
+    'Tapón Auditivo tipo Fono',
+    'Antiparra de Seguridad Clara',
+    'Antiparra de Seguridad Oscura',
+    'Sobre lente Claro',
+    'Sobre lente Oscuro',
+    'Casco Azul',
+    'Casco Blanco',
+    'Geólogo',
+    'Polera',
     'Arnés de Seguridad',
-    'Protección Auditiva',
-    'Ropa de Trabajo',
-    'Equipo de Soldadura',
-  ];
-  
-  // TODO: Estas obras deberían venir de un provider/API
-  final List<String> _obrasDisponibles = [
-    'Instalación Residencial Las Condes',
-    'Proyecto Industrial Maipú', 
-    'Mantenimiento Red Eléctrica Centro',
-    'Construcción Subestación Norte',
-    'Reparación Sistema Alumbrado Sur',
-    'Sin asignar a obra específica',
+    'Cabo de Vida',
+    'Zapato de Seguridad',
+    'Guante Soldador',
+    'Guante Mosquetero',
+    'Chaqueta Soldador',
+    'Polainas Soldador',
+    'Careta Facial',
+    'Soporte Careta Facial',
   ];
 
   @override
   void dispose() {
     _cantidadController.dispose();
+    _tallaController.dispose();
     super.dispose();
   }
 
@@ -78,14 +81,18 @@ class _AgregarEppViewState extends State<AgregarEppView> {
                   // Sección: Información Básica
                   _buildSectionHeader('Información Básica', Icons.info_outline),
                   _buildTipoEppField(),
+                  
+                  // [NUEVO] Campo de Talla/Detalle
+                  SizedBox(height: normalPadding),
+                  _buildTallaField(),
+
                   SizedBox(height: normalPadding),
                   _buildCantidadField(),
                   
                   SizedBox(height: normalPadding * 2),
                   
-                  // Sección: Asignación de Obras
-                  _buildSectionHeader('Asignación de Obras', Icons.construction),
-                  _buildObrasField(),
+                  // Información de ubicación (solo informativa)
+                  _buildUbicacionInfo(),
                   
                   SizedBox(height: normalPadding * 2),
                   
@@ -136,7 +143,7 @@ class _AgregarEppViewState extends State<AgregarEppView> {
             ),
             SizedBox(height: normalPadding / 2),
             Text(
-              'Complete la información del EPP que desea registrar en el sistema. '
+              'Complete la información del EPP que desea registrar. '
               'Los campos marcados con (*) son obligatorios.',
               style: TextStyle(
                 color: Colors.blue[600],
@@ -198,6 +205,21 @@ class _AgregarEppViewState extends State<AgregarEppView> {
     );
   }
 
+  // [NUEVO WIDGET] Campo para talla o detalle extra
+  Widget _buildTallaField() {
+    return TextFormField(
+      controller: _tallaController,
+      decoration: InputDecoration(
+        labelText: 'Talla o Detalle (Opcional)',
+        hintText: 'Ej: L, 42, o color específico',
+        prefixIcon: Icon(Icons.straighten),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
+  }
+
   Widget _buildCantidadField() {
     return TextFormField(
       controller: _cantidadController,
@@ -227,61 +249,44 @@ class _AgregarEppViewState extends State<AgregarEppView> {
     );
   }
 
-  Widget _buildObrasField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Seleccione las obras donde se utilizará este EPP:',
-          style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-        ),
-        SizedBox(height: normalPadding / 2),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[400]!),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            children: _obrasDisponibles.map((obra) {
-              final isSelected = _obrasSeleccionadas.contains(obra);
-              return CheckboxListTile(
-                title: Text(obra),
-                subtitle: obra.contains('Sin asignar') 
-                  ? Text('EPP disponible para cualquier obra', 
-                      style: TextStyle(color: Colors.orange[600], fontSize: 12))
-                  : null,
-                value: isSelected,
-                onChanged: (bool? value) {
-                  setState(() {
-                    if (value == true) {
-                      // Si selecciona "Sin asignar", deseleccionar otras
-                      if (obra.contains('Sin asignar')) {
-                        _obrasSeleccionadas.clear();
-                        _obrasSeleccionadas.add(obra);
-                      } else {
-                        // Si selecciona una obra específica, quitar "Sin asignar"
-                        _obrasSeleccionadas.removeWhere((o) => o.contains('Sin asignar'));
-                        _obrasSeleccionadas.add(obra);
-                      }
-                    } else {
-                      _obrasSeleccionadas.remove(obra);
-                    }
-                  });
-                },
-                controlAffinity: ListTileControlAffinity.leading,
-              );
-            }).toList(),
-          ),
-        ),
-        if (_obrasSeleccionadas.isEmpty)
-          Padding(
-            padding: EdgeInsets.only(top: normalPadding / 2),
-            child: Text(
-              'Debe seleccionar al menos una obra o "Sin asignar"',
-              style: TextStyle(color: Colors.red[700], fontSize: 12),
+  Widget _buildUbicacionInfo() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(normalPadding),
+      decoration: BoxDecoration(
+        color: Colors.green[50],
+        border: Border.all(color: Colors.green[300]!),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.warehouse, color: Colors.green[700], size: 32),
+          SizedBox(width: normalPadding),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '📍 Ubicación Inicial: Oficina Central',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green[700],
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Los EPP se registrarán en la Oficina Central. Podrás asignarlos a obras posteriormente desde la lista de EPP.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.green[600],
+                  ),
+                ),
+              ],
             ),
           ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -362,36 +367,36 @@ class _AgregarEppViewState extends State<AgregarEppView> {
     );
   }
 
-Widget _buildActionButtons(EppProvider eppProvider) {
-  return Row(
-    children: [
-      Expanded(
-        child: BorderButton(
-          onPressed: () {
-            if (!eppProvider.isLoading) {
-              Navigator.pop(context);
-            }
-          },
-          text: 'Cancelar',
-          size: Size(double.infinity, 50),
+  Widget _buildActionButtons(EppProvider eppProvider) {
+    return Row(
+      children: [
+        Expanded(
+          child: BorderButton(
+            onPressed: () {
+              if (!eppProvider.isLoading) {
+                Navigator.pop(context);
+              }
+            },
+            text: 'Cancelar',
+            size: Size(double.infinity, 50),
+          ),
         ),
-      ),
-      SizedBox(width: normalPadding),
-      Expanded(
-        flex: 2,
-        child: PrimaryButton(
-          onPressed: () {
-            if (!eppProvider.isLoading) {
-              _registrarEpp();
-            }
-          },
-          text: eppProvider.isLoading ? 'Registrando...' : 'Registrar EPP',
-          size: Size(double.infinity, 50),
+        SizedBox(width: normalPadding),
+        Expanded(
+          flex: 2,
+          child: PrimaryButton(
+            onPressed: () {
+              if (!eppProvider.isLoading) {
+                _registrarEpp();
+              }
+            },
+            text: eppProvider.isLoading ? 'Registrando...' : 'Registrar EPP',
+            size: Size(double.infinity, 50),
+          ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
   Widget _buildErrorMessage(String error) {
     return Container(
@@ -441,27 +446,13 @@ Widget _buildActionButtons(EppProvider eppProvider) {
   }
 
   Future<void> _registrarEpp() async {
-    // Limpiar errores previos
     final eppProvider = Provider.of<EppProvider>(context, listen: false);
     eppProvider.limpiarError();
 
-    // Validar formulario
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    // Validar obras seleccionadas
-    if (_obrasSeleccionadas.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Debe seleccionar al menos una obra'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    // Validar certificado si es requerido
     if (!_certificadoOpcional && _certificadoSeleccionado == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -474,21 +465,26 @@ Widget _buildActionButtons(EppProvider eppProvider) {
 
     try {
       bool success;
+      final obrasAsignadas = ["Oficina Central"];
+      
+      // ⚡ COMBINAR TIPO + TALLA (Si existe)
+      // Esto guarda "Zapato de Seguridad (42)" en la base de datos
+      String tipoFinal = _tipoSeleccionado!;
+      if (_tallaController.text.trim().isNotEmpty) {
+        tipoFinal = '$tipoFinal (${_tallaController.text.trim()})';
+      }
       
       if (_certificadoOpcional || _certificadoSeleccionado == null) {
-        // Registrar sin certificado
         success = await eppProvider.registrarEPPSinCertificado(
-          tipo: _tipoSeleccionado!,
-          obrasAsignadas: _obrasSeleccionadas,
+          tipo: tipoFinal, // Usamos el nombre combinado
+          obrasAsignadas: obrasAsignadas,
           cantidad: int.parse(_cantidadController.text),
         );
       } else {
-        // Registrar con certificado
-      
         success = await eppProvider.registrarEPP(
-        context: context, // ⚡ AGREGAR ESTO
-          tipo: _tipoSeleccionado!,
-          obrasAsignadas: _obrasSeleccionadas,
+          context: context,
+          tipo: tipoFinal, // Usamos el nombre combinado
+          obrasAsignadas: obrasAsignadas,
           cantidad: int.parse(_cantidadController.text),
           certificadoPdf: _certificadoSeleccionado!,
         );
