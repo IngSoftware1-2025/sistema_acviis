@@ -46,4 +46,11 @@ class CheckboxProvider extends ChangeNotifier {
     }
     notifyListeners();
   }
+  void clearCheckboxes() {
+    if (_checkBoxes.isEmpty) return;
+    for (var cb in _checkBoxes) {
+      cb.isSelected = false;
+    }
+    notifyListeners();
+  }
 }
