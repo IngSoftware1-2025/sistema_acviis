@@ -74,8 +74,6 @@ class TrabajadoresProvider extends ChangeNotifier {
         estadoCivil: '',
         sistemaDeSalud: '',
         estado: '',
-        obraEnLaQueTrabaja: '',
-        rolQueAsumeEnLaObra: '',
         contratos: [],
         correoElectronico: '',
         previsionAfp: '',
@@ -141,10 +139,6 @@ class TrabajadoresProvider extends ChangeNotifier {
     */
     _trabajadores = _todos.where((t) {
        // ================ DE MOMENTO, SE QUITA LA SEGURIDDAD POR PRISAS ===================
-      // Obra asignada
-      if (obraAsignada != null && obraAsignada!.isNotEmpty && t.obraEnLaQueTrabaja != obraAsignada) return false;
-      // Cargo
-      if (cargo != null && cargo!.isNotEmpty && t.rolQueAsumeEnLaObra != cargo) return false;
       // Estado civil
       if (estadoCivil != null && estadoCivil!.isNotEmpty && t.estadoCivil != estadoCivil) return false;
       // Sistema de salud

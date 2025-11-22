@@ -27,10 +27,7 @@ class _ModificarHerramientasViewState extends State<ModificarHerramientasView> {
         return {
           'tipo': TextEditingController(text: h.tipo),
           'garantia': TextEditingController(text: h.garantia != null ? h.garantia!.toIso8601String().split('T').first : ''),
-          'cantidad': TextEditingController(text: h.cantidad.toString()),
-          'obraAsig': TextEditingController(text: h.obraAsig ?? ''),
-          'asigInicio': TextEditingController(text: h.asigInicio != null ? h.asigInicio!.toIso8601String().split('T').first : ''),
-          'asigFin': TextEditingController(text: h.asigFin != null ? h.asigFin!.toIso8601String().split('T').first : ''),
+          'cantidad_total': TextEditingController(text: h.cantidadTotal.toString()),
         };
       },
     );
@@ -71,44 +68,23 @@ class _ModificarHerramientasViewState extends State<ModificarHerramientasView> {
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: TextField(
-                          controller: c['cantidad'],
-                          decoration: const InputDecoration(labelText: 'Cantidad'),
+                          controller: c['cantidad_total'],
+                          decoration: const InputDecoration(labelText: 'Cantidad Total'),
                           keyboardType: TextInputType.number,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: TextField(
-                          controller: c['obraAsig'],
-                          decoration: const InputDecoration(labelText: 'Obra asignada'),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: TextField(
-                          controller: c['asigInicio'],
-                          decoration: const InputDecoration(labelText: 'Asignación inicio (YYYY-MM-DD)'),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: TextField(
-                          controller: c['asigFin'],
-                          decoration: const InputDecoration(labelText: 'Asignación fin (YYYY-MM-DD)'),
                         ),
                       ),
                       const SizedBox(height: 12),
                       ElevatedButton(
                         onPressed: () async {
                           // Validación simple
-                          if (c['tipo']!.text.isEmpty || c['cantidad']!.text.isEmpty) {
+                          if (c['tipo']!.text.isEmpty || c['cantidad_total']!.text.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Completa los campos obligatorios')),
                             );
                             return;
                           }
                           // Validar cantidad
-                          if (int.tryParse(c['cantidad']!.text) == null) {
+                          if (int.tryParse(c['cantidad_total']!.text) == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Cantidad debe ser un número')),
                             );
@@ -125,40 +101,13 @@ class _ModificarHerramientasViewState extends State<ModificarHerramientasView> {
                               return;
                             }
                           }
-                          if (c['asigInicio']!.text.isNotEmpty) {
-                            try {
-                              DateTime.parse(c['asigInicio']!.text);
-                            } catch (_) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Asignación inicio: Formato de fecha inválido (YYYY-MM-DD)')),
-                              );
-                              return;
-                            }
-                          }
-                          if (c['asigFin']!.text.isNotEmpty) {
-                            try {
-                              DateTime.parse(c['asigFin']!.text);
-                            } catch (_) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Asignación fin: Formato de fecha inválido (YYYY-MM-DD)')),
-                              );
-                              return;
-                            }
-                          }
                           final herramientaData = {
                             'id': h.id,
                             'tipo': c['tipo']!.text,
                             'garantia': c['garantia']!.text.isNotEmpty 
                                 ? DateTime.parse(c['garantia']!.text).toUtc().toIso8601String() 
                                 : null,
-                            'cantidad': int.parse(c['cantidad']!.text),
-                            'obra_asig': c['obraAsig']!.text,
-                            'asig_inicio': c['asigInicio']!.text.isNotEmpty 
-                                ? DateTime.parse(c['asigInicio']!.text).toUtc().toIso8601String() 
-                                : null,
-                            'asig_fin': c['asigFin']!.text.isNotEmpty 
-                                ? DateTime.parse(c['asigFin']!.text).toUtc().toIso8601String() 
-                                : null,
+                            'cantidad_total': int.parse(c['cantidad_total']!.text),
                           };
 
                           await updateHerramienta(herramientaData);

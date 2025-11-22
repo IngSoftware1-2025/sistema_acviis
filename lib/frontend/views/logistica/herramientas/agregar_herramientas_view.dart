@@ -37,30 +37,6 @@ class _AgregarHerramientasViewState extends State<AgregarHerramientasView> {
     text: '${1 + DateTime.now().millisecondsSinceEpoch % 20}',
   );
 
-  // ===================== Obra asignada (opcional)
-  final TextEditingController _obraAsigController = TextEditingController(
-    text: [
-      'Obra Norte',
-      'Obra Sur',
-      'Obra Este',
-      'Obra Oeste'
-    ][DateTime.now().millisecondsSinceEpoch % 4],
-  );
-
-  // ===================== Asignación inicio (opcional, formato YYYY-MM-DD)
-  final TextEditingController _asigInicioController = TextEditingController(
-    text: '${2024 + DateTime.now().millisecondsSinceEpoch % 3}-'
-          '${(1 + DateTime.now().millisecondsSinceEpoch % 12).toString().padLeft(2, '0')}-'
-          '${(1 + DateTime.now().millisecondsSinceEpoch % 28).toString().padLeft(2, '0')}',
-  );
-
-  // ===================== Asignación fin (opcional, formato YYYY-MM-DD)
-  final TextEditingController _asigFinController = TextEditingController(
-    text: '${2025 + DateTime.now().millisecondsSinceEpoch % 3}-'
-          '${(1 + DateTime.now().millisecondsSinceEpoch % 12).toString().padLeft(2, '0')}-'
-          '${(1 + DateTime.now().millisecondsSinceEpoch % 28).toString().padLeft(2, '0')}',
-  );
-
   bool _isLoading = false;
 
   void _submitForm() async {
@@ -68,27 +44,16 @@ class _AgregarHerramientasViewState extends State<AgregarHerramientasView> {
       setState(() => _isLoading = true);
 
       try {
-        // Convertir fechas (garantía, asigInicio, asigFin) a DateTime si existen
+        // Convertir fecha de garantía a DateTime si existe
         DateTime? garantia;
         if (_garantiaController.text.isNotEmpty) {
           garantia = DateTime.parse(_garantiaController.text);
-        }
-        DateTime? asigInicio;
-        if (_asigInicioController.text.isNotEmpty) {
-          asigInicio = DateTime.parse(_asigInicioController.text);
-        }
-        DateTime? asigFin;
-        if (_asigFinController.text.isNotEmpty) {
-          asigFin = DateTime.parse(_asigFinController.text);
         }
 
         await createHerramienta(
           tipo: _tipoController.text,
           garantia: garantia,
-          cantidad: int.parse(_cantidadController.text),
-          obraAsig: _obraAsigController.text,
-          asigInicio: asigInicio,
-          asigFin: asigFin,
+          cantidadTotal: int.parse(_cantidadController.text),
         );
 
         if (mounted) {
@@ -144,45 +109,11 @@ class _AgregarHerramientasViewState extends State<AgregarHerramientasView> {
               ),
               TextFormField(
                 controller: _cantidadController,
-                decoration: const InputDecoration(labelText: 'Cantidad'),
+                decoration: const InputDecoration(labelText: 'Cantidad Total'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) return 'Campo requerido';
                   if (int.tryParse(value) == null) return 'Debe ser un número';
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _obraAsigController,
-                decoration: const InputDecoration(labelText: 'Obra asignada (opcional)'),
-              ),
-              TextFormField(
-                controller: _asigInicioController,
-                decoration: const InputDecoration(
-                  labelText: 'Asignación inicio (YYYY-MM-DD, opcional)',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return null;
-                  try {
-                    DateTime.parse(value);
-                  } catch (_) {
-                    return 'Formato inválido (YYYY-MM-DD)';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _asigFinController,
-                decoration: const InputDecoration(
-                  labelText: 'Asignación fin (YYYY-MM-DD, opcional)',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return null;
-                  try {
-                    DateTime.parse(value);
-                  } catch (_) {
-                    return 'Formato inválido (YYYY-MM-DD)';
-                  }
                   return null;
                 },
               ),

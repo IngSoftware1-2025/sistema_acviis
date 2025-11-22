@@ -26,8 +26,7 @@ class _ModificarVehiculosViewState extends State<ModificarVehiculosView> {
         final h = vehiculos[i];
         return {
           'patente': TextEditingController(text: h.patente),
-          'permiso_circ': TextEditingController(text: h.permisoCirc),
-          'revision_tecnica': TextEditingController(text: h.revisionTecnica.toIso8601String().split('T').first),
+          'revision_tecnica': TextEditingController(text: h.revisionTecnica.toIso8601String().split('T')[0]),
           'revision_gases': TextEditingController(text: h.revisionGases.toIso8601String().split('T').first),
           'ultima_mantencion': TextEditingController(text: h.ultimaMantencion.toIso8601String().split('T').first),
           'descripcion_mant': TextEditingController(text: h.descripcionMant ?? ''),
@@ -66,13 +65,6 @@ class _ModificarVehiculosViewState extends State<ModificarVehiculosView> {
                         child: TextField(
                           controller: c['patente'],
                           decoration: const InputDecoration(labelText: 'Patente'),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: TextField(
-                          controller: c['permiso_circ'],
-                          decoration: const InputDecoration(labelText: 'Permiso de Circulación'),
                         ),
                       ),
                       Padding(
@@ -149,11 +141,9 @@ class _ModificarVehiculosViewState extends State<ModificarVehiculosView> {
                       const SizedBox(height: 12),
                       ElevatedButton(
                         onPressed: () async {
-                          // Validación simple
-                          final camposObligatorios = [
-                            c['patente']!,
-                            c['permiso_circ']!,
-                            c['revision_tecnica']!,
+                        final camposObligatorios = [
+                          c['patente']!,
+                          c['revision_tecnica']!,
                             c['revision_gases']!,
                             c['ultima_mantencion']!,
                             c['capacidad_kg']!,
@@ -219,7 +209,6 @@ class _ModificarVehiculosViewState extends State<ModificarVehiculosView> {
                           final vehiculoData = {
                             'id': h.id,
                             'patente': c['patente']!.text,
-                            'permiso_circ': c['permiso_circ']!.text,
                             'revision_tecnica': c['revision_tecnica']!.text,
                             'revision_gases': c['revision_gases']!.text,
                             'ultima_mantencion': c['ultima_mantencion']!.text,

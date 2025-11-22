@@ -124,8 +124,6 @@ class _AgregarTrabajadorViewState extends State<AgregarTrabajadorView> {
           correoElectronico: _correoElectronicoController.text,
           sistemaDeSalud: _sistemaSaludController.text,
           previsionAfp: _previsionAfpController.text,
-          obraEnLaQueTrabaja: _obraController.text,
-          rolQueAsumeEnLaObra: _rolController.text,
         );
         // Siempre crear contrato
         if (_showContratoForm) {

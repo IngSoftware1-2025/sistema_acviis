@@ -10,8 +10,11 @@ import 'package:sistema_acviis/frontend/views/logistica/ordenes/agregar_ordenes_
 import 'package:sistema_acviis/frontend/views/logistica/ordenes/modificar_ordenes_view.dart';
 import 'package:sistema_acviis/frontend/views/logistica/ordenes/ordenes_view.dart';
 import 'package:sistema_acviis/frontend/views/obras/agregar_obras_view.dart';
+import 'package:sistema_acviis/frontend/views/obras/gestionar_finanzas_view.dart';
 import 'package:sistema_acviis/frontend/views/obras/gestionar_recursos_view.dart';
+import 'package:sistema_acviis/frontend/views/obras/gestionar_itemizados_view.dart';
 import 'package:sistema_acviis/frontend/views/obras/gestionar_trabajadores.dart';
+import 'package:sistema_acviis/frontend/views/obras/modificar_obras.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/agregar_trabajador_view.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/contratos_anexos.dart';
 import 'package:sistema_acviis/frontend/views/trabajadores/eliminar_trabajadores_view.dart';
@@ -24,7 +27,7 @@ import 'package:sistema_acviis/frontend/views/logistica/epp_view.dart';
 import 'package:sistema_acviis/frontend/views/logistica/agregar_epp_view.dart';
 import 'package:sistema_acviis/frontend/views/logistica/subir_certificado_view.dart';
 import 'package:sistema_acviis/models/epp.dart';
-import 'package:sistema_acviis/frontend/views/logistica/asignar_epp_view.dart';
+
 import 'package:sistema_acviis/frontend/views/logistica/modificar_epp_view.dart';
 //Proveedores
 import 'package:sistema_acviis/models/proveedor.dart';
@@ -37,6 +40,7 @@ import 'package:sistema_acviis/frontend/views/finanzas/facturas_view.dart';
 import 'package:sistema_acviis/frontend/views/finanzas/pagos_pendientes_view.dart';
 import 'package:sistema_acviis/frontend/views/finanzas/configurar_notificaciones_view.dart';
 import 'package:sistema_acviis/frontend/views/obras/obras_view.dart';
+import 'package:sistema_acviis/frontend/views/obras/historial_asistencia_view.dart';
 /*
   Aqui se importaran todas las vistas presentes en el sistema.
 */
@@ -51,10 +55,7 @@ final Map<String, WidgetBuilder> routes = {
     final epp = ModalRoute.of(context)!.settings.arguments as EPP;
     return SubirCertificadoView(epp: epp);
   }, 
-  '/home_page/logistica_view/epp_view/asignar_epp_view': (BuildContext context) { //Vista nueva
-    final epp = ModalRoute.of(context)!.settings.arguments as EPP;
-    return AsignarEppView(epp: epp);
-  },
+
   '/home_page/logistica_view/epp_view/modificar_epp_view': (BuildContext context) { //Vista nueva
     final epp = ModalRoute.of(context)!.settings.arguments as EPP;
     return ModificarEppView(epp: epp);
@@ -112,6 +113,10 @@ final Map<String, WidgetBuilder> routes = {
 
   '/home_page/obras_view': (BuildContext context) => const ObrasView(),
   '/home_page/obras_view/agregar_obras_view': (BuildContext context) => const AgregarObrasView(),
+  '/home_page/obras_view/modificar_obras_view': (BuildContext context) {
+    final args = ModalRoute.of(context)!.settings.arguments as List<dynamic>;
+    return ModificarObrasView(obras: args);
+  },
   '/home_page/obras_view/gestionar_trabajadores_view': (BuildContext context) {
     return const GestionarTrabajadoresView();
   },
@@ -120,5 +125,13 @@ final Map<String, WidgetBuilder> routes = {
     final obraId = args?['obraId'] as String?;
     final obraNombre = args?['obraNombre'] as String?;
     return GestionarRecursosView(obraId: obraId, obraNombre: obraNombre);
+  },
+  '/home_page/obras_view/gestionar_itemizados_view': (BuildContext context) => const GestionarItemizadosView(),
+  '/home_page/obras_view/historial_asistencia_view': (BuildContext context) => const HistorialAsistenciaView(),
+  '/home_page/obras_view/gestionar_finanzas_view': (BuildContext context) {
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+    final obraId = args?['obraId'] as String?;
+    final obraNombre = args?['obraNombre'] as String?;
+    return GestionarFinanzasView(obraId: obraId, obraNombre: obraNombre);
   },
 };

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sistema_acviis/frontend/styles/app_colors.dart';
 import 'package:sistema_acviis/frontend/utils/constants/constants.dart';
+import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
 
 class PrimaryScaffold extends StatelessWidget {
   final String title;
@@ -65,6 +67,7 @@ class PersonalizedAppBar extends StatelessWidget implements PreferredSizeWidget 
                 ),
               ),
               onPressed: () {
+                Provider.of<CheckboxProvider>(context, listen: false).clearCheckboxes();
                 // Obtiene la ruta actual (donde se encuentra este widget)
                 final uri = Uri.parse(currentRoute);
                 final segments = List<String>.from(uri.pathSegments);
@@ -75,6 +78,7 @@ class PersonalizedAppBar extends StatelessWidget implements PreferredSizeWidget 
                 if (parentRoute == '/') {
                   parentRoute = '/home_page';
                 }
+                
                 Navigator.of(context).pushReplacementNamed(parentRoute);
               },
             ),

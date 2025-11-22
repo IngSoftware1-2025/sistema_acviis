@@ -3,6 +3,7 @@ import 'package:sistema_acviis/providers/custom_checkbox_provider.dart';
 import 'package:sistema_acviis/frontend/views/home_page.dart';
 import 'package:sistema_acviis/frontend/utils/constants/routes.dart';
 import 'package:provider/provider.dart';
+import 'package:sistema_acviis/providers/finanzas_obra_provider.dart';
 import 'package:sistema_acviis/providers/herramientas_provider.dart';
 import 'package:sistema_acviis/providers/trabajadores_provider.dart';
 import 'package:sistema_acviis/providers/contratos_provider.dart';
@@ -16,6 +17,7 @@ import 'package:sistema_acviis/providers/pagos_provider.dart';
 import 'package:sistema_acviis/providers/notificaciones_provider.dart';
 import 'package:sistema_acviis/providers/obras_provider.dart';
 import 'package:sistema_acviis/providers/recursos_obra_provider.dart';
+import 'package:sistema_acviis/providers/historial_asistencia_provider.dart';
 
 // Clave global para acceder al ScaffoldMessenger sin un BuildContext
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -39,6 +41,8 @@ void main() {
         ChangeNotifierProvider(create: (_) => NotificacionesProvider()),
         ChangeNotifierProvider(create: (_) => ObrasProvider()),
         ChangeNotifierProvider(create: (_) => RecursosObraProvider()),
+        ChangeNotifierProvider(create: (_) => FinanzasObraProvider()),
+        ChangeNotifierProvider(create: (_) => HistorialAsistenciaProvider())
       ],
       child: MainApp(),
     ),

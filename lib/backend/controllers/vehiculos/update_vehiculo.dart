@@ -10,7 +10,7 @@ Future<void> updateVehiculo(Map<String, dynamic> vehiculoData) async {
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({
       'patente': vehiculoData['patente'],
-      'permiso_circ': vehiculoData['permiso_circ'],
+      'permiso_id': vehiculoData['permiso_id'],
       'revision_tecnica': DateTime.parse(vehiculoData['revision_tecnica']).toUtc().toIso8601String(),
       'revision_gases': DateTime.parse(vehiculoData['revision_gases']).toUtc().toIso8601String(),
       'ultima_mantencion': DateTime.parse(vehiculoData['ultima_mantencion']).toUtc().toIso8601String(),

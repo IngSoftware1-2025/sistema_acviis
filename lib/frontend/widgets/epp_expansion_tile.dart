@@ -1,3 +1,4 @@
+// lib/frontend/widgets/epp_expansion_tile.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sistema_acviis/models/epp.dart';
@@ -22,102 +23,73 @@ class EppExpansionTile extends StatefulWidget {
 
 class _EppExpansionTileState extends State<EppExpansionTile> {
   @override
-Widget build(BuildContext context) {
-  return Consumer<EppProvider>(
-    builder: (context, eppProvider, child) {
-      // ⚡ BUSCAR EL EPP ACTUALIZADO EN LA LISTA:
-      final eppActualizado = eppProvider.epps.firstWhere(
-        (e) => e.id == widget.epp.id,
-        orElse: () => widget.epp, // Fallback al original si no se encuentra
-      );
-      
-      return ExpansionTile(
-        title: Text('${eppActualizado.tipo} (${eppActualizado.cantidad} unidades)'),
-        subtitle: Text(
-          eppActualizado.obrasAsignadas.isNotEmpty 
-            ? 'Obras: ${eppActualizado.obrasAsignadas.join(", ")}'
-            : 'Sin asignar a obras',
-          style: TextStyle(
-            color: eppActualizado.obrasAsignadas.isEmpty ? Colors.orange : Colors.grey[600],
-            fontSize: 12,
+  Widget build(BuildContext context) {
+    return Consumer<EppProvider>(
+      builder: (context, eppProvider, child) {
+        final eppActualizado = eppProvider.epps.firstWhere(
+          (e) => e.id == widget.epp.id,
+          orElse: () => widget.epp,
+        );
+        
+        return ExpansionTile(
+          title: Text('${eppActualizado.tipo} (${eppActualizado.cantidadTotal} unidades)'),
+          subtitle: eppActualizado.cantidadDisponible != null
+              ? Text(
+                  'Disponibles: ${eppActualizado.cantidadDisponible} unidades',
+                  style: TextStyle(
+                    color: Colors.blue[600],
+                    fontSize: 12,
+                  ),
+                )
+              : null,
+          leading: Icon(
+            _getEppIcon(eppActualizado.tipo),
+            color: _getEppColor(eppActualizado.tipo),
           ),
-        ),
-        leading: Icon(
-          _getEppIcon(eppActualizado.tipo),
-          color: _getEppColor(eppActualizado.tipo),
-        ),
-        trailing: widget.trailing,
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isMobile = constraints.maxWidth < 600;
-                
-                final infoWidget = Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Información básica del EPP
-                    _buildInfoSection('Información General', [
-                      _buildInfoRow('ID', eppActualizado.id?.toString() ?? 'Sin ID'),
-                      _buildInfoRow('Tipo', eppActualizado.tipo),
-                      _buildInfoRow('Cantidad', '${eppActualizado.cantidad} unidades'),
-                      _buildInfoRow('Fecha de Registro', 
-                        eppActualizado.fechaRegistro?.toLocal().toString().split(' ')[0] ?? 'No especificada'),
-                    ]),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Información de certificado
-                    _buildInfoSection('Certificación', [
-                      _buildInfoRow('Estado de Certificado', 
-                        eppActualizado.certificadoId != null ? '✅ Certificado disponible' : '❌ Sin certificado'),
-                      if (eppActualizado.certificadoId != null)
-                        _buildInfoRow('ID de Certificado', eppActualizado.certificadoId!),
-                    ]),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Botones de acción
-                    _buildActionButtons(context, eppActualizado),
-                  ],
-                );
-
-                final obrasWidget = eppActualizado.obrasAsignadas.isNotEmpty
-                    ? Padding(
-                        padding: EdgeInsets.only(
-                          left: isMobile ? 0 : 16,
-                          top: isMobile ? 16 : 0,
-                        ),
-                        child: _buildObrasAsignadas(eppActualizado.obrasAsignadas),
-                      )
-                    : _buildSinObrasAsignadas(eppActualizado);
-
-                if (isMobile) {
+          trailing: widget.trailing,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      infoWidget,
-                      obrasWidget,
+                      // Información básica del EPP
+                      _buildInfoSection('Información General', [
+                        _buildInfoRow('ID', eppActualizado.id?.toString() ?? 'Sin ID'),
+                        _buildInfoRow('Tipo', eppActualizado.tipo),
+                        _buildInfoRow('Cantidad Total', '${eppActualizado.cantidadTotal} unidades'),
+                        if (eppActualizado.cantidadDisponible != null)
+                          _buildInfoRow('Cantidad Disponible', '${eppActualizado.cantidadDisponible} unidades'),
+                        _buildInfoRow('Fecha de Registro', 
+                          eppActualizado.fechaRegistro?.toLocal().toString().split(' ')[0] ?? 'No especificada'),
+                      ]),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Información de certificado
+                      _buildInfoSection('Certificación', [
+                        _buildInfoRow('Estado de Certificado', 
+                          eppActualizado.certificadoId != null ? '✅ Certificado disponible' : '❌ Sin certificado'),
+                        if (eppActualizado.certificadoId != null)
+                          _buildInfoRow('ID de Certificado', eppActualizado.certificadoId!),
+                      ]),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Botones de acción
+                      _buildActionButtons(context, eppActualizado),
                     ],
                   );
-                } else {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Flexible(flex: 2, child: infoWidget),
-                      Flexible(flex: 2, child: obrasWidget),
-                    ],
-                  );
-                }
-              },
+                },
+              ),
             ),
-          ),
-        ],
-      );
-    },
-  );
-}
+          ],
+        );
+      },
+    );
+  }
 
   Widget _buildInfoSection(String title, List<Widget> children) {
     return Column(
@@ -161,21 +133,11 @@ Widget build(BuildContext context) {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, EPP epp) {
+Widget _buildActionButtons(BuildContext context, EPP epp) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: [
-              ElevatedButton.icon(
-        icon: const Icon(Icons.refresh, color: Colors.white),
-        label: const Text('Actualizar', style: TextStyle(color: Colors.white)),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.grey[600],
-          foregroundColor: Colors.white,
-        ),
-        onPressed: () => _actualizarEpp(context),
-      ),
-      
         // Botón para ver/descargar certificado
         ElevatedButton.icon(
           icon: const Icon(Icons.verified_user, color: Colors.white),
@@ -188,7 +150,7 @@ Widget build(BuildContext context) {
             foregroundColor: Colors.white,
           ),
           onPressed: epp.certificadoId != null 
-            ? widget.certificadoCallback ?? () => _descargarCertificado(context, epp)
+            ? () => _descargarCertificado(context, epp) 
             : () => _subirCertificado(context, epp),
         ),
         
@@ -202,95 +164,9 @@ Widget build(BuildContext context) {
           ),
           onPressed: () => _generarReporte(context, epp),
         ),
-        
-        // Botón para asignar a trabajador
-        ElevatedButton.icon(
-          icon: const Icon(Icons.person_add, color: Colors.white),
-          label: const Text('Asignar', style: TextStyle(color: Colors.white)),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.purple,
-            foregroundColor: Colors.white,
-          ),
-          onPressed: () => _asignarEpp(context, epp),
-        ),
       ],
     );
   }
-
-  Widget _buildObrasAsignadas(List<String> obras) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Obras Asignadas',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.blue,
-          ),
-        ),
-        const SizedBox(height: 8),
-        ...obras.map((obra) => Card(
-          margin: const EdgeInsets.symmetric(vertical: 4),
-          child: ListTile(
-            leading: const Icon(Icons.construction, color: Colors.orange),
-            title: Text(obra),
-            subtitle: const Text('Obra activa'),
-            trailing: PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'detalles') {
-                  _verDetallesObra(context, obra);
-                } else if (value == 'desasignar') {
-                  _desasignarDeObra(context, widget.epp, obra);
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'detalles',
-                  child: Text('Ver detalles'),
-                ),
-                const PopupMenuItem(
-                  value: 'desasignar',
-                  child: Text('Desasignar'),
-                ),
-              ],
-            ),
-          ),
-        )).toList(),
-      ],
-    );
-  }
-
-  Widget _buildSinObrasAsignadas(EPP epp) {  // ⚡ Agregar parámetro
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Text(
-        'Asignación de Obras',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.blue,
-        ),
-      ),
-      const SizedBox(height: 8),
-      Card(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        color: Colors.orange[50],
-        child: ListTile(
-          leading: const Icon(Icons.warning, color: Colors.orange),
-          title: const Text('Sin obras asignadas'),
-          subtitle: const Text('Este EPP no está asignado a ninguna obra específica'),
-          trailing: ElevatedButton.icon(
-            icon: const Icon(Icons.add),
-            label: const Text('Asignar'),
-            onPressed: () => _asignarAObra(context, epp),  // ⚡ Usar el parámetro
-          ),
-        ),
-      ),
-    ],
-  );
-}
 
   // Métodos de utilidad para iconos y colores
   IconData _getEppIcon(String tipo) {
@@ -337,12 +213,29 @@ Widget build(BuildContext context) {
     }
   }
 
-  // Métodos de acción (placeholders)
-  void _descargarCertificado(BuildContext context, EPP epp) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Descargando certificado...')),
-    );
-    // TODO: Implementar descarga de certificado desde MongoDB
+void _descargarCertificado(BuildContext context, EPP epp) {
+    if (epp.certificadoId != null && epp.certificadoId!.isNotEmpty) {
+      // 1. Notificar al usuario que inició el proceso
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Iniciando descarga del certificado...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // 2. Llamar al provider para ejecutar la descarga real
+      Provider.of<EppProvider>(context, listen: false)
+          .descargarCertificado(context, epp.certificadoId!);
+          
+    } else {
+      // Manejo de error si el ID es nulo (aunque el botón debería estar deshabilitado/cambiado)
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error: Este EPP no tiene un certificado válido para descargar.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _subirCertificado(BuildContext context, EPP epp) {
@@ -354,133 +247,27 @@ Widget build(BuildContext context) {
   }
 
   Future<void> _generarReporte(BuildContext context, EPP epp) async {
-  try {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Generando reporte de EPP...')),
-    );
-    
-    // Llamar al generador de PDF
-    await EppPdfGenerator.generarReporteEpp(epp);
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Reporte generado y descargado exitosamente'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Error al generar reporte: $e'),
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
-}
-
-  void _asignarEpp(BuildContext context, EPP epp) async {
-  // ⚡ ESCUCHAR EL RESULTADO:
-  final resultado = await Navigator.pushNamed(
-    context,
-    '/home_page/logistica_view/epp_view/asignar_epp_view',
-    arguments: epp,
-  );
-  
-  // ⚡ SI HUBO CAMBIOS, ACTUALIZAR:
-  if (resultado == true && mounted) {
-    final eppProvider = Provider.of<EppProvider>(context, listen: false);
-    await eppProvider.fetchEpps();
-  }
-}
-
-  void _verDetallesObra(BuildContext context, String obra) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Detalles de la Obra'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Nombre: $obra'),
-            const Text('Estado: Activa'),
-            const Text('Tipo: Instalación eléctrica'),
-            // TODO: Agregar más detalles de la obra
-          ],
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Generando reporte de EPP...')),
+      );
+      
+      await EppPdfGenerator.generarReporteEpp(epp);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Reporte generado y descargado exitosamente'),
+          backgroundColor: Colors.green,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _desasignarDeObra(BuildContext context, EPP epp, String obra) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar Desasignación'),
-        content: Text('¿Deseas desasignar este EPP de la obra "$obra"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // TODO: Implementar desasignación
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('EPP desasignado de la obra')),
-              );
-            },
-            child: const Text('Desasignar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _asignarAObra(BuildContext context, EPP epp) {
-    Navigator.pushNamed(
-      context,
-      '/home_page/logistica_view/epp_view/asignar_obra_view',
-      arguments: epp,
-    );
-  }
-  //Boton para actualizar
-  Future<void> _actualizarEpp(BuildContext context) async {
-  try {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Actualizando información...')),
-    );
-    
-    final eppProvider = Provider.of<EppProvider>(context, listen: false);
-    await eppProvider.fetchEpps();
-    
-    // ⚡ VERIFICAR SI EL WIDGET SIGUE MONTADO:
-    if (!mounted) return;
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Información actualizada'),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 1),
-      ),
-    );
-  } catch (e) {
-    // ⚡ VERIFICAR TAMBIÉN AQUÍ:
-    if (!mounted) return;
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Error al actualizar: $e'),
-        backgroundColor: Colors.red,
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al generar reporte: $e'),
+          backgroundColor: Colors.red,
         ),
-    );
+      );
     }
   }
+
 }

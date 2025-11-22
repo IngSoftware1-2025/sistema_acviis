@@ -252,12 +252,8 @@ class _ListaEppState extends State<ListaEpp> {
                                     child: Text('Eliminar EPP'),
                                   ),
                                   const PopupMenuItem(
-                                    value: 'Asignar',
-                                    child: Text('Asignar a Trabajador'),
-                                  ),
-                                  const PopupMenuItem(
                                     value: 'Ver Certificado',
-                                    child: Text('Ver Certificado'),
+                                    child: Text('Descargar Certificado'),
                                   ),
                                   const PopupMenuItem(
                                     value: 'Generar Reporte',
@@ -292,13 +288,6 @@ class _ListaEppState extends State<ListaEpp> {
         break;
       case 'Eliminar':
         await _mostrarDialogoEliminarEpp(context, epp);
-        break;
-      case 'Asignar':
-        Navigator.pushNamed(
-          context,
-          '/home_page/logistica_view/epp_view/asignar_epp_view',
-          arguments: epp,
-        );
         break;
       case 'Ver Certificado':
         await _abrirCertificado(context, epp);
@@ -383,25 +372,39 @@ class _ListaEppState extends State<ListaEpp> {
     );
   }
 
-  // Función para abrir certificado
+// Función para abrir/descargar certificado
   Future<void> _abrirCertificado(BuildContext context, dynamic epp) async {
-    if (epp.certificadoId == null) {
+    // 1. Validación de seguridad
+    if (epp.certificadoId == null || epp.certificadoId.toString().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Este EPP no tiene certificado asociado')),
+        const SnackBar(
+          content: Text('Este EPP no tiene certificado asociado (ID nulo)'),
+          backgroundColor: Colors.orange,
+        ),
       );
       return;
     }
 
     try {
+      // 2. Feedback visual al usuario
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Abriendo certificado...')),
+        const SnackBar(
+          content: Text('Iniciando descarga del certificado...'),
+          duration: Duration(seconds: 2),
+        ),
       );
       
-      // TODO: Implementar descarga desde MongoDB GridFS
+      // 3. Llamada al Provider para ejecutar la descarga real
+      // Asegúrate de tener importado 'package:provider/provider.dart' y tu 'epp_provider.dart'
+      await Provider.of<EppProvider>(context, listen: false)
+          .descargarCertificado(context, epp.certificadoId!);
       
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al abrir certificado: $e')),
+        SnackBar(
+          content: Text('Error al descargar: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
