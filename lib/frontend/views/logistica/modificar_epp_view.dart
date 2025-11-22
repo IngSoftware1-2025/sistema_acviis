@@ -30,7 +30,6 @@ class _ModificarEppViewState extends State<ModificarEppView> {
   
   // Variables del formulario
   String? _tipoSeleccionado;
-  List<String> _obrasSeleccionadas = [];
   File? _nuevoCertificado;
   bool _cambiarCertificado = false;
   
@@ -66,9 +65,8 @@ class _ModificarEppViewState extends State<ModificarEppView> {
   }
 
   void _inicializarDatos() {
-    // 1. Cargar Cantidad y Obras
-    _cantidadController.text = widget.epp.cantidad.toString();
-    _obrasSeleccionadas = List.from(widget.epp.obrasAsignadas);
+    // 1. Cargar Cantidad Total
+    _cantidadController.text = widget.epp.cantidadTotal.toString();
 
     // 2. Lógica para separar "Tipo (Talla)"
     // Ej: "Chaqueta Soldador (45)" -> Tipo="Chaqueta Soldador", Talla="45"
@@ -266,8 +264,8 @@ class _ModificarEppViewState extends State<ModificarEppView> {
       controller: _cantidadController,
       keyboardType: TextInputType.number,
       decoration: InputDecoration(
-        labelText: 'Cantidad *',
-        hintText: 'Ingrese la cantidad',
+        labelText: 'Cantidad Total *',
+        hintText: 'Ingrese la cantidad total de unidades',
         prefixIcon: Icon(Icons.format_list_numbered),
         suffix: Text('unidades'),
         border: OutlineInputBorder(
@@ -407,8 +405,7 @@ class _ModificarEppViewState extends State<ModificarEppView> {
         context: context,
         id: widget.epp.id!,
         tipo: tipoFinal, // Enviamos el string combinado
-        obrasAsignadas: _obrasSeleccionadas,
-        cantidad: int.parse(_cantidadController.text),
+        cantidadTotal: int.parse(_cantidadController.text),
         nuevoCertificado: _nuevoCertificado,
       );
 

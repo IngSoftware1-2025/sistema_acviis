@@ -66,23 +66,12 @@ class EppProvider extends ChangeNotifier {
           // A. TRADUCCIÓN DE CERTIFICADO
           fixedJson['certificadoId'] ??= jsonItem['certificado_id'] ?? jsonItem['fileId'];
           
-          // B. TRADUCCIÓN DE OBRAS
-          if (fixedJson['obrasAsignadas'] == null) {
-             var obraRaw = jsonItem['obras_asignadas'] ?? jsonItem['obra_asignada'] ?? jsonItem['ubicacion'];
-             if (obraRaw != null) {
-               if (obraRaw is List) {
-                 fixedJson['obrasAsignadas'] = obraRaw;
-               } else {
-                 fixedJson['obrasAsignadas'] = [obraRaw.toString()];
-               }
-             } else {
-               fixedJson['obrasAsignadas'] = [];
-             }
-          }
+          // B. TRADUCCIÓN DE CANTIDAD TOTAL Y DISPONIBLE
+          fixedJson['cantidadTotal'] ??= jsonItem['cantidad_total'] ?? jsonItem['cantidad'];
+          fixedJson['cantidadDisponible'] ??= jsonItem['cantidad_disponible'];
 
-          // C. TRADUCCIÓN DE TIPO Y CANTIDAD
+          // C. TRADUCCIÓN DE TIPO
           fixedJson['tipo'] ??= jsonItem['tipo_equipamiento'] ?? jsonItem['tipoEpp'];
-          fixedJson['cantidad'] ??= jsonItem['cantidad_disponible'];
 
           return EPP.fromJson(fixedJson);
         }).toList();
@@ -107,8 +96,8 @@ class EppProvider extends ChangeNotifier {
   Future<bool> registrarEPP({
     required BuildContext context,
     required String tipo,
-    required List<String> obrasAsignadas,
-    required int cantidad,
+    required int cantidadTotal,
+    int? cantidadDisponible,
     required File certificadoPdf,
   }) async {
     _isLoading = true;
@@ -121,17 +110,13 @@ class EppProvider extends ChangeNotifier {
 
       final Map<String, dynamic> bodyData = {
         'tipo': tipo,
-        'obrasAsignadas': obrasAsignadas, 
-        'cantidad': cantidad,
+        'cantidadTotal': cantidadTotal,
+        'cantidad_total': cantidadTotal,
+        'cantidadDisponible': cantidadDisponible ?? cantidadTotal,
+        'cantidad_disponible': cantidadDisponible ?? cantidadTotal,
         'certificadoId': certificadoId,
-        'fechaRegistro': DateTime.now().toIso8601String(),
-        // Formato Legacy / BD
-        'tipo_equipamiento': tipo,
-        'obra_asignada': obrasAsignadas.isNotEmpty ? obrasAsignadas.first : "Sin Asignar",
-        'obras_asignadas': obrasAsignadas,
-        'cantidad_disponible': cantidad,
         'certificado_id': certificadoId,
-        'fileId': certificadoId,
+        'fechaRegistro': DateTime.now().toIso8601String(),
         'fecha_registro': DateTime.now().toIso8601String(),
       };
 
@@ -161,8 +146,8 @@ class EppProvider extends ChangeNotifier {
   // ================== 3. REGISTRO SIN CERTIFICADO (CORREGIDO) ==================
   Future<bool> registrarEPPSinCertificado({
     required String tipo,
-    required List<String> obrasAsignadas,
-    required int cantidad,
+    required int cantidadTotal,
+    int? cantidadDisponible,
   }) async {
     _isLoading = true;
     _error = null;
@@ -170,19 +155,14 @@ class EppProvider extends ChangeNotifier {
 
     try {
       final Map<String, dynamic> bodyData = {
-        // Formato moderno
         'tipo': tipo,
-        'obrasAsignadas': obrasAsignadas,
-        'cantidad': cantidad,
+        'cantidadTotal': cantidadTotal,
+        'cantidad_total': cantidadTotal,
+        'cantidadDisponible': cantidadDisponible ?? cantidadTotal,
+        'cantidad_disponible': cantidadDisponible ?? cantidadTotal,
         'certificadoId': null,
-        'fechaRegistro': DateTime.now().toIso8601String(),
-
-        // Formato Legacy / Base de Datos
-        'tipo_equipamiento': tipo,
-        'obra_asignada': obrasAsignadas.isNotEmpty ? obrasAsignadas.first : "Sin Asignar",
-        'obras_asignadas': obrasAsignadas, // ✅ CORRECCIÓN: Agregado para asegurar compatibilidad
-        'cantidad_disponible': cantidad,
         'certificado_id': null,
+        'fechaRegistro': DateTime.now().toIso8601String(),
         'fecha_registro': DateTime.now().toIso8601String(),
       };
 
@@ -261,10 +241,7 @@ class EppProvider extends ChangeNotifier {
       if (_searchQuery.isNotEmpty) {
         resultado = resultado.where((epp) {
           try {
-            return epp.tipo.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                   epp.obrasAsignadas.any((obra) => 
-                     obra.toLowerCase().contains(_searchQuery.toLowerCase())
-                   );
+            return epp.tipo.toLowerCase().contains(_searchQuery.toLowerCase());
           } catch (e) {
             return false;
           }
@@ -286,33 +263,16 @@ class EppProvider extends ChangeNotifier {
         }).toList();
       }
 
-      // 3. Aplicar filtro de obras (múltiples)
-      if (_filtroObras.isNotEmpty) {
-        resultado = resultado.where((epp) {
-          try {
-            return _filtroObras.any((obra) {
-              if (obra == 'Sin asignar') {
-                return epp.obrasAsignadas.isEmpty;
-              } else {
-                return epp.obrasAsignadas.any((obraEpp) => 
-                  obraEpp.toLowerCase().trim() == obra.toLowerCase().trim()
-                );
-              }
-            });
-          } catch (e) {
-            return false;
-          }
-        }).toList();
-      }
+      // 3. Filtro de obras eliminado - ahora se usa obra_recurso para asignaciones
 
-      // 4. Aplicar filtro de cantidad mínima
+      // 4. Aplicar filtro de cantidad mínima (usando cantidadTotal)
       if (_filtroCantidadMin != null) {
-        resultado = resultado.where((epp) => epp.cantidad >= _filtroCantidadMin!).toList();
+        resultado = resultado.where((epp) => epp.cantidadTotal >= _filtroCantidadMin!).toList();
       }
 
-      // 5. Aplicar filtro de cantidad máxima
+      // 5. Aplicar filtro de cantidad máxima (usando cantidadTotal)
       if (_filtroCantidadMax != null) {
-        resultado = resultado.where((epp) => epp.cantidad <= _filtroCantidadMax!).toList();
+        resultado = resultado.where((epp) => epp.cantidadTotal <= _filtroCantidadMax!).toList();
       }
 
       // 6. Aplicar filtro de certificado
@@ -341,8 +301,8 @@ class EppProvider extends ChangeNotifier {
     required BuildContext context,
     required int id,
     required String tipo,
-    required List<String> obrasAsignadas,
-    required int cantidad,
+    required int cantidadTotal,
+    int? cantidadDisponible,
     File? nuevoCertificado,
   }) async {
     _isLoading = true;
@@ -356,11 +316,11 @@ class EppProvider extends ChangeNotifier {
       }
 
       Map<String, dynamic> updateData = {
-        'tipo': tipo, 'tipo_equipamiento': tipo,
-        'obrasAsignadas': obrasAsignadas, 
-        'obra_asignada': obrasAsignadas.isNotEmpty ? obrasAsignadas.first : "Sin Asignar",
-        'obras_asignadas': obrasAsignadas, // También aquí por si acaso
-        'cantidad': cantidad, 'cantidad_disponible': cantidad,
+        'tipo': tipo,
+        'cantidadTotal': cantidadTotal,
+        'cantidad_total': cantidadTotal,
+        'cantidadDisponible': cantidadDisponible,
+        'cantidad_disponible': cantidadDisponible,
       };
 
       if (certificadoId != null) {
@@ -440,7 +400,7 @@ class EppProvider extends ChangeNotifier {
     int sinCertificado = 0;
     for (var epp in _eppsFiltrados) {
       porTipo[epp.tipo] = (porTipo[epp.tipo] ?? 0) + 1;
-      totalCantidad += epp.cantidad;
+      totalCantidad += epp.cantidadTotal;
       if (epp.certificadoId != null) conCertificado++; else sinCertificado++;
     }
     return {

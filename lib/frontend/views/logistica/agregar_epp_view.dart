@@ -276,7 +276,7 @@ class _AgregarEppViewState extends State<AgregarEppView> {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  'Los EPP se registrarán en la Oficina Central. Podrás asignarlos a obras posteriormente desde la lista de EPP.',
+                  'Los EPP se registrarán en la Oficina Central. Podrás asignarlos a obras posteriormente desde la pantalla de asignación de recursos del módulo Obras.',
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.green[600],
@@ -465,7 +465,6 @@ class _AgregarEppViewState extends State<AgregarEppView> {
 
     try {
       bool success;
-      final obrasAsignadas = ["Oficina Central"];
       
       // ⚡ COMBINAR TIPO + TALLA (Si existe)
       // Esto guarda "Zapato de Seguridad (42)" en la base de datos
@@ -474,18 +473,18 @@ class _AgregarEppViewState extends State<AgregarEppView> {
         tipoFinal = '$tipoFinal (${_tallaController.text.trim()})';
       }
       
+      final cantidadTotal = int.parse(_cantidadController.text);
+      
       if (_certificadoOpcional || _certificadoSeleccionado == null) {
         success = await eppProvider.registrarEPPSinCertificado(
           tipo: tipoFinal, // Usamos el nombre combinado
-          obrasAsignadas: obrasAsignadas,
-          cantidad: int.parse(_cantidadController.text),
+          cantidadTotal: cantidadTotal,
         );
       } else {
         success = await eppProvider.registrarEPP(
           context: context,
           tipo: tipoFinal, // Usamos el nombre combinado
-          obrasAsignadas: obrasAsignadas,
-          cantidad: int.parse(_cantidadController.text),
+          cantidadTotal: cantidadTotal,
           certificadoPdf: _certificadoSeleccionado!,
         );
       }

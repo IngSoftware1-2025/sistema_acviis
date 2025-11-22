@@ -92,7 +92,7 @@ class _SubirCertificadoViewState extends State<SubirCertificadoView> {
                         ),
                       ),
                       Text(
-                        'ID: ${widget.epp.id} | Cantidad: ${widget.epp.cantidad} unidades',
+                        'ID: ${widget.epp.id} | Cantidad Total: ${widget.epp.cantidadTotal} unidades',
                         style: TextStyle(
                           color: Colors.blue[600],
                           fontSize: 14,
@@ -396,8 +396,7 @@ class _SubirCertificadoViewState extends State<SubirCertificadoView> {
         context: context, 
         id: widget.epp.id!,
         tipo: widget.epp.tipo,
-        obrasAsignadas: widget.epp.obrasAsignadas,
-        cantidad: widget.epp.cantidad,
+        cantidadTotal: widget.epp.cantidadTotal,
         nuevoCertificado: _certificadoSeleccionado!,
       );
 

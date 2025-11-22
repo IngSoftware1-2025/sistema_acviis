@@ -33,10 +33,6 @@ class EppPdfGenerator {
                 _buildInfoGeneral(epp),
                 pw.SizedBox(height: 20),
                 
-                // Obras asignadas
-                _buildObrasAsignadas(epp),
-                pw.SizedBox(height: 20),
-                
                 // Certificación
                 _buildCertificacion(epp),
                 pw.SizedBox(height: 30),
@@ -181,101 +177,15 @@ class EppPdfGenerator {
               children: [
                 _buildInfoRow('ID:', epp.id?.toString() ?? 'Sin ID'),
                 _buildInfoRow('Tipo:', epp.tipo),
-                _buildInfoRow('Cantidad:', '${epp.cantidad} unidades'),
+                _buildInfoRow('Cantidad Total:', '${epp.cantidadTotal} unidades'),
+                if (epp.cantidadDisponible != null)
+                  _buildInfoRow('Cantidad Disponible:', '${epp.cantidadDisponible} unidades'),
                 _buildInfoRow(
                   'Fecha de Registro:', 
                   epp.fechaRegistro?.toLocal().toString().split(' ')[0] ?? 'No especificada'
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  static pw.Widget _buildObrasAsignadas(EPP epp) {
-    return pw.Container(
-      width: double.infinity,
-      decoration: pw.BoxDecoration(
-        border: pw.Border.all(color: PdfColors.grey300),
-        borderRadius: pw.BorderRadius.circular(8),
-      ),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          // Header de sección
-          pw.Container(
-            width: double.infinity,
-            padding: const pw.EdgeInsets.all(12),
-            decoration: pw.BoxDecoration(
-              color: PdfColors.orange50,
-              borderRadius: const pw.BorderRadius.only(
-                topLeft: pw.Radius.circular(8),
-                topRight: pw.Radius.circular(8),
-              ),
-            ),
-            child: pw.Text(
-              'ASIGNACIÓN DE OBRAS',
-              style: pw.TextStyle(
-                fontSize: 14,
-                fontWeight: pw.FontWeight.bold,
-                color: PdfColors.orange800,
-              ),
-            ),
-          ),
-          // Contenido
-          pw.Padding(
-            padding: const pw.EdgeInsets.all(16),
-            child: epp.obrasAsignadas.isNotEmpty
-                ? pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text(
-                        'Obras donde se utiliza este EPP:',
-                        style: pw.TextStyle(
-                          fontSize: 12,
-                          fontWeight: pw.FontWeight.bold,
-                        ),
-                      ),
-                      pw.SizedBox(height: 8),
-                      ...epp.obrasAsignadas.map((obra) => pw.Padding(
-                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
-                        child: pw.Row(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          children: [
-                            pw.Text('• ', style: pw.TextStyle(fontSize: 12)),
-                            pw.Expanded(
-                              child: pw.Text(
-                                obra,
-                                style: pw.TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )).toList(),
-                    ],
-                  )
-                : pw.Container(
-                    padding: const pw.EdgeInsets.all(12),
-                    decoration: pw.BoxDecoration(
-                      color: PdfColors.orange100,
-                      borderRadius: pw.BorderRadius.circular(4),
-                    ),
-                    child: pw.Row(
-                      children: [
-                        pw.Text('⚠️ ', style: pw.TextStyle(fontSize: 14)),
-                        pw.Text(
-                          'Sin obras asignadas - EPP disponible para cualquier obra',
-                          style: pw.TextStyle(
-                            fontSize: 12,
-                            color: PdfColors.orange800,
-                            fontStyle: pw.FontStyle.italic,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
           ),
         ],
       ),

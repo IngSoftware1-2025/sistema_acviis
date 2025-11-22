@@ -3,16 +3,16 @@ import 'dart:convert';
 class EPP {
   final int? id; // Puede ser null al crearlo
   final String tipo;
-  final List<String> obrasAsignadas;
-  final int cantidad;
+  final int cantidadTotal;
+  final int? cantidadDisponible;
   final String? certificadoId; // ID de GridFS en MongoDB
   final DateTime? fechaRegistro;
 
   EPP({
     this.id,
     required this.tipo,
-    required this.obrasAsignadas,
-    required this.cantidad,
+    required this.cantidadTotal,
+    this.cantidadDisponible,
     this.certificadoId,
     this.fechaRegistro,
   });
@@ -22,15 +22,14 @@ factory EPP.fromJson(Map<String, dynamic> json) {
   return EPP(
     id: json['id'],
     tipo: json['tipo'],
-    // ASEGURAR QUE SIEMPRE SEA UN ARRAY:
-    obrasAsignadas: json['obrasAsignadas'] != null 
-      ? List<String>.from(json['obrasAsignadas']) 
-      : [], // ← Array vacío si es null
-    cantidad: json['cantidad'],
-    certificadoId: json['certificadoId'],
+    cantidadTotal: json['cantidadTotal'] ?? json['cantidad_total'] ?? 0,
+    cantidadDisponible: json['cantidadDisponible'] ?? json['cantidad_disponible'],
+    certificadoId: json['certificadoId'] ?? json['certificado_id'],
     fechaRegistro: json['fechaRegistro'] != null
         ? DateTime.parse(json['fechaRegistro'])
-        : null,
+        : (json['fecha_registro'] != null 
+            ? DateTime.parse(json['fecha_registro'])
+            : null),
   );
 }
 
@@ -39,10 +38,14 @@ factory EPP.fromJson(Map<String, dynamic> json) {
     return {
       "id": id,
       "tipo": tipo,
-      "obrasAsignadas": obrasAsignadas,
-      "cantidad": cantidad,
+      "cantidadTotal": cantidadTotal,
+      "cantidad_total": cantidadTotal,
+      "cantidadDisponible": cantidadDisponible,
+      "cantidad_disponible": cantidadDisponible,
       "certificadoId": certificadoId,
+      "certificado_id": certificadoId,
       "fechaRegistro": fechaRegistro?.toIso8601String(),
+      "fecha_registro": fechaRegistro?.toIso8601String(),
     };
   }
 
