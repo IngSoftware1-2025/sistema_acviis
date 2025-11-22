@@ -13,52 +13,28 @@ class ListaOrdenes extends StatefulWidget {
 }
 
 class _ListaOrdenesState extends State<ListaOrdenes> {
-  bool _checkBoxesInicializados = false;
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final ordenesProvider = Provider.of<OrdenesProvider>(
-        context,
-        listen: false,
-      );
+      final ordenesProvider =
+          Provider.of<OrdenesProvider>(context, listen: false);
       await ordenesProvider.fetchOrdenes();
       if (!mounted) return;
 
-      final checkboxProvider = Provider.of<CheckboxProvider>(
-        context,
-        listen: false,
-      );
+      final checkboxProvider =
+          Provider.of<CheckboxProvider>(context, listen: false);
+      final ordenesActivas = ordenesProvider.ordenes
+          .where((o) => o.estado != 'De baja')
+          .toList();
 
-      if (checkboxProvider.checkBoxes.length !=
-          ordenesProvider.ordenes.length + 1) {
-        checkboxProvider.setCheckBoxes(ordenesProvider.ordenes.length);
-        _checkBoxesInicializados = true;
-      }
+      checkboxProvider.setCheckBoxes(ordenesActivas.length);
     });
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final ordenesProvider = Provider.of<OrdenesProvider>(context);
-    final checkboxProvider = Provider.of<CheckboxProvider>(context);
-
-    if (!_checkBoxesInicializados &&
-        ordenesProvider.ordenes.isNotEmpty &&
-        checkboxProvider.checkBoxes.length !=
-            ordenesProvider.ordenes.length + 1) {
-      checkboxProvider.setCheckBoxes(ordenesProvider.ordenes.length);
-      _checkBoxesInicializados = true;
-    }
-  }
-
   bool get _tieneSeleccionadas {
-    final checkboxProvider = Provider.of<CheckboxProvider>(
-      context,
-      listen: false,
-    );
+    final checkboxProvider =
+        Provider.of<CheckboxProvider>(context, listen: false);
     return checkboxProvider.checkBoxes.skip(1).any((cb) => cb.isSelected);
   }
 
@@ -74,9 +50,19 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    // 🔁 Aseguramos que SIEMPRE haya un checkbox por orden activa (+1 para el "select all")
+    if (checkboxProvider.checkBoxes.length != ordenesActivas.length + 1) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final cp =
+            Provider.of<CheckboxProvider>(context, listen: false);
+        cp.setCheckBoxes(ordenesActivas.length);
+      });
+    }
+
     return Column(
       children: [
-        // ----- HEADER -----
+        // HEADER
         Container(
           padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
           child: Row(
@@ -109,9 +95,8 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
                         final ordenesSeleccionadas = ordenesActivas
                             .asMap()
                             .entries
-                            .where((entry) =>
-                                checkboxProvider.checkBoxes[entry.key + 1]
-                                    .isSelected)
+                            .where((entry) => checkboxProvider
+                                .checkBoxes[entry.key + 1].isSelected)
                             .map((entry) => entry.value)
                             .toList();
 
@@ -151,11 +136,13 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
                             ),
                             actions: [
                               TextButton(
-                                onPressed: () => Navigator.pop(context, false),
+                                onPressed: () =>
+                                    Navigator.pop(context, false),
                                 child: const Text('Cancelar'),
                               ),
                               TextButton(
-                                onPressed: () => Navigator.pop(context, true),
+                                onPressed: () =>
+                                    Navigator.pop(context, true),
                                 child: const Text('Eliminar'),
                               ),
                             ],
@@ -176,9 +163,12 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
                               ),
                             ),
                           );
-                          checkboxProvider.setCheckBoxes(
-                            ordenesProvider.ordenes.length,
-                          );
+                          // volvemos a alinear la cantidad de checkboxes
+                          checkboxProvider
+                              .setCheckBoxes(ordenesProvider.ordenes
+                                  .where(
+                                      (o) => o.estado != 'De baja')
+                                  .length);
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
@@ -198,7 +188,7 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
         ),
         const Divider(),
 
-        // ----- LISTA -----
+        // LISTA
         Expanded(
           child: ordenesActivas.isEmpty
               ? const Center(
@@ -216,11 +206,10 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
                       ),
                       child: Row(
                         children: [
-                          if (checkboxProvider.checkBoxes.length > i + 1)
-                            PrimaryCheckbox(
-                              customCheckbox:
-                                  checkboxProvider.checkBoxes[i + 1],
-                            ),
+                          PrimaryCheckbox(
+                            customCheckbox:
+                                checkboxProvider.checkBoxes[i + 1],
+                          ),
                           Expanded(
                             child: ExpansionTileOrdenes(orden: orden),
                           ),
