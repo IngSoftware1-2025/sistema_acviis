@@ -76,6 +76,7 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
 
     return Column(
       children: [
+        // ----- HEADER -----
         Container(
           padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
           child: Row(
@@ -130,12 +131,14 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
                 onPressed: _tieneSeleccionadas
                     ? () async {
                         final checkboxProvider =
-                            Provider.of<CheckboxProvider>(context, listen: false);
-                        final ordenesSeleccionadas = ordenesActivas.asMap().entries
-                            .where((entry) =>
-                                checkboxProvider.checkBoxes[entry.key + 1].isSelected)
-                            .map((entry) => entry.value)
-                            .toList();
+                            Provider.of<CheckboxProvider>(context,
+                                listen: false);
+                        final ordenesSeleccionadas =
+                            ordenesActivas.asMap().entries
+                                .where((entry) => checkboxProvider
+                                    .checkBoxes[entry.key + 1].isSelected)
+                                .map((entry) => entry.value)
+                                .toList();
 
                         if (ordenesSeleccionadas.isEmpty) return;
 
@@ -194,6 +197,8 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
           ),
         ),
         const Divider(),
+
+        // ----- LISTA -----
         Expanded(
           child: ordenesActivas.isEmpty
               ? const Center(
@@ -205,7 +210,10 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
                   itemBuilder: (context, i) {
                     final orden = ordenesActivas[i];
                     return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 1.0),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 1.0,
+                        horizontal: 12.0,
+                      ),
                       child: Row(
                         children: [
                           if (checkboxProvider.checkBoxes.length > i + 1)
@@ -213,7 +221,9 @@ class _ListaOrdenesState extends State<ListaOrdenes> {
                               customCheckbox:
                                   checkboxProvider.checkBoxes[i + 1],
                             ),
-                          Expanded(child: ExpansionTileOrdenes(orden: orden)),
+                          Expanded(
+                            child: ExpansionTileOrdenes(orden: orden),
+                          ),
                         ],
                       ),
                     );
