@@ -170,20 +170,11 @@ class ObrasProvider extends ChangeNotifier {
       if (success) { 
         // Actualizar datos locales
         await fetchObras(); // Recargar datos para reflejar cambios
-        
-        // Mostrar mensaje de éxito
-        scaffoldMessengerKey.currentState?.showSnackBar(
-          const SnackBar(content: Text('Trabajador asignado exitosamente')),
-        );
-        
         return true;
       }
       return false;
     } catch (e) {
       print('Error en asignarTrabajadorAObra: $e');
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(content: Text('Error al asignar trabajador: ${e.toString()}')),
-      );
       return false;
     } finally {
       _isLoading = false;
@@ -206,20 +197,11 @@ class ObrasProvider extends ChangeNotifier {
       if (success) {
         // Actualizar datos locales
         await fetchObras(); // Recargar datos para reflejar cambios
-        
-        // Mostrar mensaje de éxito
-        scaffoldMessengerKey.currentState?.showSnackBar(
-          const SnackBar(content: Text('Trabajador removido exitosamente')),
-        );
-        
         return true;
       }
       return false;
     } catch (e) {
       print('Error en quitarTrabajadorDeObra: $e');
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(content: Text('Error al quitar trabajador: ${e.toString()}')),
-      );
       return false;
     } finally {
       _isLoading = false;

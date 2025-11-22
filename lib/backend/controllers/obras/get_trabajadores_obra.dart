@@ -33,7 +33,6 @@ Future<List<Trabajador>> obtenerTrabajadoresDeObra(String obraId) async {
           'nombre_completo': trabajadorJson['nombreCompleto'],
           'rut': trabajadorJson['rut'],
           'estado': trabajadorJson['estado'],
-          'rol_que_asume_en_la_obra': trabajadorJson['rolEnObra'] ?? 'No especificado',
           // Campos requeridos pero que podrían no venir en la respuesta
           'estado_civil': '',
           'fecha_de_nacimiento': DateTime.now().toIso8601String(),
@@ -41,7 +40,6 @@ Future<List<Trabajador>> obtenerTrabajadoresDeObra(String obraId) async {
           'correo_electronico': '',
           'sistema_de_salud': '',
           'prevision_afp': '',
-          'obra_en_la_que_trabaja': obraId,
           'contratos': []
         };
         

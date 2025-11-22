@@ -86,13 +86,11 @@ class _GestionarTrabajadoresViewState extends State<GestionarTrabajadoresView> {
     final obrasProvider = Provider.of<ObrasProvider>(context);
     
     // Filtrar los trabajadores según el texto de búsqueda y el estado
-    // Excluir los trabajadores con estado "Despedido" y los que ya están asignados
+    // Excluir solo los trabajadores con estado "Despedido"
     final trabajadoresDisponibles = trabajadoresProvider.trabajadores
         .where((t) => 
             // No incluir trabajadores despedidos
             t.estado.toLowerCase() != 'despedido' &&
-            // No incluir trabajadores ya asignados
-            !trabajadoresAsignados.contains(t.id) &&
             // Filtrar por texto de búsqueda
             (t.nombreCompleto.toLowerCase().contains(_searchText.toLowerCase()) ||
              t.rut.toLowerCase().contains(_searchText.toLowerCase())))
@@ -178,17 +176,27 @@ class _GestionarTrabajadoresViewState extends State<GestionarTrabajadoresView> {
                                     isAssigned: false,
                                     onToggle: () async {
                                       if (obraId != null) {
-                                        setState(() => isLoading = true);
+                                        // Mostrar diálogo para solicitar el rol
+                                        final rol = await _mostrarDialogoRol(context, trabajador.nombreCompleto);
+                                        
+                                        // Si el usuario cancela, no continuar
+                                        if (rol == null || rol.trim().isEmpty) {
+                                          return;
+                                        }
+                                        
+                                        if (mounted) {
+                                          setState(() => isLoading = true);
+                                        }
                                         
                                         try {
                                           // Asignar el trabajador a la obra usando el provider
                                           final success = await obrasProvider.asignarTrabajadorAObra(
                                             obraId!,
                                             trabajador.id,
-                                            rolEnObra: trabajador.rolQueAsumeEnLaObra.isNotEmpty 
-                                                ? trabajador.rolQueAsumeEnLaObra 
-                                                : null,
+                                            rolEnObra: rol.trim(),
                                           );
+                                          
+                                          if (!mounted) return; // Verificar inmediatamente después del await
                                           
                                           if (success) {
                                             setState(() {
@@ -196,16 +204,20 @@ class _GestionarTrabajadoresViewState extends State<GestionarTrabajadoresView> {
                                             });
                                             
                                             ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text('${trabajador.nombreCompleto} asignado a la obra')),
+                                              SnackBar(content: Text('${trabajador.nombreCompleto} asignado a la obra como $rol')),
                                             );
                                           }
                                         } catch (e) {
                                           print('Error al asignar trabajador: $e');
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text('Error al asignar trabajador: $e')),
-                                          );
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Error al asignar trabajador: $e')),
+                                            );
+                                          }
                                         } finally {
-                                          setState(() => isLoading = false);
+                                          if (mounted) {
+                                            setState(() => isLoading = false);
+                                          }
                                         }
                                       }
                                     }
@@ -248,7 +260,9 @@ class _GestionarTrabajadoresViewState extends State<GestionarTrabajadoresView> {
                                   isAssigned: true,
                                   onToggle: () async {
                                     if (obraId != null) {
-                                      setState(() => isLoading = true);
+                                      if (mounted) {
+                                        setState(() => isLoading = true);
+                                      }
                                       
                                       try {
                                         // Quitar el trabajador de la obra
@@ -256,6 +270,8 @@ class _GestionarTrabajadoresViewState extends State<GestionarTrabajadoresView> {
                                           obraId!,
                                           trabajador.id,
                                         );
+                                        
+                                        if (!mounted) return; // Verificar inmediatamente después del await
                                         
                                         if (success) {
                                           setState(() {
@@ -268,11 +284,15 @@ class _GestionarTrabajadoresViewState extends State<GestionarTrabajadoresView> {
                                         }
                                       } catch (e) {
                                         print('Error al quitar trabajador: $e');
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Error al quitar trabajador: $e')),
-                                        );
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Error al quitar trabajador: $e')),
+                                          );
+                                        }
                                       } finally {
-                                        setState(() => isLoading = false);
+                                        if (mounted) {
+                                          setState(() => isLoading = false);
+                                        }
                                       }
                                     }
                                   }
@@ -300,14 +320,91 @@ class _GestionarTrabajadoresViewState extends State<GestionarTrabajadoresView> {
     );
   }
   
+  Future<String?> _mostrarDialogoRol(BuildContext context, String nombreTrabajador) async {
+    final TextEditingController rolController = TextEditingController();
+    
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false, // El usuario debe presionar un botón
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Asignar Rol',
+            style: TextStyle(
+              fontFamily: 'Satoshi',
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Ingrese el rol que desempeñará $nombreTrabajador en esta obra:',
+                style: TextStyle(
+                  fontFamily: 'Satoshi',
+                  fontSize: 14,
+                ),
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: rolController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: 'Rol en la obra',
+                  hintText: 'Ej: Maestro Mayor, Oficial, Ayudante',
+                  border: OutlineInputBorder(),
+                ),
+                textCapitalization: TextCapitalization.words,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(null); // Cancelar
+              },
+              child: Text(
+                'Cancelar',
+                style: TextStyle(
+                  fontFamily: 'Satoshi',
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final rol = rolController.text.trim();
+                if (rol.isNotEmpty) {
+                  Navigator.of(context).pop(rol);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Por favor ingrese un rol')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
+              child: Text(
+                'Asignar',
+                style: TextStyle(
+                  fontFamily: 'Satoshi',
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
   Widget _buildTrabajadorCard({
     required Trabajador trabajador,
     required bool isAssigned,
     required VoidCallback onToggle,
   }) {
-    // Determinamos si el trabajador tiene un rol asignado
-    final bool tieneRol = trabajador.rolQueAsumeEnLaObra.isNotEmpty;
-    
     // Iniciales para el avatar
     final String iniciales = trabajador.nombreCompleto.isNotEmpty 
         ? trabajador.nombreCompleto.split(' ').map((name) => name.isNotEmpty ? name[0] : '').join('').toUpperCase()
@@ -344,16 +441,6 @@ class _GestionarTrabajadoresViewState extends State<GestionarTrabajadoresView> {
                 fontSize: 14,
               ),
             ),
-            if (tieneRol) 
-              Text(
-                'Rol: ${trabajador.rolQueAsumeEnLaObra}',
-                style: TextStyle(
-                  fontFamily: 'Satoshi',
-                  fontWeight: FontWeight.w300,
-                  fontSize: 14,
-                  color: AppColors.primaryDarker,
-                ),
-              ),
           ],
         ),
         trailing: IconButton(

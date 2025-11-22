@@ -96,8 +96,6 @@ Future<void> createAnexoMongoTemporal(Map<String, String> data) async {
     'correo_electronico': data['correo_electronico'],
     'sistema_de_salud': data['sistema_de_salud'],
     'prevision_afp': data['prevision_afp'],
-    'obra_en_la_que_trabaja': data['obra_en_la_que_trabaja'],
-    'rol_que_asume_en_la_obra': data['rol_que_asume_en_la_obra'],
     'estado': data['estado'],
     // Datos del anexo
     'id_anexo': data['id_anexo'],

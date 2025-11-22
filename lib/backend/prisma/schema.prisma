@@ -9,21 +9,19 @@ datasource db {
 }
 
 model trabajadores {
-  id                       String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  nombre_completo          String            @unique @db.VarChar
-  estado_civil             String            @db.VarChar
-  rut                      String            @unique @db.VarChar
-  fecha_de_nacimiento      DateTime          @db.Date
-  direccion                String            @db.VarChar
-  correo_electronico       String            @unique @db.VarChar
-  sistema_de_salud         String            @db.VarChar
-  prevision_afp            String            @db.VarChar
-  obra_en_la_que_trabaja   String            @db.VarChar
-  rol_que_asume_en_la_obra String            @db.VarChar
-  estado                   String            @db.VarChar
-  comentarios              comentarios[]
-  contratos                contratos[]
-  trabajador_obra          trabajador_obra[]
+  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre_completo     String            @unique @db.VarChar
+  estado_civil        String            @db.VarChar
+  rut                 String            @unique @db.VarChar
+  fecha_de_nacimiento DateTime          @db.Date
+  direccion           String            @db.VarChar
+  correo_electronico  String            @unique @db.VarChar
+  sistema_de_salud    String            @db.VarChar
+  prevision_afp       String            @db.VarChar
+  estado              String            @db.VarChar
+  comentarios         comentarios[]
+  contratos           contratos[]
+  trabajador_obra     trabajador_obra[]
 }
 
 model contratos {
@@ -198,7 +196,7 @@ model obras {
   charlas              charlas[]
   historial_asistencia historial_asistencia[]
   itemizados           itemizados[]
-  obra_finanza       obra_finanza[]
+  obra_finanza         obra_finanza[]
   obra_recursos        obra_recurso[]
   trabajador_obra      trabajador_obra[]
 }
@@ -281,17 +279,44 @@ model historial_asistencia {
 }
 
 model obra_finanza {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  obra_id         String   @map("obraId") @db.Uuid
-  tipo            String   @db.VarChar // 'caja chica', etc.
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  obra_id          String   @map("obraId") @db.Uuid
+  tipo             String   @db.VarChar
   fecha_asignacion DateTime @default(now()) @map("fechaAsignacion") @db.Timestamp(6)
-  proposito       String   @db.VarChar
-  estado          String   @default("activa") @db.VarChar // 'activa' o 'cerrada'
-  detalles        Json?    // Aquí van todos los montos y demás información
-  
-  obra            obras    @relation(fields: [obra_id], references: [id], onDelete: Cascade)
-  
+  proposito        String   @db.VarChar
+  estado           String   @default("activa") @db.VarChar
+  detalles         Json?
+  obra             obras    @relation(fields: [obra_id], references: [id], onDelete: Cascade)
+
   @@index([obra_id], map: "idx_obra_finanza_obra")
   @@map("obra_finanzas")
 }
 
+model passwordReset {
+  id         String   @id(map: "passwordreset_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @db.Uuid
+  token      String   @unique(map: "passwordreset_token_key") @db.VarChar
+  expires_at DateTime @db.Timestamp(6)
+  used       Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  usuarios   usuarios @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "passwordreset_user_id_fkey")
+
+  @@index([token], map: "passwordreset_token_idx")
+}
+
+model usuarios {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  supabase_uid  String?         @unique @db.Uuid
+  email         String          @unique @db.VarChar
+  password_hash String?         @db.VarChar
+  nombre        String          @db.VarChar
+  rol           String          @default("usuario") @db.VarChar
+  activo        Boolean         @default(true)
+  estado        Boolean         @default(false)
+  created_at    DateTime        @default(now()) @db.Timestamp(6)
+  updated_at    DateTime        @default(now()) @db.Timestamp(6)
+  passwordReset passwordReset[]
+
+  @@index([email], map: "idx_usuarios_email")
+  @@index([supabase_uid], map: "idx_usuarios_supabase_uid")
+}

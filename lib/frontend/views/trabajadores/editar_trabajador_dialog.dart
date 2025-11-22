@@ -34,8 +34,6 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
     correoController = TextEditingController(text: widget.trabajador.correoElectronico);
     sistemaSaludController = TextEditingController(text: widget.trabajador.sistemaDeSalud);
     previsionAfpController = TextEditingController(text: widget.trabajador.previsionAfp);
-    obraController = TextEditingController(text: widget.trabajador.obraEnLaQueTrabaja);
-    rolController = TextEditingController(text: widget.trabajador.rolQueAsumeEnLaObra);
     estadoController = TextEditingController(text: widget.trabajador.estado);
   }
 
@@ -47,8 +45,6 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
     correoController.dispose();
     sistemaSaludController.dispose();
     previsionAfpController.dispose();
-    obraController.dispose();
-    rolController.dispose();
     estadoController.dispose();
     super.dispose();
   }
@@ -93,16 +89,6 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
                 decoration: const InputDecoration(labelText: 'Previsión AFP'),
                 validator: (v) => v == null || v.isEmpty ? 'Campo obligatorio' : null,
               ),
-              TextFormField(
-                controller: obraController,
-                decoration: const InputDecoration(labelText: 'Obra en la que trabaja'),
-                validator: (v) => v == null || v.isEmpty ? 'Campo obligatorio' : null,
-              ),
-              TextFormField(
-                controller: rolController,
-                decoration: const InputDecoration(labelText: 'Rol que asume en la obra'),
-                validator: (v) => v == null || v.isEmpty ? 'Campo obligatorio' : null,
-              ),
               DropdownButtonFormField<String>(
                 value: estadoController.text.isNotEmpty ? estadoController.text : null,
                 items: const [
@@ -140,8 +126,6 @@ class _EditarTrabajadorDialogState extends State<EditarTrabajadorDialog> {
                 'correo_electronico': correoController.text,
                 'sistema_de_salud': sistemaSaludController.text,
                 'prevision_afp': previsionAfpController.text,
-                'obra_en_la_que_trabaja': obraController.text,
-                'rol_que_asume_en_la_obra': rolController.text,
               };
               if (estadoController.text.isNotEmpty) {
                 trabajadorData['estado'] = estadoController.text;
