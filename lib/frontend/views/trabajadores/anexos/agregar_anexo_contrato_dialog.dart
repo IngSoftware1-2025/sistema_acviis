@@ -241,8 +241,7 @@ class _AgregarAnexoContratoDialogState extends State<AgregarAnexoContratoDialog>
                       'correo_electronico': widget.trabajador.correoElectronico,
                       'sistema_de_salud': widget.trabajador.sistemaDeSalud,
                       'prevision_afp': widget.trabajador.previsionAfp,
-                      'obra_en_la_que_trabaja': widget.trabajador.obraEnLaQueTrabaja,
-                      'rol_que_asume_en_la_obra': widget.trabajador.rolQueAsumeEnLaObra,
+
                       'estado': widget.trabajador.estado,
                     });
                   } else {

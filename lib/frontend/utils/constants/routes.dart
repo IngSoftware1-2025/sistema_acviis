@@ -27,7 +27,7 @@ import 'package:sistema_acviis/frontend/views/logistica/epp_view.dart';
 import 'package:sistema_acviis/frontend/views/logistica/agregar_epp_view.dart';
 import 'package:sistema_acviis/frontend/views/logistica/subir_certificado_view.dart';
 import 'package:sistema_acviis/models/epp.dart';
-import 'package:sistema_acviis/frontend/views/logistica/asignar_epp_view.dart';
+
 import 'package:sistema_acviis/frontend/views/logistica/modificar_epp_view.dart';
 //Proveedores
 import 'package:sistema_acviis/models/proveedor.dart';
@@ -55,10 +55,7 @@ final Map<String, WidgetBuilder> routes = {
     final epp = ModalRoute.of(context)!.settings.arguments as EPP;
     return SubirCertificadoView(epp: epp);
   }, 
-  '/home_page/logistica_view/epp_view/asignar_epp_view': (BuildContext context) { //Vista nueva
-    final epp = ModalRoute.of(context)!.settings.arguments as EPP;
-    return AsignarEppView(epp: epp);
-  },
+
   '/home_page/logistica_view/epp_view/modificar_epp_view': (BuildContext context) { //Vista nueva
     final epp = ModalRoute.of(context)!.settings.arguments as EPP;
     return ModificarEppView(epp: epp);

@@ -10,8 +10,6 @@ class Trabajador {
   final String correoElectronico;
   final String sistemaDeSalud;
   final String previsionAfp;
-  final String obraEnLaQueTrabaja;
-  final String rolQueAsumeEnLaObra;
   final String estado;
   final List<dynamic> contratos;
 
@@ -25,8 +23,6 @@ class Trabajador {
     required this.correoElectronico,
     required this.sistemaDeSalud,
     required this.previsionAfp,
-    required this.obraEnLaQueTrabaja,
-    required this.rolQueAsumeEnLaObra,
     required this.estado,
     required this.contratos,
   });
@@ -44,8 +40,6 @@ class Trabajador {
       correoElectronico: json['correo_electronico'] ?? '',
       sistemaDeSalud: json['sistema_de_salud'] ?? '',
       previsionAfp: json['prevision_afp'] ?? '',
-      obraEnLaQueTrabaja: json['obra_en_la_que_trabaja'] ?? '',
-      rolQueAsumeEnLaObra: json['rol_que_asume_en_la_obra'] ?? '',
       estado: json['estado'] ?? '',
       contratos: json['contratos'] ?? [],
     );
@@ -62,8 +56,6 @@ class Trabajador {
       'correo_electronico': correoElectronico,
       'sistema_de_salud': sistemaDeSalud,
       'prevision_afp': previsionAfp,
-      'obra_en_la_que_trabaja': obraEnLaQueTrabaja,
-      'rol_que_asume_en_la_obra': rolQueAsumeEnLaObra,
       'contratos': contratos
     };
   }

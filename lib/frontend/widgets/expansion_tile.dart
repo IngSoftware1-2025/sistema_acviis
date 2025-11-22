@@ -63,8 +63,6 @@ class _PersonalizedExpansionTileState extends State<PersonalizedExpansionTile> {
                       Text('Correo Electrónico: ${t.correoElectronico}'),
                       Text('Sistema de Salud: ${t.sistemaDeSalud}'),
                       Text('Previsión AFP: ${t.previsionAfp}'),
-                      Text('Obra en la que trabaja: ${t.obraEnLaQueTrabaja}'),
-                      Text('Rol que asume en la obra: ${t.rolQueAsumeEnLaObra}'),
                       Text('Estado en la empresa: ${t.estado}'),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(

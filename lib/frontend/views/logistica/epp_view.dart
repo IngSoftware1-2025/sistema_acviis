@@ -128,42 +128,7 @@ PrimaryButton(
   text: 'Eliminar EPP',
 ),
 
-                  SizedBox(height: normalPadding),
 
-                  // Botón Asignar EPP (nueva funcionalidad específica de EPP)
-                  PrimaryButton(
-                    onPressed: () {
-                      final checkboxProvider = Provider.of<CheckboxProvider>(context, listen: false);
-                      final eppProvider = Provider.of<EppProvider>(context, listen: false);
-
-                      // Obtiene los índices seleccionados
-                      final seleccionados = <int>[];
-                      for (int i = 1; i < checkboxProvider.checkBoxes.length; i++) {
-                        if (checkboxProvider.checkBoxes[i].isSelected) {
-                          seleccionados.add(i - 1);
-                        }
-                      }
-
-                      if (seleccionados.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Debes seleccionar al menos un EPP.')),
-                        );
-                        return;
-                      }
-
-                      // Obtiene los EPPs seleccionados
-                      final eppsSeleccionados = seleccionados
-                          .map((i) => eppProvider.epps[i])
-                          .toList();
-
-                      Navigator.pushNamed(
-                        context,
-                        '/home_page/logistica_view/epp_view/asignar_epp_view',
-                        arguments: eppsSeleccionados,
-                      );
-                    },
-                    text: 'Asignar EPP',
-                  ),
                 ],
               ),
               
@@ -232,7 +197,7 @@ PrimaryButton(
                 SizedBox(height: 8),
                 ...eppsSeleccionados.map((epp) => Padding(
                   padding: EdgeInsets.symmetric(vertical: 2),
-                  child: Text('• ${epp.tipo} (${epp.cantidad} unidades)'),
+                  child: Text('• ${epp.tipo} (${epp.cantidadTotal} unidades)'),
                 )).toList(),
                 SizedBox(height: 16),
                 Text(

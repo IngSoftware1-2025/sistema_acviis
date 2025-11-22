@@ -31,25 +31,17 @@ class _EppExpansionTileState extends State<EppExpansionTile> {
           orElse: () => widget.epp,
         );
         
-        // ⚡ VERIFICACIÓN SEGURA DE OBRAS ASIGNADAS
-        final estaEnOficinaCentral = eppActualizado.obrasAsignadas.isNotEmpty && 
-                                      eppActualizado.obrasAsignadas.first == "Oficina Central";
-        
         return ExpansionTile(
-          title: Text('${eppActualizado.tipo} (${eppActualizado.cantidad} unidades)'),
-          subtitle: Text(
-            eppActualizado.obrasAsignadas.isNotEmpty 
-              ? (estaEnOficinaCentral
-                  ? '📍 En Oficina Central'
-                  : 'Obras: ${eppActualizado.obrasAsignadas.join(", ")}')
-              : 'Sin ubicación asignada',
-            style: TextStyle(
-              color: estaEnOficinaCentral 
-                  ? Colors.green[600] 
-                  : (eppActualizado.obrasAsignadas.isNotEmpty ? Colors.blue[600] : Colors.orange[600]),
-              fontSize: 12,
-            ),
-          ),
+          title: Text('${eppActualizado.tipo} (${eppActualizado.cantidadTotal} unidades)'),
+          subtitle: eppActualizado.cantidadDisponible != null
+              ? Text(
+                  'Disponibles: ${eppActualizado.cantidadDisponible} unidades',
+                  style: TextStyle(
+                    color: Colors.blue[600],
+                    fontSize: 12,
+                  ),
+                )
+              : null,
           leading: Icon(
             _getEppIcon(eppActualizado.tipo),
             color: _getEppColor(eppActualizado.tipo),
@@ -60,16 +52,16 @@ class _EppExpansionTileState extends State<EppExpansionTile> {
               padding: const EdgeInsets.all(16.0),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final isMobile = constraints.maxWidth < 600;
-                  
-                  final infoWidget = Column(
+                  return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Información básica del EPP
                       _buildInfoSection('Información General', [
                         _buildInfoRow('ID', eppActualizado.id?.toString() ?? 'Sin ID'),
                         _buildInfoRow('Tipo', eppActualizado.tipo),
-                        _buildInfoRow('Cantidad', '${eppActualizado.cantidad} unidades'),
+                        _buildInfoRow('Cantidad Total', '${eppActualizado.cantidadTotal} unidades'),
+                        if (eppActualizado.cantidadDisponible != null)
+                          _buildInfoRow('Cantidad Disponible', '${eppActualizado.cantidadDisponible} unidades'),
                         _buildInfoRow('Fecha de Registro', 
                           eppActualizado.fechaRegistro?.toLocal().toString().split(' ')[0] ?? 'No especificada'),
                       ]),
@@ -90,34 +82,6 @@ class _EppExpansionTileState extends State<EppExpansionTile> {
                       _buildActionButtons(context, eppActualizado),
                     ],
                   );
-
-                  final obrasWidget = eppActualizado.obrasAsignadas.isNotEmpty
-                      ? Padding(
-                          padding: EdgeInsets.only(
-                            left: isMobile ? 0 : 16,
-                            top: isMobile ? 16 : 0,
-                          ),
-                          child: _buildObrasAsignadas(eppActualizado.obrasAsignadas),
-                        )
-                      : _buildSinObrasAsignadas(eppActualizado);
-
-                  if (isMobile) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        infoWidget,
-                        obrasWidget,
-                      ],
-                    );
-                  } else {
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Flexible(flex: 2, child: infoWidget),
-                        Flexible(flex: 2, child: obrasWidget),
-                      ],
-                    );
-                  }
                 },
               ),
             ),
@@ -199,122 +163,6 @@ Widget _buildActionButtons(BuildContext context, EPP epp) {
             foregroundColor: Colors.white,
           ),
           onPressed: () => _generarReporte(context, epp),
-        ),
-        
-        // Botón para asignar a trabajador
-        ElevatedButton.icon(
-          icon: const Icon(Icons.person_add, color: Colors.white),
-          label: const Text('Asignar', style: TextStyle(color: Colors.white)),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.purple,
-            foregroundColor: Colors.white,
-          ),
-          onPressed: () => _asignarEpp(context, epp),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildObrasAsignadas(List<String> obras) {
-    // ⚡ VERIFICACIÓN SEGURA
-    final enOficinaCentral = obras.isNotEmpty && obras.first == "Oficina Central";
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Ubicación Actual',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.blue,
-          ),
-        ),
-        const SizedBox(height: 8),
-        
-        if (enOficinaCentral) ...[
-          // ⚡ CARD ESPECIAL PARA OFICINA CENTRAL
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            color: Colors.green[50],
-            child: ListTile(
-              leading: const Icon(Icons.warehouse, color: Colors.green),
-              title: const Text(
-                'Oficina Central',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: const Text('Disponible para asignación a obras'),
-              trailing: ElevatedButton.icon(
-                icon: const Icon(Icons.send),
-                label: const Text('Asignar a Obra'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: () => _asignarAObra(context, widget.epp),
-              ),
-            ),
-          ),
-        ] else ...[
-          // ⚡ MOSTRAR OBRAS NORMALES
-          ...obras.map((obra) => Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            child: ListTile(
-              leading: const Icon(Icons.construction, color: Colors.orange),
-              title: Text(obra),
-              subtitle: const Text('Obra activa'),
-              trailing: PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'detalles') {
-                    _verDetallesObra(context, obra);
-                  } else if (value == 'desasignar') {
-                    _desasignarDeObra(context, widget.epp, obra);
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'detalles',
-                    child: Text('Ver detalles'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'desasignar',
-                    child: Text('Desasignar'),
-                  ),
-                ],
-              ),
-            ),
-          )).toList(),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildSinObrasAsignadas(EPP epp) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Asignación de Obras',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.blue,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Card(
-          margin: const EdgeInsets.symmetric(vertical: 4),
-          color: Colors.orange[50],
-          child: ListTile(
-            leading: const Icon(Icons.warning, color: Colors.orange),
-            title: const Text('Sin obras asignadas'),
-            subtitle: const Text('Este EPP no está asignado a ninguna obra específica'),
-            trailing: ElevatedButton.icon(
-              icon: const Icon(Icons.add),
-              label: const Text('Asignar'),
-              onPressed: () => _asignarAObra(context, epp),
-            ),
-          ),
         ),
       ],
     );
@@ -422,73 +270,4 @@ void _descargarCertificado(BuildContext context, EPP epp) {
     }
   }
 
-  void _asignarEpp(BuildContext context, EPP epp) async {
-    final resultado = await Navigator.pushNamed(
-      context,
-      '/home_page/logistica_view/epp_view/asignar_epp_view',
-      arguments: epp,
-    );
-    
-    if (resultado == true && mounted) {
-      final eppProvider = Provider.of<EppProvider>(context, listen: false);
-      await eppProvider.fetchEpps();
-    }
-  }
-
-  void _verDetallesObra(BuildContext context, String obra) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Detalles de la Obra'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Nombre: $obra'),
-            const Text('Estado: Activa'),
-            const Text('Tipo: Instalación eléctrica'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _desasignarDeObra(BuildContext context, EPP epp, String obra) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar Desasignación'),
-        content: Text('¿Deseas desasignar este EPP de la obra "$obra"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('EPP desasignado de la obra')),
-              );
-            },
-            child: const Text('Desasignar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _asignarAObra(BuildContext context, EPP epp) {
-    Navigator.pushNamed(
-      context,
-      '/home_page/logistica_view/epp_view/asignar_epp_view',
-      arguments: epp,
-    );
-  }
 }

@@ -252,10 +252,6 @@ class _ListaEppState extends State<ListaEpp> {
                                     child: Text('Eliminar EPP'),
                                   ),
                                   const PopupMenuItem(
-                                    value: 'Asignar',
-                                    child: Text('Asignar a Obra'),
-                                  ),
-                                  const PopupMenuItem(
                                     value: 'Ver Certificado',
                                     child: Text('Descargar Certificado'),
                                   ),
@@ -292,13 +288,6 @@ class _ListaEppState extends State<ListaEpp> {
         break;
       case 'Eliminar':
         await _mostrarDialogoEliminarEpp(context, epp);
-        break;
-      case 'Asignar':
-        Navigator.pushNamed(
-          context,
-          '/home_page/logistica_view/epp_view/asignar_epp_view',
-          arguments: epp,
-        );
         break;
       case 'Ver Certificado':
         await _abrirCertificado(context, epp);

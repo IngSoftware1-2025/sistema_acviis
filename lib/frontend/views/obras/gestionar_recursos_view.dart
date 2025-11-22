@@ -485,7 +485,7 @@ class _GestionarRecursosViewState extends State<GestionarRecursosView> with Sing
                             value = recurso['id'];
                             break;
                           case 'epp':
-                            label = '${recurso['tipo']} - ${recurso['cantidad']} unidades';
+                            label = '${recurso['tipo']} - Disponible: ${recurso['cantidad_disponible']} unidades';
                             value = recurso['id'].toString();
                             break;
                         }
@@ -513,6 +513,21 @@ class _GestionarRecursosViewState extends State<GestionarRecursosView> with Sing
                                   : 1;
                             }
                           }
+                          
+                          // Actualizar cantidad máxima disponible cuando se selecciona un EPP
+                          if (tipo == 'epp' && value != null) {
+                            final recursoSeleccionado = recursosDisponibles.firstWhere(
+                              (r) => r['id'].toString() == value,
+                              orElse: () => null,
+                            );
+                            if (recursoSeleccionado != null) {
+                              cantidadMaximaDisponible = recursoSeleccionado['cantidad_disponible'] as int?;
+                              // Resetear cantidad a 1 o al máximo si es menor
+                              cantidad = cantidadMaximaDisponible != null && cantidadMaximaDisponible! > 0
+                                  ? (cantidadMaximaDisponible! < cantidad ? cantidadMaximaDisponible! : cantidad)
+                                  : 1;
+                            }
+                          }
                         });
                       },
                     ),
@@ -528,7 +543,7 @@ class _GestionarRecursosViewState extends State<GestionarRecursosView> with Sing
                             decoration: InputDecoration(
                               labelText: 'Cantidad',
                               border: OutlineInputBorder(),
-                              helperText: tipo == 'herramienta' && cantidadMaximaDisponible != null
+                              helperText: (tipo == 'herramienta' || tipo == 'epp') && cantidadMaximaDisponible != null
                                   ? 'Máximo disponible: $cantidadMaximaDisponible'
                                   : null,
                             ),
@@ -537,8 +552,8 @@ class _GestionarRecursosViewState extends State<GestionarRecursosView> with Sing
                             onChanged: (value) {
                               final nuevaCantidad = int.tryParse(value) ?? 1;
                               
-                              // Validar que no exceda el máximo disponible para herramientas
-                              if (tipo == 'herramienta' && cantidadMaximaDisponible != null) {
+                              // Validar que no exceda el máximo disponible para herramientas y EPP
+                              if ((tipo == 'herramienta' || tipo == 'epp') && cantidadMaximaDisponible != null) {
                                 if (nuevaCantidad > cantidadMaximaDisponible!) {
                                   setState(() {
                                     cantidad = cantidadMaximaDisponible!;
@@ -594,8 +609,8 @@ class _GestionarRecursosViewState extends State<GestionarRecursosView> with Sing
                   return;
                 }
                 
-                // Validación adicional para herramientas
-                if (tipo == 'herramienta' && cantidadMaximaDisponible != null) {
+                // Validación adicional para herramientas y EPP
+                if ((tipo == 'herramienta' || tipo == 'epp') && cantidadMaximaDisponible != null) {
                   if (cantidad > cantidadMaximaDisponible!) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('La cantidad no puede ser mayor a $cantidadMaximaDisponible')),
@@ -801,12 +816,6 @@ class _GestionarRecursosViewState extends State<GestionarRecursosView> with Sing
             setState(() => _isLoading = false);
           }
         }
-      }
-      
-      // Mostrar mensaje de éxito
-      if (mounted) {
-        _mostrarMensaje('${_capitalizeFirst(tipo)} asignado correctamente');
-        setState(() => _isLoading = false);
       }
     } catch (e) {
       print('Error al asignar recurso: $e');
