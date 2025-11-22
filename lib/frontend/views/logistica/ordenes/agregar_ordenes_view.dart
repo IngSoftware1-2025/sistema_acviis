@@ -35,11 +35,10 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
   @override
   void initState() {
     super.initState();
-    final proveedorProvider = Provider.of<ProveedoresProvider>(context, listen: false);
-    proveedorProvider.precargarProveedores();
+
+    Provider.of<ProveedoresProvider>(context, listen: false).precargarProveedores();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final itemizadosProvider = Provider.of<ItemizadosProvider>(context, listen: false);
-      itemizadosProvider.precargarItemizados();
+      Provider.of<ItemizadosProvider>(context, listen: false).precargarItemizados();
     });
   }
 
@@ -51,6 +50,7 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
         );
         return;
       }
+
       setState(() => _isLoading = true);
 
       try {
@@ -86,7 +86,7 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
           );
           Navigator.of(context).pushNamedAndRemoveUntil(
             '/home_page/logistica_view/ordenes_view',
-            (Route<dynamic> route) => false,
+            (route) => false,
           );
         }
       } catch (e) {
@@ -99,39 +99,95 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
     }
   }
 
+  InputDecoration _inputDecoration({required String label, IconData? icon}) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: icon != null ? Icon(icon) : null,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return PrimaryScaffold(
       title: 'Agregar Orden de Compra',
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: ListView(
             children: [
+              // Número de orden
               TextFormField(
                 controller: _numeroOrdenController,
-                decoration: const InputDecoration(labelText: 'Número de orden'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Campo requerido' : null,
+                decoration: _inputDecoration(
+                  label: 'Número de orden',
+                  icon: Icons.confirmation_number_outlined,
+                ),
+                validator: (value) => value == null || value.isEmpty ? 'Campo requerido' : null,
               ),
+
+              // Número de cotización
               TextFormField(
-                controller: _fechaEmisionController,
-                decoration: const InputDecoration(labelText: 'Fecha de emisión (YYYY-MM-DD)'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Campo requerido';
-                  try {
-                    DateTime.parse(value);
-                  } catch (_) {
-                    return 'Formato inválido (YYYY-MM-DD)';
-                  }
-                  return null;
-                },
+                controller: _numeroCotizacionController,
+                decoration: _inputDecoration(
+                  label: 'Número de cotización (opcional)',
+                  icon: Icons.tag_outlined,
+                ),
               ),
+
+              // FECHA CON SELECTOR + CURSOR CLICKABLE
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () async {
+                    FocusScope.of(context).unfocus();
+
+                    final pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.parse(_fechaEmisionController.text),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: ColorScheme.fromSeed(
+                              seedColor: const Color(0xFF6750A4),
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+
+                    if (pickedDate != null) {
+                      setState(() {
+                        _fechaEmisionController.text =
+                            pickedDate.toIso8601String().split('T')[0];
+                      });
+                    }
+                  },
+                  child: AbsorbPointer(
+                    child: TextFormField(
+                      controller: _fechaEmisionController,
+                      decoration: _inputDecoration(
+                        label: 'Fecha de emisión',
+                        icon: Icons.calendar_today_outlined,
+                      ),
+                      validator: (value) =>
+                          value == null || value.isEmpty ? 'Campo requerido' : null,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Proveedor
               Consumer<ProveedoresProvider>(
-                builder: (context, proveedorProvider, child) {
+                builder: (context, proveedorProvider, _) {
                   return DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(labelText: 'Proveedor'),
+                    decoration: _inputDecoration(
+                      label: 'Proveedor',
+                      icon: Icons.store_mall_directory_outlined,
+                    ),
                     value: _proveedorIdController.text.isNotEmpty
                         ? _proveedorIdController.text
                         : null,
@@ -141,29 +197,45 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
                         child: Text(p.nombreVendedor),
                       );
                     }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _proveedorIdController.text = value ?? '';
-                      });
-                    },
+                    onChanged: (value) => setState(() {
+                      _proveedorIdController.text = value ?? '';
+                    }),
                     validator: (value) =>
                         value == null || value.isEmpty ? 'Campo requerido' : null,
                   );
                 },
               ),
+
+              // Número de contacto
+              TextFormField(
+                controller: _numeroContactoController,
+                decoration: _inputDecoration(
+                  label: 'Número de contacto (opcional)',
+                  icon: Icons.phone_outlined,
+                ),
+              ),
+
+              // Centro de costo
               TextFormField(
                 controller: _centroCostoController,
-                decoration: const InputDecoration(labelText: 'Centro de costo'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Campo requerido' : null,
+                decoration: _inputDecoration(
+                  label: 'Centro de costo',
+                  icon: Icons.apartment_outlined,
+                ),
+                validator: (value) => value == null || value.isEmpty ? 'Campo requerido' : null,
               ),
+
+              // Itemizado
               Consumer<ItemizadosProvider>(
-                builder: (context, itemizadosProvider, child) {
+                builder: (context, itemizadosProvider, _) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       DropdownButtonFormField<String>(
-                        decoration: const InputDecoration(labelText: 'Itemizado'),
+                        decoration: _inputDecoration(
+                          label: 'Itemizado',
+                          icon: Icons.view_list_outlined,
+                        ),
                         value: _selectedItemizadoId,
                         items: itemizadosProvider.itemizados.map((item) {
                           return DropdownMenuItem<String>(
@@ -171,49 +243,43 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
                             child: Text(item.nombre),
                           );
                         }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedItemizadoId = value;
-                          });
-                        },
-                        validator: (value) => value == null || value.isEmpty ? 'Campo requerido' : null,
+                        onChanged: (value) => setState(() {
+                          _selectedItemizadoId = value;
+                        }),
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Campo requerido' : null,
                       ),
+
                       if (_selectedItemizadoId != null)
                         Padding(
-                          padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                          child: Builder(
-                            builder: (context) {
-                              final item = itemizadosProvider.itemizados.firstWhere(
-                                (i) => i.id == _selectedItemizadoId,
-                              );
-                              return Text(
-                                'Monto disponible: ${item.montoDisponible}',
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              );
-                            },
+                          padding: const EdgeInsets.only(top: 8, bottom: 12),
+                          child: Text(
+                            'Monto disponible: ${itemizadosProvider.itemizados.firstWhere((i) => i.id == _selectedItemizadoId).montoDisponible}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
                     ],
                   );
                 },
               ),
-              TextFormField(
-                controller: _numeroCotizacionController,
-                decoration: const InputDecoration(labelText: 'Número de cotización (opcional)'),
-              ),
-              TextFormField(
-                controller: _numeroContactoController,
-                decoration: const InputDecoration(labelText: 'Número de contacto (opcional)'),
-              ),
+
+              // Nombre del servicio
               TextFormField(
                 controller: _nombreServicioController,
-                decoration: const InputDecoration(labelText: 'Nombre del servicio'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Campo requerido' : null,
+                decoration: _inputDecoration(
+                  label: 'Nombre del servicio',
+                  icon: Icons.work_outline,
+                ),
+                validator: (value) => value == null || value.isEmpty ? 'Campo requerido' : null,
               ),
+
+              // Valor
               TextFormField(
                 controller: _valorController,
-                decoration: const InputDecoration(labelText: 'Valor'),
+                decoration: _inputDecoration(
+                  label: 'Valor',
+                  icon: Icons.attach_money_outlined,
+                ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) return 'Campo requerido';
@@ -221,17 +287,28 @@ class _AgregarOrdenesViewState extends State<AgregarOrdenesView> {
                   return null;
                 },
               ),
+
+              // Descuento
               SwitchListTile(
                 title: const Text('¿Aplicar descuento?'),
+                secondary: const Icon(Icons.percent_outlined),
                 value: _descuentoSwitch,
                 onChanged: (value) => setState(() => _descuentoSwitch = value),
               ),
+
+              // Notas adicionales
               TextFormField(
                 controller: _notasAdicionalesController,
-                decoration: const InputDecoration(labelText: 'Notas adicionales (opcional)'),
+                decoration: _inputDecoration(
+                  label: 'Notas adicionales (opcional)',
+                  icon: Icons.note_alt_outlined,
+                ),
                 maxLines: 3,
               ),
+
               const SizedBox(height: 20),
+
+              // Botón guardar
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : ElevatedButton(
